@@ -83,5 +83,9 @@
   },
   "ember": {
     "edition": "octane"
+  },
+  "dependencies": {
+    "ol": "^10.7.0",
+    "ol-mapbox-style": "^13.2.0"
   }
 }

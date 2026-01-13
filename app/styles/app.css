@@ -1,1 +1,20 @@
 /* Ember supports plain CSS out of the box. More info: https://cli.emberjs.com/release/advanced-use/stylesheets/ */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+#root,
+#ember-testing {
+  height: 100%;
+}
+
+/* Ensure map container has a visible background while tiles load */
+[style*='position: absolute; inset: 0;'] {
+  background: #f8f9fa;
+}
