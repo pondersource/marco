@@ -26,7 +26,6 @@ const setupMap = modifier((element) => {
   });
 
   apply(openfreemap, 'https://tiles.openfreemap.org/styles/positron');
-
 });
 
 <template>

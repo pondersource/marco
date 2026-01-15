@@ -1,10 +1,23 @@
+import Component from '@glimmer/component';
 import { pageTitle } from 'ember-page-title';
 import Map from '#components/map';
+import { service } from '@ember/service';
 
-<template>
-  {{pageTitle "M/\RCO"}}
+export default class ApplicationComponent extends Component {
+  @service storage;
 
-  <Map />
+  constructor() {
+    super(...arguments);
+    console.log('Application component constructed');
+    // Access the service to ensure it is instantiated
+    this.storage;
+  }
 
-  {{outlet}}
-</template>
+  <template>
+    {{pageTitle "M/\RCO"}}
+
+    <Map />
+
+    {{outlet}}
+  </template>
+}

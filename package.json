@@ -85,7 +85,10 @@
     "edition": "octane"
   },
   "dependencies": {
+    "@remotestorage/module-places": "link:vendor/remotestorage-module-places",
     "ol": "^10.7.0",
-    "ol-mapbox-style": "^13.2.0"
+    "ol-mapbox-style": "^13.2.0",
+    "remotestorage-widget": "^1.8.0",
+    "remotestoragejs": "2.0.0-beta.8"
   }
 }
