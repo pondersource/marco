@@ -37,38 +37,67 @@ export default class PlacesSidebar extends Component {
   }
 
   @action
-  async savePlace(poi) {
-    if (!poi) return;
+  async toggleSave(place) {
+    if (!place) return;
 
-    // Map Overpass POI to our Place schema
-    const placeData = {
-      title: poi.tags.name || poi.tags['name:en'] || 'Untitled Place',
-      lat: poi.lat,
-      lon: poi.lon,
-      tags: [], 
-      url: poi.tags.website,
-      osmId: String(poi.id),
-      // We rely on the module to generate ID and Geohash
-    };
+    if (place.createdAt) {
+      // It's a saved bookmark -> Delete it
+      if (confirm(`Delete "${place.title}"?`)) {
+        try {
+          // We need geohash to delete. 
+          // Existing bookmarks have it. 
+          // If for some reason it's missing (shouldn't happen for saved items), we can't delete easily.
+          if (place.id && place.geohash) {
+            await this.storage.places.remove(place.id, place.geohash);
+            console.log('Place deleted:', place.title);
+            
+            // Close sidebar after delete since the item is gone from "Saved" context
+            // Or we could revert to "Save" state if we had the original POI data, 
+            // but usually we just close or show "Nearby".
+            if (this.args.onClose) {
+              this.args.onClose();
+            }
+          } else {
+             alert('Cannot delete: Missing ID or Geohash');
+          }
+        } catch (e) {
+          console.error('Failed to delete:', e);
+          alert('Failed to delete: ' + e.message);
+        }
+      }
+    } else {
+      // It's a fresh POI -> Save it
+      
+      // Map Overpass POI to our Place schema
+      const placeData = {
+        title: place.tags.name || place.tags['name:en'] || 'Untitled Place',
+        lat: place.lat,
+        lon: place.lon,
+        tags: [], 
+        url: place.tags.website,
+        osmId: String(place.id),
+        // We rely on the module to generate ID and Geohash
+      };
 
-    try {
-      await this.storage.places.store(placeData);
-      console.log('Place saved:', placeData.title);
-      alert('Place saved!'); // Quick feedback for now
-      
-      // Notify the map component to refresh bookmarks if possible.
-      // Since we don't have a direct callback here yet, we might rely on 
-      // RemoteStorage events or just simple refresh if the map listens.
-      if (this.args.onBookmarkSaved) {
-        this.args.onBookmarkSaved();
+      try {
+        const savedPlace = await this.storage.places.store(placeData);
+        console.log('Place saved:', placeData.title);
+        
+        // Update the selected place in the UI to be the saved bookmark 
+        // (so the button turns to "Saved")
+        // We can update the local tracked property if we are viewing a single item
+        // or let the parent update. 
+        // Ideally, we switch `this.selectedPlace` to the `savedPlace` returned by the store.
+        this.selectedPlace = savedPlace;
+        
+        // Notify parent if needed (map will auto-update via events)
+        if (this.args.onBookmarkSaved) {
+            this.args.onBookmarkSaved();
+        }
+      } catch (error) {
+        console.error('Failed to save place:', error);
+        alert('Failed to save place: ' + error.message);
       }
-      
-      if (this.args.onClose) {
-        this.args.onClose();
-      }
-    } catch (error) {
-      console.error('Failed to save place:', error);
-      alert('Failed to save place: ' + error.message);
     }
   }
 
@@ -106,16 +135,9 @@ export default class PlacesSidebar extends Component {
             {{/if}}
 
             <div class="actions">
-               {{!-- Only show save button if it doesn't look like a saved bookmark (bookmarks have 'createdAt') --}}
-               {{#unless this.selectedPlace.createdAt}}
-                  <button type="button" class="btn-primary" {{on "click" (fn this.savePlace this.selectedPlace)}}>
-                    Save Bookmark
-                  </button>
-               {{else}}
-                  <button type="button" class="btn-secondary" disabled>
-                    Saved ✓
-                  </button>
-               {{/unless}}
+               <button type="button" class={{if this.selectedPlace.createdAt "btn-secondary" "btn-primary"}} {{on "click" (fn this.toggleSave this.selectedPlace)}}>
+                 {{if this.selectedPlace.createdAt "Saved ✓" "Save"}}
+               </button>
             </div>
             
             <div class="meta-info">

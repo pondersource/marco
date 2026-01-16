@@ -82,8 +82,6 @@ export default class MapComponent extends Component {
 
   async loadBookmarks() {
     try {
-      // Wait a moment for RemoteStorage to be ready (if needed), 
-      // or just try fetching. The 'connected' event is better but for now:
       const places = await this.storage.places.listAll();
       
       this.bookmarkSource.clear();
@@ -108,6 +106,18 @@ export default class MapComponent extends Component {
   }
 
   handleMapClick = async (event) => {
+    // 0. Handle closing sidebar if open and clicked on empty map area
+    if (this.args.isSidebarOpen) {
+       // We can just trigger the outside click and return. 
+       // However, if the user clicked on a feature, maybe they want to switch selection?
+       // The requirement says "when clicking on the map while the sidebar is open, it should close the sidebar instead of executing the normal map click logic"
+       // This implies strict closing behavior.
+       if (this.args.onOutsideClick) {
+         this.args.onOutsideClick();
+       }
+       return;
+    }
+
     const coords = toLonLat(event.coordinate);
     const [lon, lat] = coords;
 

@@ -39,6 +39,8 @@ export default class ApplicationComponent extends Component {
 
     <Map 
       @onPlacesFound={{this.showPlaces}} 
+      @isSidebarOpen={{this.isSidebarOpen}}
+      @onOutsideClick={{this.closeSidebar}}
     />
 
     {{#if this.isSidebarOpen}}
