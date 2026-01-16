@@ -75,18 +75,24 @@ export default class MapComponent extends Component {
     });
 
     // Listen to changes in the /places/ scope
+    // keeping this as a backup or for future real-time sync support
     this.storage.rs.scope('/places/').on('change', (event) => {
        console.log('RemoteStorage change detected:', event);
-       this.loadBookmarks();
+       // this.loadBookmarks(); // Disabling auto-update for now per instructions, using explicit version action instead
     });
+  });
+
+  // Re-fetch bookmarks when the version changes (triggered by parent action)
+  updateBookmarks = modifier((element, [version]) => {
+     this.loadBookmarks();
   });
 
   async loadBookmarks() {
     try {
       const places = await this.storage.places.listAll();
-      
+
       this.bookmarkSource.clear();
-      
+
       if (places && Array.isArray(places)) {
         places.forEach(place => {
           if (place.lat && place.lon) {
@@ -136,7 +142,7 @@ export default class MapComponent extends Component {
           }
           return;
        }
-       
+
        // Otherwise (empty map or non-bookmark feature), close the sidebar
        if (this.args.onOutsideClick) {
          this.args.onOutsideClick();
@@ -150,7 +156,7 @@ export default class MapComponent extends Component {
         if (this.args.onPlacesFound) {
            this.args.onPlacesFound([], clickedBookmark);
         }
-        return; 
+        return;
     }
 
     const coords = toLonLat(event.coordinate);
@@ -212,6 +218,7 @@ export default class MapComponent extends Component {
   <template>
     <div
       {{this.setupMap}}
+      {{this.updateBookmarks @bookmarksVersion}}
       style="position: absolute; inset: 0;"
     ></div>
   </template>

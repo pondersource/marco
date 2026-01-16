@@ -12,6 +12,7 @@ export default class ApplicationComponent extends Component {
   @tracked nearbyPlaces = null;
   @tracked selectedPlace = null;
   @tracked isSidebarOpen = false;
+  @tracked bookmarksVersion = 0;
 
   constructor() {
     super(...arguments);
@@ -39,6 +40,11 @@ export default class ApplicationComponent extends Component {
     this.selectedPlace = null;
   }
 
+  @action
+  refreshBookmarks() {
+    this.bookmarksVersion++;
+  }
+
   <template>
     {{pageTitle "M/\RCO"}}
 
@@ -46,6 +52,7 @@ export default class ApplicationComponent extends Component {
       @onPlacesFound={{this.showPlaces}} 
       @isSidebarOpen={{this.isSidebarOpen}}
       @onOutsideClick={{this.closeSidebar}}
+      @bookmarksVersion={{this.bookmarksVersion}}
     />
 
     {{#if this.isSidebarOpen}}
@@ -54,6 +61,7 @@ export default class ApplicationComponent extends Component {
         @selectedPlace={{this.selectedPlace}}
         @onSelect={{this.selectPlace}}
         @onClose={{this.closeSidebar}} 
+        @onBookmarkChange={{this.refreshBookmarks}}
       />
     {{/if}}
 

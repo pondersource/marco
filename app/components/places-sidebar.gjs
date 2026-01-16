@@ -42,6 +42,11 @@ export default class PlacesSidebar extends Component {
           if (place.id && place.geohash) {
             await this.storage.places.remove(place.id, place.geohash);
             console.log('Place deleted:', place.title);
+
+            // Notify parent to refresh map bookmarks
+            if (this.args.onBookmarkChange) {
+              this.args.onBookmarkChange();
+            }
             
             // Close sidebar after delete
             if (this.args.onClose) {
@@ -70,6 +75,11 @@ export default class PlacesSidebar extends Component {
         const savedPlace = await this.storage.places.store(placeData);
         console.log('Place saved:', placeData.title);
         
+        // Notify parent to refresh map bookmarks
+        if (this.args.onBookmarkChange) {
+           this.args.onBookmarkChange();
+        }
+
         // Update selection to the new saved place object
         if (this.args.onSelect) {
           this.args.onSelect(savedPlace);
