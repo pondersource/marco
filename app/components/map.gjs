@@ -77,14 +77,17 @@ export default class MapComponent extends Component {
     // Listen to changes in the /places/ scope
     // keeping this as a backup or for future real-time sync support
     this.storage.rs.scope('/places/').on('change', (event) => {
-       console.log('RemoteStorage change detected:', event);
-       // this.loadBookmarks(); // Disabling auto-update for now per instructions, using explicit version action instead
+      console.log('RemoteStorage change detected:', event);
+      // this.loadBookmarks(); // Disabling auto-update for now per instructions, using explicit version action instead
     });
   });
 
-  // Re-fetch bookmarks when the version changes (triggered by parent action)
-  updateBookmarks = modifier((element, [version]) => {
-     this.loadBookmarks();
+  // Re-fetch bookmarks when the version changes (triggered by parent action or service)
+  updateBookmarks = modifier(() => {
+    // Depend on the tracked storage.version
+    if (this.storage.version >= 0) {
+      this.loadBookmarks();
+    }
   });
 
   async loadBookmarks() {
@@ -94,21 +97,21 @@ export default class MapComponent extends Component {
       this.bookmarkSource.clear();
 
       if (places && Array.isArray(places)) {
-        places.forEach(place => {
+        places.forEach((place) => {
           if (place.lat && place.lon) {
             const feature = new Feature({
               geometry: new Point(fromLonLat([place.lon, place.lat])),
               name: place.title,
               id: place.id,
               isBookmark: true, // Marker property to distinguish
-              originalPlace: place
+              originalPlace: place,
             });
             this.bookmarkSource.addFeature(feature);
           }
         });
       }
     } catch (e) {
-      console.error("Failed to load bookmarks:", e);
+      console.error('Failed to load bookmarks:', e);
     }
   }
 
@@ -120,43 +123,46 @@ export default class MapComponent extends Component {
     let selectedFeatureType = null;
 
     if (features && features.length > 0) {
-       const bookmarkFeature = features.find(f => f.get('isBookmark'));
-       if (bookmarkFeature) {
-          clickedBookmark = bookmarkFeature.get('originalPlace');
-       }
-       // Also get visual props for standard map click logic later
-       const props = features[0].getProperties();
-       if (props.name) {
-         selectedFeatureName = props.name;
-         selectedFeatureType = props.class || props.subclass;
-       }
+      const bookmarkFeature = features.find((f) => f.get('isBookmark'));
+      if (bookmarkFeature) {
+        clickedBookmark = bookmarkFeature.get('originalPlace');
+      }
+      // Also get visual props for standard map click logic later
+      const props = features[0].getProperties();
+      if (props.name) {
+        selectedFeatureName = props.name;
+        selectedFeatureType = props.class || props.subclass;
+      }
     }
 
     // Special handling when sidebar is OPEN
     if (this.args.isSidebarOpen) {
-       // If it's a bookmark, we allow "switching" to it even if sidebar is open
-       if (clickedBookmark) {
-          console.log("Clicked bookmark while sidebar open (switching):", clickedBookmark);
-          if (this.args.onPlacesFound) {
-             this.args.onPlacesFound([], clickedBookmark);
-          }
-          return;
-       }
+      // If it's a bookmark, we allow "switching" to it even if sidebar is open
+      if (clickedBookmark) {
+        console.log(
+          'Clicked bookmark while sidebar open (switching):',
+          clickedBookmark
+        );
+        if (this.args.onPlacesFound) {
+          this.args.onPlacesFound([], clickedBookmark);
+        }
+        return;
+      }
 
-       // Otherwise (empty map or non-bookmark feature), close the sidebar
-       if (this.args.onOutsideClick) {
-         this.args.onOutsideClick();
-       }
-       return;
+      // Otherwise (empty map or non-bookmark feature), close the sidebar
+      if (this.args.onOutsideClick) {
+        this.args.onOutsideClick();
+      }
+      return;
     }
 
     // Normal behavior (sidebar is closed)
     if (clickedBookmark) {
-        console.log("Clicked bookmark:", clickedBookmark);
-        if (this.args.onPlacesFound) {
-           this.args.onPlacesFound([], clickedBookmark);
-        }
-        return;
+      console.log('Clicked bookmark:', clickedBookmark);
+      if (this.args.onPlacesFound) {
+        this.args.onPlacesFound([], clickedBookmark);
+      }
+      return;
     }
 
     const coords = toLonLat(event.coordinate);
@@ -170,46 +176,63 @@ export default class MapComponent extends Component {
       let pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
 
       // Sort by distance from click
-      pois = pois.map(p => {
-        // Use center lat/lon for ways/relations if available, else lat/lon
-        const pLat = p.lat || p.center?.lat;
-        const pLon = p.lon || p.center?.lon;
-        return {
-          ...p,
-          _distance: (pLat && pLon) ? getDistance(lat, lon, pLat, pLon) : 9999
-        };
-      }).sort((a, b) => a._distance - b._distance);
+      pois = pois
+        .map((p) => {
+          // Use center lat/lon for ways/relations if available, else lat/lon
+          const pLat = p.lat || p.center?.lat;
+          const pLon = p.lon || p.center?.lon;
+          return {
+            ...p,
+            _distance: pLat && pLon ? getDistance(lat, lon, pLat, pLon) : 9999,
+          };
+        })
+        .sort((a, b) => a._distance - b._distance);
 
       let matchedPlace = null;
 
       if (selectedFeatureName && pois.length > 0) {
         // Heuristic:
         // 1. Exact Name Match
-        matchedPlace = pois.find(p => p.tags && (p.tags.name === selectedFeatureName || p.tags['name:en'] === selectedFeatureName));
+        matchedPlace = pois.find(
+          (p) =>
+            p.tags &&
+            (p.tags.name === selectedFeatureName ||
+              p.tags['name:en'] === selectedFeatureName)
+        );
 
         // 2. If no exact match, look for VERY close (<=20m) and matching type
         if (!matchedPlace) {
-           const topCandidate = pois[0];
-           if (topCandidate._distance <= 20) {
-              // Check type compatibility if available
-              // (visual tile 'class' is often 'cafe', osm tag is 'amenity'='cafe')
-              const pType = topCandidate.tags.amenity || topCandidate.tags.shop || topCandidate.tags.tourism;
-              if (selectedFeatureType && pType && (selectedFeatureType === pType || pType.includes(selectedFeatureType))) {
-                 console.log("Heuristic match found (distance + type):", topCandidate);
-                 matchedPlace = topCandidate;
-              } else if (topCandidate._distance <= 10) {
-                 // Even without type match, if it's super close (<=10m), it's likely the one.
-                 console.log("Heuristic match found (proximity):", topCandidate);
-                 matchedPlace = topCandidate;
-              }
-           }
+          const topCandidate = pois[0];
+          if (topCandidate._distance <= 20) {
+            // Check type compatibility if available
+            // (visual tile 'class' is often 'cafe', osm tag is 'amenity'='cafe')
+            const pType =
+              topCandidate.tags.amenity ||
+              topCandidate.tags.shop ||
+              topCandidate.tags.tourism;
+            if (
+              selectedFeatureType &&
+              pType &&
+              (selectedFeatureType === pType ||
+                pType.includes(selectedFeatureType))
+            ) {
+              console.log(
+                'Heuristic match found (distance + type):',
+                topCandidate
+              );
+              matchedPlace = topCandidate;
+            } else if (topCandidate._distance <= 10) {
+              // Even without type match, if it's super close (<=10m), it's likely the one.
+              console.log('Heuristic match found (proximity):', topCandidate);
+              matchedPlace = topCandidate;
+            }
+          }
         }
       }
 
       if (this.args.onPlacesFound) {
         this.args.onPlacesFound(pois, matchedPlace);
       }
-
     } catch (error) {
       console.error('Failed to fetch POIs:', error);
     }
@@ -218,7 +241,7 @@ export default class MapComponent extends Component {
   <template>
     <div
       {{this.setupMap}}
-      {{this.updateBookmarks @bookmarksVersion}}
+      {{this.updateBookmarks}}
       style="position: absolute; inset: 0;"
     ></div>
   </template>

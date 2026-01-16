@@ -1,7 +1,6 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { action } from '@ember/object';
-import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import or from 'ember-truth-helpers/helpers/or';
@@ -22,7 +21,7 @@ export default class PlacesSidebar extends Component {
     if (this.args.onSelect) {
       this.args.onSelect(null);
     }
-    
+
     // Fallback logic: if no list available, close sidebar
     if (!this.args.places || this.args.places.length === 0) {
       if (this.args.onClose) {
@@ -47,13 +46,35 @@ export default class PlacesSidebar extends Component {
             if (this.args.onBookmarkChange) {
               this.args.onBookmarkChange();
             }
-            
+
+            // Update selection to the new saved place object
+            // This updates the local UI state immediately without a route refresh
+            if (this.args.onUpdate) {
+               // When deleting, we revert to a "fresh" object or just close.
+               // Since we close the sidebar below, we might not strictly need to update local state,
+               // but it's good practice.
+               // Reconstruct the "original" place without ID/Geohash/CreatedAt
+               const freshPlace = {
+                  ...place,
+                  id: undefined,
+                  geohash: undefined,
+                  createdAt: undefined
+               };
+               this.args.onUpdate(freshPlace);
+            }
+
+             // Also fire onSelect if it exists (for list view)
+            if (this.args.onSelect) {
+               // Similar logic for select if needed, but we usually close.
+               this.args.onSelect(null); 
+            }
+
             // Close sidebar after delete
             if (this.args.onClose) {
               this.args.onClose();
             }
           } else {
-             alert('Cannot delete: Missing ID or Geohash');
+            alert('Cannot delete: Missing ID or Geohash');
           }
         } catch (e) {
           console.error('Failed to delete:', e);
@@ -66,18 +87,23 @@ export default class PlacesSidebar extends Component {
         title: place.tags.name || place.tags['name:en'] || 'Untitled Place',
         lat: place.lat,
         lon: place.lon,
-        tags: [], 
+        tags: [],
         url: place.tags.website,
-        osmId: String(place.id),
+        osmId: String(place.osmId || place.id), // Ensure we grab osmId if available, or fallback to id
       };
 
       try {
         const savedPlace = await this.storage.places.store(placeData);
         console.log('Place saved:', placeData.title);
-        
+
         // Notify parent to refresh map bookmarks
         if (this.args.onBookmarkChange) {
-           this.args.onBookmarkChange();
+          this.args.onBookmarkChange();
+        }
+
+        // Update selection to the new saved place object
+        if (this.args.onUpdate) {
+          this.args.onUpdate(savedPlace);
         }
 
         // Update selection to the new saved place object
@@ -95,44 +121,86 @@ export default class PlacesSidebar extends Component {
     <div class="sidebar">
       <div class="sidebar-header">
         {{#if @selectedPlace}}
-             <button type="button" class="back-btn" {{on "click" this.clearSelection}}>←</button>
-             <h2>Details</h2>
+          <button
+            type="button"
+            class="back-btn"
+            {{on "click" this.clearSelection}}
+          >←</button>
+          <h2>Details</h2>
         {{else}}
-             <h2>Nearby Places</h2>
+          <h2>Nearby Places</h2>
         {{/if}}
-        <button type="button" class="close-btn" {{on "click" @onClose}}>×</button>
+        <button
+          type="button"
+          class="close-btn"
+          {{on "click" @onClose}}
+        >×</button>
       </div>
-      
+
       <div class="sidebar-content">
         {{#if @selectedPlace}}
           <div class="place-details">
-            <h3>{{or @selectedPlace.title @selectedPlace.tags.name @selectedPlace.tags.name:en "Unnamed Place"}}</h3>
+            <h3>{{or
+                @selectedPlace.title
+                @selectedPlace.tags.name
+                @selectedPlace.tags.name:en
+                "Unnamed Place"
+              }}</h3>
             <p class="place-meta">
               {{#if @selectedPlace.tags.amenity}}
-                {{or @selectedPlace.tags.amenity @selectedPlace.tags.shop @selectedPlace.tags.tourism}}
+                {{or
+                  @selectedPlace.tags.amenity
+                  @selectedPlace.tags.shop
+                  @selectedPlace.tags.tourism
+                }}
               {{else}}
-                 {{@selectedPlace.description}}
+                {{@selectedPlace.description}}
               {{/if}}
             </p>
-            
+
             {{#if (or @selectedPlace.url @selectedPlace.tags.website)}}
-              <p><a href={{or @selectedPlace.url @selectedPlace.tags.website}} target="_blank" rel="noopener noreferrer">Website</a></p>
+              <p><a
+                  href={{or @selectedPlace.url @selectedPlace.tags.website}}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >Website</a></p>
             {{/if}}
 
             {{#if @selectedPlace.tags.opening_hours}}
-               <p><strong>Open:</strong> {{@selectedPlace.tags.opening_hours}}</p>
+              <p><strong>Open:</strong>
+                {{@selectedPlace.tags.opening_hours}}</p>
             {{/if}}
 
             <div class="actions">
-               <button type="button" class={{if @selectedPlace.createdAt "btn-secondary" "btn-primary"}} {{on "click" (fn this.toggleSave @selectedPlace)}}>
-                 {{if @selectedPlace.createdAt "Saved ✓" "Save"}}
-               </button>
+              <button
+                type="button"
+                class={{if
+                  @selectedPlace.createdAt
+                  "btn-secondary"
+                  "btn-primary"
+                }}
+                {{on "click" (fn this.toggleSave @selectedPlace)}}
+              >
+                {{if @selectedPlace.createdAt "Saved ✓" "Save"}}
+              </button>
             </div>
-            
+
             <div class="meta-info">
-               {{#if (or @selectedPlace.osmId @selectedPlace.id)}}
-                 <p><small>OSM ID: <a href="https://www.openstreetmap.org/{{if @selectedPlace.type @selectedPlace.type 'node'}}/{{or @selectedPlace.osmId @selectedPlace.id}}" target="_blank" rel="noopener noreferrer">{{or @selectedPlace.osmId @selectedPlace.id}}</a></small></p>
-               {{/if}}
+              {{#if (or @selectedPlace.osmId @selectedPlace.id)}}
+                <p><small>OSM ID:
+                    <a
+                      href="https://www.openstreetmap.org/{{if
+                        @selectedPlace.type
+                        @selectedPlace.type
+                        'node'
+                      }}/{{or @selectedPlace.osmId @selectedPlace.id}}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >{{or
+                        @selectedPlace.osmId
+                        @selectedPlace.id
+                      }}</a></small></p>
+              {{/if}}
             </div>
           </div>
         {{else}}
@@ -140,9 +208,22 @@ export default class PlacesSidebar extends Component {
             <ul class="places-list">
               {{#each @places as |place|}}
                 <li>
-                  <button type="button" class="place-item" {{on "click" (fn this.selectPlace place)}}>
-                    <div class="place-name">{{or place.tags.name place.tags.name:en "Unnamed Place"}}</div>
-                    <div class="place-type">{{or place.tags.amenity place.tags.shop place.tags.tourism "Point of Interest"}}</div>
+                  <button
+                    type="button"
+                    class="place-item"
+                    {{on "click" (fn this.selectPlace place)}}
+                  >
+                    <div class="place-name">{{or
+                        place.tags.name
+                        place.tags.name:en
+                        "Unnamed Place"
+                      }}</div>
+                    <div class="place-type">{{or
+                        place.tags.amenity
+                        place.tags.shop
+                        place.tags.tourism
+                        "Point of Interest"
+                      }}</div>
                   </button>
                 </li>
               {{/each}}

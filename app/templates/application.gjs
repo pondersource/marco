@@ -5,14 +5,19 @@ import PlacesSidebar from '#components/places-sidebar';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
+import { eq } from 'ember-truth-helpers';
+import { and } from 'ember-truth-helpers';
 
 export default class ApplicationComponent extends Component {
   @service storage;
+  @service router;
 
   @tracked nearbyPlaces = null;
-  @tracked selectedPlace = null;
-  @tracked isSidebarOpen = false;
-  @tracked bookmarksVersion = 0;
+  // @tracked bookmarksVersion = 0; // Moved to storage service
+
+  get isSidebarOpen() {
+    return !!this.nearbyPlaces || this.router.currentRouteName === 'place';
+  }
 
   constructor() {
     super(...arguments);
@@ -23,45 +28,56 @@ export default class ApplicationComponent extends Component {
 
   @action
   showPlaces(places, selectedPlace = null) {
-    this.nearbyPlaces = places;
-    this.selectedPlace = selectedPlace;
-    this.isSidebarOpen = true;
+    // If we have a specific place, transition to the route
+    if (selectedPlace) {
+      // Use ID if available, or osmId
+      const id = selectedPlace.id || selectedPlace.osmId;
+      if (id) {
+        this.router.transitionTo('place', id);
+      }
+      this.nearbyPlaces = null; // Clear list when selecting specific
+    } else if (places && places.length > 0) {
+      // Show list case
+      this.nearbyPlaces = places;
+      this.router.transitionTo('index');
+    }
   }
 
   @action
-  selectPlace(place) {
-    this.selectedPlace = place;
+  selectFromList(place) {
+    if (place) {
+      const id = place.id || place.osmId;
+      if (id) {
+        this.router.transitionTo('place', id);
+      }
+    }
   }
 
   @action
   closeSidebar() {
-    this.isSidebarOpen = false;
     this.nearbyPlaces = null;
-    this.selectedPlace = null;
+    this.router.transitionTo('index');
   }
 
   @action
   refreshBookmarks() {
-    this.bookmarksVersion++;
+    this.storage.notifyChange();
   }
 
   <template>
     {{pageTitle "M/\RCO"}}
 
-    <Map 
-      @onPlacesFound={{this.showPlaces}} 
+    <Map
+      @onPlacesFound={{this.showPlaces}}
       @isSidebarOpen={{this.isSidebarOpen}}
       @onOutsideClick={{this.closeSidebar}}
-      @bookmarksVersion={{this.bookmarksVersion}}
     />
 
-    {{#if this.isSidebarOpen}}
-      <PlacesSidebar 
-        @places={{this.nearbyPlaces}} 
-        @selectedPlace={{this.selectedPlace}}
-        @onSelect={{this.selectPlace}}
-        @onClose={{this.closeSidebar}} 
-        @onBookmarkChange={{this.refreshBookmarks}}
+    {{#if (and (eq this.router.currentRouteName "index") this.nearbyPlaces)}}
+      <PlacesSidebar
+        @places={{this.nearbyPlaces}}
+        @onSelect={{this.selectFromList}}
+        @onClose={{this.closeSidebar}}
       />
     {{/if}}
 
