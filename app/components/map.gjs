@@ -30,16 +30,40 @@ export default class MapComponent extends Component {
       }),
     });
 
-    apply(openfreemap, 'https://tiles.openfreemap.org/styles/positron');
+    apply(openfreemap, 'https://tiles.openfreemap.org/styles/liberty');
 
     this.mapInstance.on('singleclick', this.handleMapClick);
+
+    // Change cursor to pointer when hovering over a clickable feature
+    this.mapInstance.on('pointermove', (e) => {
+      const pixel = this.mapInstance.getEventPixel(e.originalEvent);
+      const hit = this.mapInstance.hasFeatureAtPixel(pixel);
+      this.mapInstance.getTarget().style.cursor = hit ? 'pointer' : '';
+    });
   });
 
   handleMapClick = async (event) => {
+    // 1. Check if user clicked on a rendered feature (POI)
+    const features = this.mapInstance.getFeaturesAtPixel(event.pixel);
+    
+    if (features && features.length > 0) {
+      // Prioritize POIs (features with names/amenities)
+      // OpenLayers features from vector tiles have properties like 'name', 'class', 'subclass', etc.
+      const clickedFeature = features[0];
+      const props = clickedFeature.getProperties();
+
+      // Basic check: does it look like a POI? (has a name or distinct class)
+      if (props.name || props.class) {
+        console.log('Clicked Feature (POI):', props);
+        return; // Stop here, we found a direct click
+      }
+    }
+
+    // 2. Fallback: Fetch nearby POIs via Overpass API
     const coords = toLonLat(event.coordinate);
     const [lon, lat] = coords;
 
-    console.log(`Clicked at: ${lat}, ${lon}`);
+    console.log(`No feature clicked. Searching nearby at: ${lat}, ${lon}`);
 
     try {
       const pois = await this.osm.getNearbyPois(lat, lon);
