@@ -30,6 +30,25 @@ export default class PlacesSidebar extends Component {
     }
   }
 
+  get geoLink() {
+    if (!this.args.selectedPlace) return '#';
+    const p = this.args.selectedPlace;
+    // geo:lat,lon?q=lat,lon(Label)
+    const label = encodeURIComponent(
+      p.title ||
+        p.tags?.name ||
+        p.tags?.['name:en'] ||
+        'Location'
+    );
+    return `geo:${p.lat},${p.lon}?q=${p.lat},${p.lon}(${label})`;
+  }
+
+  get visibleGeoLink() {
+    if (!this.args.selectedPlace) return '';
+    const p = this.args.selectedPlace;
+    return `geo:${p.lat},${p.lon}`;
+  }
+
   @action
   async toggleSave(place) {
     if (!place) return;
@@ -66,7 +85,7 @@ export default class PlacesSidebar extends Component {
              // Also fire onSelect if it exists (for list view)
             if (this.args.onSelect) {
                // Similar logic for select if needed, but we usually close.
-               this.args.onSelect(null); 
+               this.args.onSelect(null);
             }
 
             // Close sidebar after delete
@@ -187,6 +206,12 @@ export default class PlacesSidebar extends Component {
 
             <div class="meta-info">
               {{#if (or @selectedPlace.osmId @selectedPlace.id)}}
+              <p>
+                  <a
+                    href={{this.geoLink}}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >{{this.visibleGeoLink}}</a></p>
                 <p><small>OSM ID:
                     <a
                       href="https://www.openstreetmap.org/{{if
