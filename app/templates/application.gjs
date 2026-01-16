@@ -28,6 +28,11 @@ export default class ApplicationComponent extends Component {
   }
 
   @action
+  selectPlace(place) {
+    this.selectedPlace = place;
+  }
+
+  @action
   closeSidebar() {
     this.isSidebarOpen = false;
     this.nearbyPlaces = null;
@@ -46,7 +51,8 @@ export default class ApplicationComponent extends Component {
     {{#if this.isSidebarOpen}}
       <PlacesSidebar 
         @places={{this.nearbyPlaces}} 
-        @initialPlace={{this.selectedPlace}}
+        @selectedPlace={{this.selectedPlace}}
+        @onSelect={{this.selectPlace}}
         @onClose={{this.closeSidebar}} 
       />
     {{/if}}

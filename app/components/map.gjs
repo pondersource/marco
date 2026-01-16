@@ -74,8 +74,9 @@ export default class MapComponent extends Component {
       this.loadBookmarks();
     });
 
-    this.storage.places.on('change', (event) => {
-       // Ideally we would only update the changed one, but refreshing all is safer for now
+    // Listen to changes in the /places/ scope
+    this.storage.rs.scope('/places/').on('change', (event) => {
+       console.log('RemoteStorage change detected:', event);
        this.loadBookmarks();
     });
   });
@@ -106,49 +107,56 @@ export default class MapComponent extends Component {
   }
 
   handleMapClick = async (event) => {
-    // 0. Handle closing sidebar if open and clicked on empty map area
+    // Check if user clicked on a rendered feature (POI or Bookmark) FIRST
+    const features = this.mapInstance.getFeaturesAtPixel(event.pixel);
+    let clickedBookmark = null;
+    let selectedFeatureName = null;
+    let selectedFeatureType = null;
+
+    if (features && features.length > 0) {
+       const bookmarkFeature = features.find(f => f.get('isBookmark'));
+       if (bookmarkFeature) {
+          clickedBookmark = bookmarkFeature.get('originalPlace');
+       }
+       // Also get visual props for standard map click logic later
+       const props = features[0].getProperties();
+       if (props.name) {
+         selectedFeatureName = props.name;
+         selectedFeatureType = props.class || props.subclass;
+       }
+    }
+
+    // Special handling when sidebar is OPEN
     if (this.args.isSidebarOpen) {
-       // We can just trigger the outside click and return. 
-       // However, if the user clicked on a feature, maybe they want to switch selection?
-       // The requirement says "when clicking on the map while the sidebar is open, it should close the sidebar instead of executing the normal map click logic"
-       // This implies strict closing behavior.
+       // If it's a bookmark, we allow "switching" to it even if sidebar is open
+       if (clickedBookmark) {
+          console.log("Clicked bookmark while sidebar open (switching):", clickedBookmark);
+          if (this.args.onPlacesFound) {
+             this.args.onPlacesFound([], clickedBookmark);
+          }
+          return;
+       }
+       
+       // Otherwise (empty map or non-bookmark feature), close the sidebar
        if (this.args.onOutsideClick) {
          this.args.onOutsideClick();
        }
        return;
     }
 
+    // Normal behavior (sidebar is closed)
+    if (clickedBookmark) {
+        console.log("Clicked bookmark:", clickedBookmark);
+        if (this.args.onPlacesFound) {
+           this.args.onPlacesFound([], clickedBookmark);
+        }
+        return; 
+    }
+
     const coords = toLonLat(event.coordinate);
     const [lon, lat] = coords;
 
-    // 1. Check if user clicked on a rendered feature (POI or Bookmark)
-    const features = this.mapInstance.getFeaturesAtPixel(event.pixel);
-    let selectedFeatureName = null;
-    let selectedFeatureType = null;
-    let clickedBookmark = null;
-
-    if (features && features.length > 0) {
-      // Prioritize bookmarks if clicked
-      const bookmarkFeature = features.find(f => f.get('isBookmark'));
-      if (bookmarkFeature) {
-        clickedBookmark = bookmarkFeature.get('originalPlace');
-        console.log("Clicked bookmark:", clickedBookmark);
-        
-        // Notify parent to show bookmark details
-        if (this.args.onPlacesFound) {
-           // We pass it as a "selectedPlace" but with an empty list of nearby items since it's a specific bookmark
-           this.args.onPlacesFound([], clickedBookmark);
-        }
-        return; // Stop processing to avoid fetching OSM data for a known bookmark
-      }
-
-      const props = features[0].getProperties();
-      if (props.name) {
-        selectedFeatureName = props.name;
-        selectedFeatureType = props.class || props.subclass; // e.g., 'cafe'
-        console.log(`Clicked visual feature: "${selectedFeatureName}" (${selectedFeatureType})`);
-      }
-    }
+    // ... continue with normal OSM fetch logic ...
 
     // 2. Fetch authoritative data via Overpass
     try {
