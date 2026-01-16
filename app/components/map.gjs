@@ -67,18 +67,21 @@ export default class MapComponent extends Component {
     });
 
     // Load initial bookmarks
-    this.loadBookmarks();
-
-    // Listen for remote storage changes
-    this.storage.rs.on('connected', () => {
+    this.storage.rs.on('ready', () => {
       this.loadBookmarks();
     });
+
+    // Listen for remote storage changes
+    // this.storage.rs.on('connected', () => {
+    //   this.loadBookmarks();
+    // });
 
     // Listen to changes in the /places/ scope
     // keeping this as a backup or for future real-time sync support
     this.storage.rs.scope('/places/').on('change', (event) => {
       console.log('RemoteStorage change detected:', event);
       // this.loadBookmarks(); // Disabling auto-update for now per instructions, using explicit version action instead
+      this.loadBookmarks();
     });
   });
 
