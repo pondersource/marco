@@ -18,6 +18,7 @@ export default class StorageService extends Service {
     this.rs.caching.enable('/places/');
 
     window.remoteStorage = this.rs;
+
     // const widget = new Widget(this.rs);
     // widget.attach();
   }

@@ -86,6 +86,7 @@
   },
   "dependencies": {
     "@remotestorage/module-places": "link:vendor/remotestorage-module-places",
+    "ember-truth-helpers": "^5.0.0",
     "ol": "^10.7.0",
     "ol-mapbox-style": "^13.2.0",
     "remotestorage-widget": "^1.8.0",

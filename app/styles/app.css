@@ -26,3 +26,118 @@ body {
   right: 10px;
   z-index: 1000;
 }
+
+/* Sidebar Styles */
+.sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  background: white;
+  z-index: 2000;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.place-details {
+  padding: 0.5rem;
+}
+
+.place-details h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.place-meta {
+  color: #666;
+  text-transform: capitalize;
+  margin-bottom: 1rem;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.places-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.places-list li {
+  margin-bottom: 0.5rem;
+}
+
+.place-item {
+  width: 100%;
+  text-align: left;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.place-item:hover {
+  background: #e9ecef;
+}
+
+.place-name {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.place-type {
+  font-size: 0.85rem;
+  color: #666;
+  text-transform: capitalize;
+}
+
+.empty-state {
+  text-align: center;
+  color: #666;
+  margin-top: 2rem;
+}
