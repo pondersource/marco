@@ -175,7 +175,7 @@ export default class MapComponent extends Component {
 
     // 2. Fetch authoritative data via Overpass
     try {
-      const searchRadius = selectedFeatureName ? 50 : 200;
+      const searchRadius = selectedFeatureName ? 30 : 50;
       let pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
 
       // Sort by distance from click

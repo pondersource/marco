@@ -1,7 +1,7 @@
 import Service from '@ember/service';
 
 export default class OsmService extends Service {
-  async getNearbyPois(lat, lon, radius = 200) {
+  async getNearbyPois(lat, lon, radius = 50) {
     const query = `
 [out:json][timeout:25];
 (
