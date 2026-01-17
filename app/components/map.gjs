@@ -95,7 +95,23 @@ export default class MapComponent extends Component {
 
   async loadBookmarks() {
     try {
-      const places = await this.storage.places.listAll();
+      // For now, continue to load ALL places.
+      // In the future, we can pass geohash prefixes based on map view extent here.
+      // e.g. this.storage.loadAllPlaces(this.getVisiblePrefixes())
+      // But since the signature of list() changed to optional prefixes, we should use loadAllPlaces
+      // from the service instead of accessing storage.places.listAll directly if possible,
+      // OR update this call to match the new API.
+      // The service wraps it in loadAllPlaces(), but let's check what that does.
+      
+      // The Service now has: loadAllPlaces(prefixes = null) -> calls rs.places.list(prefixes)
+      
+      // Let's use the Service method if we want to update the tracked property,
+      // BUT this component seems to want to manage the vector source directly.
+      // Actually, looking at line 98, it calls `this.storage.places.listAll()`.
+      // The `listAll` method was REMOVED from the module and replaced with `list`.
+      
+      // So we MUST change this line.
+      const places = await this.storage.places.getPlaces(); 
 
       this.bookmarkSource.clear();
 
