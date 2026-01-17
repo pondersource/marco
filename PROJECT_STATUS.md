@@ -21,14 +21,17 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 
 - Created a custom TypeScript module in `vendor/remotestorage-module-places/`.
 - **Schema:** `place` object containing `id` (ULID), `title`, `lat`, `lon`, `geohash`, `osmId`, `url`, etc.
-- **Storage Path:** `places/<geohash-prefix-6>/<ulid>` (groups places by location).
-- **Dependencies:** Uses `ulid` and `latlon-geohash` internally (bundled via `npm run build`).
-- **Fixes:** Refactored to `async/await`, removed manual `try/catch` validation, and added logic to strip `undefined` fields to satisfy RemoteStorage validation.
+- **Storage Path:** Nested `<2-char>/<2-char>/<id>` (based on geohash) for scalability.
+- **API:**
+  - `getPlaces(prefixes?)`: efficient partial loading of specific sectors (or full recursive scan if no prefixes provided).
+  - Uses `getListing` for directory traversal and `getAll` for object retrieval.
+  - configured with `maxAge: false` to ensure data freshness.
+- **Dependencies:** Uses `ulid` and `latlon-geohash` internally.
 
 ### 3. App Infrastructure
 
 - **Services:**
-  - `storage.js`: Initializes RemoteStorage, claims access, enables caching, and sets up the widget.
+  - `storage.js`: Initializes RemoteStorage, claims access, enables caching, and sets up the widget. Consumes the new `getPlaces` API.
   - `osm.js`: Fetches nearby POIs from Overpass API.
 - **UI Components:**
   - `places-sidebar.gjs`: Displays a list of nearby POIs. Allows selecting a place to view details and saving it as a bookmark. Links to the OSM website via the node ID.
@@ -42,21 +45,21 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   2.  If a POI is matched heuristically, it opens "Details" directly.
   3.  Otherwise, it lists nearby places.
   4.  User clicks "Save Bookmark" -> Stores JSON in RemoteStorage.
-- **Recent Fixes:** Corrected an issue where saving failed due to `undefined` URL fields. Added `osmId` to the schema and sidebar UI.
+- **Recent Fixes:**
+  - Refactored RemoteStorage module to use nested directory structures.
+  - Fixed `getListing` usage to correctly parse the `items` object from the RemoteStorage spec.
 
 ## Files Currently in Focus
 
-- `vendor/remotestorage-module-places/src/places.ts`: The data module logic (schema, pathing, storage). **Requires `npm run build` in this directory after changes.**
-- `app/components/map.gjs`: Map rendering and click interaction logic.
-- `app/components/places-sidebar.gjs`: UI for listing POIs and saving them.
-- `app/services/storage.js`: RemoteStorage configuration.
+- `app/services/osm.js`: **NEXT TARGET.** Needs optimization to handle timeouts.
+- `vendor/remotestorage-module-places/src/places.ts`: Recently refactored.
+- `app/components/map.gjs`: Map rendering and bookmark loading.
 
 ## Next Steps & Pending Tasks
 
-1.  **Rendering Bookmarks:** We are saving places, but **not yet displaying them on the map**. We need to fetch stored places from RemoteStorage (likely via `listByPrefix` based on the current map view) and render them as markers on the OpenLayers map.
-2.  **UI Feedback:** Verify the "Save" action gives better visual feedback than `alert()`.
-3.  **Widget:** The RemoteStorage widget attachment code in `storage.js` is currently commented out; it needs to be enabled or properly placed in the UI.
-4.  **Refinement:** The `osmId` property was just added; verify the link in the sidebar works correctly.
+1.  **Optimize Overpass API:** The current implementation is timing out frequently. We need to optimize the query or fetch strategy.
+2.  **Viewport-based Loading:** Implement logic in the map component to calculate visible geohash prefixes and pass them to `storage.getPlaces()` for efficient partial loading.
+3.  **UI Feedback:** Verify the "Save" action gives better visual feedback than `alert()`.
 
 ## Technical Constraints
 
