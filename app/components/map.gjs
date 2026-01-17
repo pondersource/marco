@@ -49,7 +49,7 @@ export default class MapComponent extends Component {
       layers: [openfreemap, bookmarkLayer],
       controls: defaultControls({ zoom: false }),
       view: new View({
-        center: fromLonLat([99.04738, 7.58087]),
+        center: fromLonLat([99.05738, 7.55087]),
         zoom: 13.0,
         projection: 'EPSG:3857',
       }),
@@ -58,6 +58,9 @@ export default class MapComponent extends Component {
     apply(openfreemap, 'https://tiles.openfreemap.org/styles/liberty');
 
     this.mapInstance.on('singleclick', this.handleMapClick);
+
+    // Load places when map moves
+    this.mapInstance.on('moveend', this.handleMapMove);
 
     // Change cursor to pointer when hovering over a clickable feature
     this.mapInstance.on('pointermove', (e) => {
@@ -68,7 +71,8 @@ export default class MapComponent extends Component {
 
     // Load initial bookmarks
     this.storage.rs.on('ready', () => {
-      this.loadBookmarks();
+      // Initial load based on current view
+      this.handleMapMove();
     });
 
     // Listen for remote storage changes
@@ -81,7 +85,7 @@ export default class MapComponent extends Component {
     this.storage.rs.scope('/places/').on('change', (event) => {
       console.log('RemoteStorage change detected:', event);
       // this.loadBookmarks(); // Disabling auto-update for now per instructions, using explicit version action instead
-      this.loadBookmarks();
+      this.handleMapMove();
     });
   });
 
@@ -89,29 +93,21 @@ export default class MapComponent extends Component {
   updateBookmarks = modifier(() => {
     // Depend on the tracked storage.version
     if (this.storage.version >= 0) {
-      this.loadBookmarks();
+      this.handleMapMove();
     }
   });
 
-  async loadBookmarks() {
+  async loadBookmarks(places = []) {
     try {
-      // For now, continue to load ALL places.
-      // In the future, we can pass geohash prefixes based on map view extent here.
-      // e.g. this.storage.loadAllPlaces(this.getVisiblePrefixes())
-      // But since the signature of list() changed to optional prefixes, we should use loadAllPlaces
-      // from the service instead of accessing storage.places.listAll directly if possible,
-      // OR update this call to match the new API.
-      // The service wraps it in loadAllPlaces(), but let's check what that does.
-      
-      // The Service now has: loadAllPlaces(prefixes = null) -> calls rs.places.list(prefixes)
-      
-      // Let's use the Service method if we want to update the tracked property,
-      // BUT this component seems to want to manage the vector source directly.
-      // Actually, looking at line 98, it calls `this.storage.places.listAll()`.
-      // The `listAll` method was REMOVED from the module and replaced with `list`.
-      
-      // So we MUST change this line.
-      const places = await this.storage.places.getPlaces(); 
+      if (!places || places.length === 0) {
+        // Fallback or explicit check if we have tracked property usage?
+        // The service updates 'savedPlaces'. We should probably use that if we want reactiveness.
+        places = this.storage.savedPlaces;
+      }
+
+      // Previously: const places = await this.storage.places.getPlaces();
+      // We no longer want to fetch everything blindly.
+      // We rely on 'savedPlaces' being updated by handleMapMove calling storage.loadPlacesInBounds.
 
       this.bookmarkSource.clear();
 
@@ -133,6 +129,19 @@ export default class MapComponent extends Component {
       console.error('Failed to load bookmarks:', e);
     }
   }
+
+  handleMapMove = async () => {
+    if (!this.mapInstance) return;
+
+    const size = this.mapInstance.getSize();
+    const extent = this.mapInstance.getView().calculateExtent(size);
+    const [minLon, minLat] = toLonLat([extent[0], extent[1]]);
+    const [maxLon, maxLat] = toLonLat([extent[2], extent[3]]);
+
+    const bbox = { minLat, minLon, maxLat, maxLon };
+    await this.storage.loadPlacesInBounds(bbox);
+    this.loadBookmarks(this.storage.savedPlaces);
+  };
 
   handleMapClick = async (event) => {
     // Check if user clicked on a rendered feature (POI or Bookmark) FIRST

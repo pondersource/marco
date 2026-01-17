@@ -73,6 +73,7 @@
     "prettier-plugin-ember-template-tag": "^2.1.2",
     "qunit": "^2.25.0",
     "qunit-dom": "^3.5.0",
+    "sinon": "^21.0.1",
     "stylelint": "^16.26.1",
     "stylelint-config-standard": "^38.0.0",
     "testem": "^3.17.0",
@@ -87,6 +88,7 @@
   "dependencies": {
     "@remotestorage/module-places": "link:vendor/remotestorage-module-places",
     "ember-truth-helpers": "^5.0.0",
+    "latlon-geohash": "^2.0.0",
     "ol": "^10.7.0",
     "ol-mapbox-style": "^13.2.0",
     "remotestorage-widget": "^1.8.0",
