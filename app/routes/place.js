@@ -28,6 +28,7 @@ export default class PlaceRoute extends Route {
     try {
       const poi = await this.osm.getPoiById(id);
       if (poi) {
+        console.debug('Found OSM POI:', poi);
         // Map to our Place schema so the sidebar understands it
         return {
           title: poi.tags.name || poi.tags['name:en'] || 'Untitled Place',

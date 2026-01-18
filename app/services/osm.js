@@ -41,9 +41,19 @@ out center;
     }
   }
 
-  async fetchWithRetry(url, options = {}, retries = 1) {
+  async fetchWithRetry(url, options = {}, retries = 3) {
     try {
-      return await fetch(url, options);
+      const res = await fetch(url, options);
+
+      if (!res.ok && retries > 0 && [502, 503, 504, 429].includes(res.status)) {
+        console.log(
+          `Overpass request failed with ${res.status}. Retrying... (${retries} left)`
+        );
+        await new Promise((r) => setTimeout(r, 1000));
+        return this.fetchWithRetry(url, options, retries - 1);
+      }
+
+      return res;
     } catch (e) {
       if (retries > 0 && e.name !== 'AbortError') {
         console.log(`Retrying Overpass request... (${retries} left)`);
