@@ -1,7 +1,16 @@
 import Service from '@ember/service';
 
 export default class OsmService extends Service {
+  controller = null;
+
   async getNearbyPois(lat, lon, radius = 50) {
+    // Cancel previous request if it exists
+    if (this.controller) {
+      this.controller.abort();
+    }
+    this.controller = new AbortController();
+    const signal = this.controller.signal;
+
     const query = `
 [out:json][timeout:25];
 (
@@ -17,10 +26,32 @@ out center;
     const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
       query
     )}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Overpass request failed');
-    const data = await res.json();
-    return data.elements;
+
+    try {
+      const res = await this.fetchWithRetry(url, { signal });
+      if (!res.ok) throw new Error('Overpass request failed');
+      const data = await res.json();
+      return data.elements;
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        console.log('Overpass request aborted');
+        return [];
+      }
+      throw e;
+    }
+  }
+
+  async fetchWithRetry(url, options = {}, retries = 1) {
+    try {
+      return await fetch(url, options);
+    } catch (e) {
+      if (retries > 0 && e.name !== 'AbortError') {
+        console.log(`Retrying Overpass request... (${retries} left)`);
+        await new Promise((r) => setTimeout(r, 1000));
+        return this.fetchWithRetry(url, options, retries - 1);
+      }
+      throw e;
+    }
   }
 
   async getPoiById(id) {
@@ -44,7 +75,7 @@ out center;
     const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
       query
     )}`;
-    const res = await fetch(url);
+    const res = await this.fetchWithRetry(url);
     if (!res.ok) throw new Error('Overpass request failed');
     const data = await res.json();
     return data.elements[0]; // Return the first match
