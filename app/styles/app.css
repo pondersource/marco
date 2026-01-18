@@ -141,3 +141,31 @@ body {
   color: #666;
   margin-top: 2rem;
 }
+
+/* Map Search Pulse Animation */
+.search-pulse {
+  border-radius: 50%;
+  border: 2px solid rgba(255, 204, 51, 0.8); /* Gold/Yellow to match markers */
+  background: rgba(255, 204, 51, 0.2);
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: pulse 1.5s infinite ease-out;
+  box-sizing: border-box; /* Ensure border is included in width/height */
+  display: none; /* Hidden by default */
+}
+
+.search-pulse.active {
+  display: block;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 0;
+  }
+}

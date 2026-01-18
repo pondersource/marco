@@ -5,7 +5,8 @@ import 'ol/ol.css';
 import Map from 'ol/Map.js';
 import { defaults as defaultControls } from 'ol/control.js';
 import View from 'ol/View.js';
-import { fromLonLat, toLonLat } from 'ol/proj.js';
+import { fromLonLat, toLonLat, getPointResolution } from 'ol/proj.js';
+import Overlay from 'ol/Overlay.js';
 import LayerGroup from 'ol/layer/Group.js';
 import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector.js';
@@ -21,6 +22,8 @@ export default class MapComponent extends Component {
 
   mapInstance;
   bookmarkSource;
+  searchOverlay;
+  searchOverlayElement;
 
   setupMap = modifier((element) => {
     if (this.mapInstance) return;
@@ -56,6 +59,16 @@ export default class MapComponent extends Component {
     });
 
     apply(openfreemap, 'https://tiles.openfreemap.org/styles/liberty');
+
+    // Create Overlay for search pulse
+    this.searchOverlayElement = document.createElement('div');
+    this.searchOverlayElement.className = 'search-pulse';
+    this.searchOverlay = new Overlay({
+      element: this.searchOverlayElement,
+      positioning: 'center-center',
+      stopEvent: false, // Allow clicks to pass through
+    });
+    this.mapInstance.addOverlay(this.searchOverlay);
 
     this.mapInstance.on('singleclick', this.handleMapClick);
 
@@ -196,11 +209,28 @@ export default class MapComponent extends Component {
     const coords = toLonLat(event.coordinate);
     const [lon, lat] = coords;
 
-    // ... continue with normal OSM fetch logic ...
+    // Determine search radius based on whether we clicked a named feature
+    const searchRadius = selectedFeatureName ? 30 : 50;
+
+    // Show visual feedback (pulse)
+    if (this.searchOverlayElement) {
+      const view = this.mapInstance.getView();
+      const resolutionAtPoint = getPointResolution(
+        view.getProjection(),
+        view.getResolution(),
+        event.coordinate
+      );
+      const diameterInMeters = searchRadius * 2;
+      const diameterInPixels = diameterInMeters / resolutionAtPoint;
+
+      this.searchOverlayElement.style.width = `${diameterInPixels}px`;
+      this.searchOverlayElement.style.height = `${diameterInPixels}px`;
+      this.searchOverlay.setPosition(event.coordinate);
+      this.searchOverlayElement.classList.add('active');
+    }
 
     // 2. Fetch authoritative data via Overpass
     try {
-      const searchRadius = selectedFeatureName ? 30 : 50;
       let pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
 
       // Sort by distance from click
@@ -263,6 +293,10 @@ export default class MapComponent extends Component {
       }
     } catch (error) {
       console.error('Failed to fetch POIs:', error);
+    } finally {
+      if (this.searchOverlayElement) {
+        this.searchOverlayElement.classList.remove('active');
+      }
     }
   };
 
