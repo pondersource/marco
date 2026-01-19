@@ -19,6 +19,12 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 - **Optimization:** Added **10px hit tolerance** for easier tapping on mobile devices.
 - **Visuals:** Increased bookmark marker size (Radius 9px) and added a subtle drop shadow.
 - **Feedback:** Implemented a "pulse" animation (via OpenLayers Overlay) at the click location to visualize the search radius (30m/50m).
+- **Mobile UX:** Disabled browser tap highlights (`-webkit-tap-highlight-color: transparent`) to prevent blue flashing on Android.
+- **Geolocation ("Locate Me"):**
+  - Implemented a "Locate Me" button with robust tracking logic.
+  - **Dynamic Zoom:** Automatically zooms to a level where the accuracy circle covers ~10% of the map (fallback logic handles missing accuracy data).
+  - **Smart Pulse:** Displays a pulsing blue circle during the search phase.
+  - **Auto-Stop:** Pulse and tracking automatically stop when high accuracy (≤20m) is achieved or after a 10s timeout.
 
 ### 2. RemoteStorage Module (`@remotestorage/module-places`)
 
@@ -62,13 +68,12 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 
 ## Next Steps & Pending Tasks
 
-1.  **Locate Me:** Add a button (using OpenLayers Geolocation) to center the map on the user's current position.
-2.  **App Header:** Implement a transparent header bar with the App Logo (left) and Login/User Info (right).
-3.  **Persist View:** Store the current map center and zoom level in `localStorage` to restore the view upon re-opening the app.
-4.  **Edit Bookmarks:** Allow users to edit the title and description of saved places.
-5.  **Refine UI/UX:** Further polish sidebar interactions and mobile responsiveness.
-6.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
-7.  **Testing:** Add automated tests for the geohash coverage and retry logic.
+1.  **App Header:** Implement a transparent header bar with the App Logo (left) and Login/User Info (right).
+2.  **Persist View:** Store the current map center and zoom level in `localStorage` to restore the view upon re-opening the app.
+3.  **Edit Bookmarks:** Allow users to edit the title and description of saved places.
+4.  **Refine UI/UX:** Further polish sidebar interactions and mobile responsiveness.
+5.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
+6.  **Testing:** Add automated tests for the geohash coverage and retry logic.
 
 ## Technical Constraints
 
