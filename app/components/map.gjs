@@ -3,7 +3,7 @@ import { service } from '@ember/service';
 import { modifier } from 'ember-modifier';
 import 'ol/ol.css';
 import Map from 'ol/Map.js';
-import { defaults as defaultControls } from 'ol/control.js';
+import { defaults as defaultControls, Control } from 'ol/control.js';
 import View from 'ol/View.js';
 import { fromLonLat, toLonLat, getPointResolution } from 'ol/proj.js';
 import Overlay from 'ol/Overlay.js';
@@ -12,6 +12,7 @@ import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector.js';
 import Feature from 'ol/Feature.js';
 import Point from 'ol/geom/Point.js';
+import Geolocation from 'ol/Geolocation.js';
 import { Style, Circle, Fill, Stroke } from 'ol/style.js';
 import { apply } from 'ol-mapbox-style';
 import { getDistance } from '../utils/geo';
@@ -42,7 +43,7 @@ export default class MapComponent extends Component {
             displacement: [0, -2],
           }),
         }),
-      new Style({
+        new Style({
           image: new Circle({
             radius: 9,
             fill: new Fill({ color: '#ffcc33' }), // Gold/Yellow
@@ -56,28 +57,210 @@ export default class MapComponent extends Component {
       zIndex: 10, // Ensure it sits above the map tiles
     });
 
+    const view = new View({
+      center: fromLonLat([99.05738, 7.55087]),
+      zoom: 13.0,
+      projection: 'EPSG:3857',
+    });
+
     this.mapInstance = new Map({
       target: element,
       layers: [openfreemap, bookmarkLayer],
-      controls: defaultControls({ zoom: false }),
-      view: new View({
-        center: fromLonLat([99.05738, 7.55087]),
-        zoom: 13.0,
-        projection: 'EPSG:3857',
-      }),
+      view: view,
+      controls: defaultControls({ zoom: false, rotate: false, attribution: true }),
     });
 
-    apply(openfreemap, 'https://tiles.openfreemap.org/styles/liberty');
+    apply(this.mapInstance, 'https://tiles.openfreemap.org/styles/liberty');
 
-    // Create Overlay for search pulse
     this.searchOverlayElement = document.createElement('div');
     this.searchOverlayElement.className = 'search-pulse';
     this.searchOverlay = new Overlay({
       element: this.searchOverlayElement,
       positioning: 'center-center',
-      stopEvent: false, // Allow clicks to pass through
+      stopEvent: false,
     });
     this.mapInstance.addOverlay(this.searchOverlay);
+
+    // Geolocation Pulse Overlay
+    this.locationOverlayElement = document.createElement('div');
+    this.locationOverlayElement.className = 'search-pulse blue';
+    this.locationOverlay = new Overlay({
+      element: this.locationOverlayElement,
+      positioning: 'center-center',
+      stopEvent: false,
+    });
+    this.mapInstance.addOverlay(this.locationOverlay);
+
+    // Geolocation Setup
+    const geolocation = new Geolocation({
+      trackingOptions: {
+        enableHighAccuracy: true,
+      },
+      projection: view.getProjection(),
+    });
+
+    const positionFeature = new Feature();
+    positionFeature.setStyle(
+      new Style({
+        image: new Circle({
+          radius: 6,
+          fill: new Fill({
+            color: '#3399CC',
+          }),
+          stroke: new Stroke({
+            color: '#fff',
+            width: 2,
+          }),
+        }),
+      })
+    );
+
+    const geolocationSource = new VectorSource({
+      features: [positionFeature],
+    });
+    const geolocationLayer = new VectorLayer({
+      source: geolocationSource,
+      zIndex: 15,
+    });
+
+    geolocation.on('change:position', function () {
+      const coordinates = geolocation.getPosition();
+      positionFeature.setGeometry(coordinates ? new Point(coordinates) : null);
+    });
+
+    // Locate Me Control
+    const locateElement = document.createElement('div');
+    locateElement.className = 'ol-control ol-locate';
+    const locateBtn = document.createElement('button');
+    locateBtn.innerHTML = '⊙';
+    locateBtn.title = 'Locate Me';
+    locateElement.appendChild(locateBtn);
+
+    // Track active sessions to prevent race conditions
+    let locateTimeout;
+    let locateListenerKey;
+
+    // Helper to stop tracking and cleanup UI
+    const stopLocating = () => {
+      // Clear timeout
+      if (locateTimeout) {
+        clearTimeout(locateTimeout);
+        locateTimeout = null;
+      }
+      
+      // Remove listener
+      try {
+        if (locateListenerKey) {
+          geolocation.un('change:position', zoomToLocation);
+          locateListenerKey = null;
+        }
+      } catch (e) { /* ignore */ }
+
+      // Hide pulse
+      if (this.locationOverlayElement) {
+        this.locationOverlayElement.classList.remove('active');
+      }
+    };
+
+    const zoomToLocation = () => {
+      const coordinates = geolocation.getPosition();
+      const accuracyGeometry = geolocation.getAccuracyGeometry();
+      const accuracy = geolocation.getAccuracy();
+
+      if (!coordinates) return;
+
+      const size = this.mapInstance.getSize();
+      const view = this.mapInstance.getView();
+      let targetResolution = null;
+
+      // Update Pulse Overlay Position & Size (but don't force it active)
+      if (this.locationOverlayElement) {
+        const resolution = view.getResolution();
+        const pointResolution = getPointResolution(
+          view.getProjection(),
+          resolution,
+          coordinates
+        );
+        const diameterInMeters = (accuracy || 50) * 2; 
+        const diameterInPixels = diameterInMeters / pointResolution;
+
+        this.locationOverlayElement.style.width = `${diameterInPixels}px`;
+        this.locationOverlayElement.style.height = `${diameterInPixels}px`;
+        this.locationOverlay.setPosition(coordinates);
+      }
+
+      // Check Target Accuracy (<= 20m) for early exit
+      // Only if we have a valid accuracy reading
+      if (accuracy && accuracy <= 20) {
+        stopLocating();
+      }
+
+      // 1. Try to use the exact geometry (circular polygon) if available
+      if (accuracyGeometry) {
+        const extent = accuracyGeometry.getExtent();
+        const fitResolution = view.getResolutionForExtent(extent, size);
+        targetResolution = fitResolution * 3.162; // Scale for 10% area coverage
+      }
+      // 2. Fallback to using the scalar accuracy (meters) if geometry is missing
+      else if (accuracy) {
+        const viewportWidthMeters = 6.325 * accuracy;
+        const minDimensionPixels = Math.min(size[0], size[1]);
+        const requiredResolutionMeters = viewportWidthMeters / minDimensionPixels;
+        const metersPerMapUnit = getPointResolution(
+          view.getProjection(),
+          1,
+          coordinates
+        );
+        targetResolution = requiredResolutionMeters / metersPerMapUnit;
+      }
+
+      let viewOptions = {
+        center: coordinates,
+        duration: 1000,
+      };
+
+      if (targetResolution) {
+        const maxResolution = view.getResolutionForZoom(17); // Use 17 as safe max zoom for accuracy < 20m
+        viewOptions.resolution = Math.max(targetResolution, maxResolution);
+      } else {
+        viewOptions.zoom = 16;
+      }
+
+      this.mapInstance.getView().animate(viewOptions);
+    };
+
+    locateBtn.addEventListener('click', () => {
+      // 1. Clear any previous session
+      stopLocating();
+
+      geolocation.setTracking(true);
+      const coordinates = geolocation.getPosition();
+
+      // 2. Activate Pulse immediately
+      if (this.locationOverlayElement) {
+        this.locationOverlayElement.classList.add('active');
+      }
+
+      // 3. Zoom immediately if we have data
+      if (coordinates) {
+        zoomToLocation();
+      }
+
+      // 4. Start Following
+      locateListenerKey = geolocation.on('change:position', zoomToLocation);
+      
+      // 5. Set Safety Timeout (10s)
+      locateTimeout = setTimeout(() => {
+        stopLocating();
+      }, 10000);
+    });
+
+    const locateControl = new Control({
+      element: locateElement,
+    });
+
+    this.mapInstance.addLayer(geolocationLayer);
+    this.mapInstance.addControl(locateControl);
 
     this.mapInstance.on('singleclick', this.handleMapClick);
 

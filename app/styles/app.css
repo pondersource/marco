@@ -159,6 +159,11 @@ body {
   display: block;
 }
 
+.search-pulse.blue {
+  border-color: rgba(51, 153, 204, 0.8);
+  background: rgba(51, 153, 204, 0.2);
+}
+
 @keyframes pulse {
   0% {
     transform: translate(-50%, -50%) scale(0.8);
@@ -168,4 +173,15 @@ body {
     transform: translate(-50%, -50%) scale(1.4);
     opacity: 0;
   }
+}
+
+/* Locate Control */
+.ol-control.ol-locate {
+  top: 5em; /* Position below zoom controls (usually at .5em or similar) */
+  right: 0.5em;
+  left: auto;
+}
+
+.ol-touch .ol-control.ol-locate {
+  top: 5.5em; /* Adjust for touch devices where controls might be larger */
 }
