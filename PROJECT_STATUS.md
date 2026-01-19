@@ -1,6 +1,6 @@
 # Project Status: Marco
 
-**Last Updated:** Fri Jan 16 2026
+**Last Updated:** Mon Jan 19 2026
 
 ## Project Context
 
@@ -16,6 +16,9 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   - Detects clicks on visual vector tiles.
   - Falls back to fetching authoritative data from an **Overpass API** service.
   - Uses a **heuristic** (distance + type matching) to link visual clicks to API results (handling data desynchronization).
+- **Optimization:** Added **10px hit tolerance** for easier tapping on mobile devices.
+- **Visuals:** Increased bookmark marker size (Radius 9px) and added a subtle drop shadow.
+- **Feedback:** Implemented a "pulse" animation (via OpenLayers Overlay) at the click location to visualize the search radius (30m/50m).
 
 ### 2. RemoteStorage Module (`@remotestorage/module-places`)
 
@@ -32,34 +35,36 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 
 - **Services:**
   - `storage.js`: Initializes RemoteStorage, claims access, enables caching, and sets up the widget. Consumes the new `getPlaces` API.
+    - **Optimization:** Implemented **Debounced Reload** (200ms) for bookmark updates to handle rapid change events efficiently.
+    - **Optimization:** Correctly handles deletion/updates by clearing stale data for reloaded geohash sectors.
   - `osm.js`: Fetches nearby POIs from Overpass API.
+    - **Reliability:** Implemented `fetchWithRetry` to handle HTTP 504/502/503 timeouts and 429 rate limits, in addition to network errors.
 - **UI Components:**
   - `places-sidebar.gjs`: Displays a list of nearby POIs. Allows selecting a place to view details and saving it as a bookmark. Links to the OSM website via the node ID.
-- **Geo Utils:** Added `app/utils/geo.js` for Haversine distance calculations.
+- **Geo Utils:**
+  - `app/utils/geo.js`: Haversine distance calculations.
+  - `app/utils/geohash-coverage.js`: Logic to calculate required 4-char geohash prefixes for a given bounding box.
 
 ## Current State
 
 - **Repo:** The app runs via `pnpm start`.
 - **Workflow:**
-  1.  User clicks map -> Sidebar opens.
-  2.  If a POI is matched heuristically, it opens "Details" directly.
-  3.  Otherwise, it lists nearby places.
+  1.  User pans map -> `moveend` triggers `storage.loadPlacesInBounds`, fetching only new geohash prefixes.
+  2.  User clicks map -> "Pulse" animation shows search area.
+  3.  Sidebar opens with POI details (heuristic match) or list.
   4.  User clicks "Save Bookmark" -> Stores JSON in RemoteStorage.
-- **Recent Fixes:**
-  - Refactored RemoteStorage module to use nested directory structures.
-  - Fixed `getListing` usage to correctly parse the `items` object from the RemoteStorage spec.
+  5.  RemoteStorage change event -> Debounced reload updates the map reactive-ly.
 
 ## Files Currently in Focus
 
-- `app/services/osm.js`: **NEXT TARGET.** Needs optimization to handle timeouts.
-- `vendor/remotestorage-module-places/src/places.ts`: Recently refactored.
-- `app/components/map.gjs`: Map rendering and bookmark loading.
+- `app/components/map.gjs`: Map rendering, event handling, and UI feedback.
+- `app/services/storage.js`: Data sync logic and caching strategy.
 
 ## Next Steps & Pending Tasks
 
-1.  **Optimize Overpass API:** The current implementation is timing out frequently. We need to optimize the query or fetch strategy.
-2.  **Viewport-based Loading:** Implement logic in the map component to calculate visible geohash prefixes and pass them to `storage.getPlaces()` for efficient partial loading.
-3.  **UI Feedback:** Verify the "Save" action gives better visual feedback than `alert()`.
+1.  **Refine UI/UX:** Further polish sidebar interactions and mobile responsiveness.
+2.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
+3.  **Testing:** Add automated tests for the geohash coverage and retry logic.
 
 ## Technical Constraints
 
