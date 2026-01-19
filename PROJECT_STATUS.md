@@ -62,9 +62,13 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 
 ## Next Steps & Pending Tasks
 
-1.  **Refine UI/UX:** Further polish sidebar interactions and mobile responsiveness.
-2.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
-3.  **Testing:** Add automated tests for the geohash coverage and retry logic.
+1.  **Locate Me:** Add a button (using OpenLayers Geolocation) to center the map on the user's current position.
+2.  **App Header:** Implement a transparent header bar with the App Logo (left) and Login/User Info (right).
+3.  **Persist View:** Store the current map center and zoom level in `localStorage` to restore the view upon re-opening the app.
+4.  **Edit Bookmarks:** Allow users to edit the title and description of saved places.
+5.  **Refine UI/UX:** Further polish sidebar interactions and mobile responsiveness.
+6.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
+7.  **Testing:** Add automated tests for the geohash coverage and retry logic.
 
 ## Technical Constraints
 
