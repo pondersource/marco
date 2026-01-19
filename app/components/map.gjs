@@ -34,16 +34,25 @@ export default class MapComponent extends Component {
     this.bookmarkSource = new VectorSource();
     const bookmarkLayer = new VectorLayer({
       source: this.bookmarkSource,
-      style: new Style({
-        image: new Circle({
-          radius: 7,
-          fill: new Fill({ color: '#ffcc33' }), // Gold/Yellow
-          stroke: new Stroke({
-            color: '#fff',
-            width: 2,
+      style: [
+        new Style({
+          image: new Circle({
+            radius: 10,
+            fill: new Fill({ color: 'rgba(0, 0, 0, 0.2)' }),
+            displacement: [0, -2],
           }),
         }),
-      }),
+      new Style({
+          image: new Circle({
+            radius: 9,
+            fill: new Fill({ color: '#ffcc33' }), // Gold/Yellow
+            stroke: new Stroke({
+              color: '#fff',
+              width: 2,
+            }),
+          }),
+        }),
+      ],
       zIndex: 10, // Ensure it sits above the map tiles
     });
 
@@ -78,7 +87,9 @@ export default class MapComponent extends Component {
     // Change cursor to pointer when hovering over a clickable feature
     this.mapInstance.on('pointermove', (e) => {
       const pixel = this.mapInstance.getEventPixel(e.originalEvent);
-      const hit = this.mapInstance.hasFeatureAtPixel(pixel);
+      const hit = this.mapInstance.hasFeatureAtPixel(pixel, {
+        hitTolerance: 10,
+      });
       this.mapInstance.getTarget().style.cursor = hit ? 'pointer' : '';
     });
 
@@ -151,7 +162,9 @@ export default class MapComponent extends Component {
 
   handleMapClick = async (event) => {
     // Check if user clicked on a rendered feature (POI or Bookmark) FIRST
-    const features = this.mapInstance.getFeaturesAtPixel(event.pixel);
+    const features = this.mapInstance.getFeaturesAtPixel(event.pixel, {
+      hitTolerance: 10,
+    });
     let clickedBookmark = null;
     let selectedFeatureName = null;
     let selectedFeatureType = null;
