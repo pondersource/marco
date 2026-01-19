@@ -491,6 +491,7 @@ export default class MapComponent extends Component {
 
   <template>
     <div
+      class="map-container"
       {{this.setupMap}}
       {{this.updateBookmarks}}
       style="position: absolute; inset: 0;"

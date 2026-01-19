@@ -15,8 +15,10 @@ body {
 }
 
 /* Ensure map container has a visible background while tiles load */
-[style*='position: absolute; inset: 0;'] {
+.map-container {
   background: #f8f9fa;
+  -webkit-tap-highlight-color: transparent;
+  outline: none; /* Prevent focus outline on click */
 }
 
 /* Ensure RS widget is above the map */
