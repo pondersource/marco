@@ -92,26 +92,19 @@ export default class MapComponent extends Component {
     // this.storage.rs.on('connected', () => {
     //   this.loadBookmarks();
     // });
-
-    // Listen to changes in the /places/ scope
-    // keeping this as a backup or for future real-time sync support
-    this.storage.rs.scope('/places/').on('change', (event) => {
-      console.log('RemoteStorage change detected:', event);
-      // this.loadBookmarks(); // Disabling auto-update for now per instructions, using explicit version action instead
-      this.handleMapMove();
-    });
   });
 
   // Re-fetch bookmarks when the version changes (triggered by parent action or service)
   updateBookmarks = modifier(() => {
-    // Depend on the tracked storage.version
-    if (this.storage.version >= 0) {
-      this.handleMapMove();
-    }
+    // Depend on the tracked storage.savedPlaces to automatically update when they change
+    const places = this.storage.savedPlaces;
+    this.loadBookmarks(places);
   });
 
   async loadBookmarks(places = []) {
     try {
+      if (!this.bookmarkSource) return;
+
       if (!places || places.length === 0) {
         // Fallback or explicit check if we have tracked property usage?
         // The service updates 'savedPlaces'. We should probably use that if we want reactiveness.
