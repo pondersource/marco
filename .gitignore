@@ -22,3 +22,6 @@
 
 # broccoli-debug
 /DEBUG/
+
+# LLMs
+.opencode/
