@@ -51,20 +51,29 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   - `app/utils/geo.js`: Haversine distance calculations.
   - `app/utils/geohash-coverage.js`: Logic to calculate required 4-char geohash prefixes for a given bounding box.
 
+### 4. Routing & Data Optimization
+
+- **Explicit URLs:** Implemented routing support for specific OSM entities via `/place/osm:node:<id>` and `/place/osm:way:<id>`, distinguishing them from local bookmarks (ULIDs).
+- **Data Normalization:** Refactored `OsmService` to return normalized objects (`osmTags`, `osmType`) for all queries. This ensures consistent data structures between fresh Overpass results and saved bookmarks throughout the app.
+- **Performance:** Optimized navigation to prevent redundant network requests. Clicking a map pin passes the existing data object to the route, skipping the `model` hook (no re-fetch) while maintaining correct deep-linkable URLs via a custom `serialize` hook in `PlaceRoute`.
+
 ## Current State
 
 - **Repo:** The app runs via `pnpm start`.
 - **Workflow:**
-  1.  User pans map -> `moveend` triggers `storage.loadPlacesInBounds`, fetching only new geohash prefixes.
-  2.  User clicks map -> "Pulse" animation shows search area.
-  3.  Sidebar opens with POI details (heuristic match) or list.
-  4.  User clicks "Save Bookmark" -> Stores JSON in RemoteStorage.
-  5.  RemoteStorage change event -> Debounced reload updates the map reactive-ly.
+  1.  User pans map -> `moveend` triggers `storage.loadPlacesInBounds`.
+  2.  User clicks map -> "Pulse" animation -> hybrid hit detection (Visual Tile vs Overpass).
+  3.  **Navigation:** Selected place is passed to the route (`transitionTo` with model), updating the URL to `/place/<id>` or `/place/osm:<type>:<id>` without re-fetching data.
+  4.  Sidebar displays details (using normalized `osmTags`).
+  5.  User clicks "Save Bookmark" -> Stores JSON in RemoteStorage.
+  6.  RemoteStorage change event -> Debounced reload updates the map reactive-ly.
 
 ## Files Currently in Focus
 
-- `app/components/map.gjs`: Map rendering, event handling, and UI feedback.
-- `app/services/storage.js`: Data sync logic and caching strategy.
+- `app/routes/place.js`: Routing logic, ID parsing, and URL serialization.
+- `app/services/osm.js`: Data fetching and normalization.
+- `app/components/map.gjs`: Map rendering and interaction.
+- `app/services/storage.js`: Data sync logic.
 
 ## Next Steps & Pending Tasks
 
