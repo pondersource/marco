@@ -30,11 +30,9 @@ export default class ApplicationComponent extends Component {
   showPlaces(places, selectedPlace = null) {
     // If we have a specific place, transition to the route
     if (selectedPlace) {
-      // Use ID if available, or osmId
-      const id = selectedPlace.id || selectedPlace.osmId;
-      if (id) {
-        this.router.transitionTo('place', id);
-      }
+      // Pass the FULL object model to avoid re-fetching!
+      // The Route's serialize() hook handles URL generation.
+      this.router.transitionTo('place', selectedPlace);
       this.nearbyPlaces = null; // Clear list when selecting specific
     } else if (places && places.length > 0) {
       // Show list case
@@ -46,10 +44,8 @@ export default class ApplicationComponent extends Component {
   @action
   selectFromList(place) {
     if (place) {
-      const id = place.id || place.osmId;
-      if (id) {
-        this.router.transitionTo('place', id);
-      }
+      // Optimize: Pass full object to avoid fetch
+      this.router.transitionTo('place', place);
     }
   }
 

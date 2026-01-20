@@ -8,6 +8,13 @@ export default class PlaceRoute extends Route {
   async model(params) {
     const id = params.place_id;
 
+    // Check for explicit OSM prefixes
+    if (id.startsWith('osm:node:') || id.startsWith('osm:way:')) {
+      const [, type, osmId] = id.split(':');
+      console.log(`Fetching explicit OSM ${type}:`, osmId);
+      return this.loadOsmPlace(osmId, type);
+    }
+
     // 1. Try to find in local bookmarks
     // We rely on the service maintaining the list
     let bookmark = this.storage.findPlaceById(id);
@@ -23,29 +30,34 @@ export default class PlaceRoute extends Route {
       return bookmark;
     }
 
-    // 2. Fallback: Fetch from OSM
+    // 2. Fallback: Fetch from OSM (assuming generic ID or old format)
     console.log('Not in bookmarks, fetching from OSM:', id);
+    return this.loadOsmPlace(id);
+  }
+
+  async loadOsmPlace(id, type = null) {
     try {
-      const poi = await this.osm.getPoiById(id);
+      const poi = await this.osm.getPoiById(id, type);
       if (poi) {
         console.debug('Found OSM POI:', poi);
-        // Map to our Place schema so the sidebar understands it
-        return {
-          title: poi.tags.name || poi.tags['name:en'] || 'Untitled Place',
-          lat: poi.lat || poi.center?.lat,
-          lon: poi.lon || poi.center?.lon,
-          url: poi.tags.website,
-          osmId: String(poi.id),
-          osmTags: poi.tags, // raw tags
-          osmType: poi.type, // "node" or "way"
-          description: poi.tags.description, // ensure description maps
-          // No ID/Geohash/CreatedAt means it's not saved
-        };
+        return poi;
       }
     } catch (e) {
       console.error('Failed to fetch POI', e);
     }
-
     return null;
+  }
+
+  serialize(model) {
+    // If the model is a saved bookmark, use its ID
+    if (model.id) {
+      return { place_id: model.id };
+    }
+    // If it's an OSM POI, use the explicit format
+    if (model.osmId && model.osmType) {
+      return { place_id: `osm:${model.osmType}:${model.osmId}` };
+    }
+    // Fallback
+    return { place_id: model.osmId };
   }
 }

@@ -147,7 +147,7 @@ export default class MapComponent extends Component {
         clearTimeout(locateTimeout);
         locateTimeout = null;
       }
-      
+
       // Remove listener
       try {
         if (locateListenerKey) {
@@ -181,7 +181,7 @@ export default class MapComponent extends Component {
           resolution,
           coordinates
         );
-        const diameterInMeters = (accuracy || 50) * 2; 
+        const diameterInMeters = (accuracy || 50) * 2;
         const diameterInPixels = diameterInMeters / pointResolution;
 
         this.locationOverlayElement.style.width = `${diameterInPixels}px`;
@@ -248,7 +248,7 @@ export default class MapComponent extends Component {
 
       // 4. Start Following
       locateListenerKey = geolocation.on('change:position', zoomToLocation);
-      
+
       // 5. Set Safety Timeout (10s)
       locateTimeout = setTimeout(() => {
         stopLocating();
@@ -425,12 +425,10 @@ export default class MapComponent extends Component {
       // Sort by distance from click
       pois = pois
         .map((p) => {
-          // Use center lat/lon for ways/relations if available, else lat/lon
-          const pLat = p.lat || p.center?.lat;
-          const pLon = p.lon || p.center?.lon;
+          // p is already normalized by service, so lat/lon are at top level
           return {
             ...p,
-            _distance: pLat && pLon ? getDistance(lat, lon, pLat, pLon) : 9999,
+            _distance: getDistance(lat, lon, p.lat, p.lon),
           };
         })
         .sort((a, b) => a._distance - b._distance);
@@ -442,9 +440,9 @@ export default class MapComponent extends Component {
         // 1. Exact Name Match
         matchedPlace = pois.find(
           (p) =>
-            p.tags &&
-            (p.tags.name === selectedFeatureName ||
-              p.tags['name:en'] === selectedFeatureName)
+            p.osmTags &&
+            (p.osmTags.name === selectedFeatureName ||
+              p.osmTags['name:en'] === selectedFeatureName)
         );
 
         // 2. If no exact match, look for VERY close (<=20m) and matching type
@@ -454,9 +452,9 @@ export default class MapComponent extends Component {
             // Check type compatibility if available
             // (visual tile 'class' is often 'cafe', osm tag is 'amenity'='cafe')
             const pType =
-              topCandidate.tags.amenity ||
-              topCandidate.tags.shop ||
-              topCandidate.tags.tourism;
+              topCandidate.osmTags.amenity ||
+              topCandidate.osmTags.shop ||
+              topCandidate.osmTags.tourism;
             if (
               selectedFeatureType &&
               pType &&

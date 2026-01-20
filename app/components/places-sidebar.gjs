@@ -172,7 +172,8 @@ export default class PlacesSidebar extends Component {
                 @selectedPlace.osmTags.amenity
                 @selectedPlace.osmTags.shop
                 @selectedPlace.osmTags.tourism
-                "Point of Interest"
+                @selectedPlace.osmTags.leisure
+                @selectedPlace.osmTags.historic
               }}
               {{#if @selectedPlace.description}}
                 {{@selectedPlace.description}}
@@ -241,15 +242,17 @@ export default class PlacesSidebar extends Component {
                     {{on "click" (fn this.selectPlace place)}}
                   >
                     <div class="place-name">{{or
-                        place.tags.name
-                        place.tags.name:en
+                        place.title
+                        place.osmTags.name
+                        place.osmTags.name:en
                         "Unnamed Place"
                       }}</div>
                     <div class="place-type">{{or
-                        place.tags.amenity
-                        place.tags.shop
-                        place.tags.tourism
-                        "Point of Interest"
+                        place.osmTags.amenity
+                        place.osmTags.shop
+                        place.osmTags.tourism
+                        place.osmTags.leisure
+                        place.osmTags.historic
                       }}</div>
                   </button>
                 </li>
