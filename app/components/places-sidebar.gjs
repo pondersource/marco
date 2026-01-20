@@ -103,12 +103,14 @@ export default class PlacesSidebar extends Component {
     } else {
       // It's a fresh POI -> Save it
       const placeData = {
-        title: place.tags.name || place.tags['name:en'] || 'Untitled Place',
+        title: place.osmTags.name || place.osmTags['name:en'] || 'Untitled Place',
         lat: place.lat,
         lon: place.lon,
         tags: [],
-        url: place.tags.website,
+        url: place.osmTags.website,
         osmId: String(place.osmId || place.id), // Ensure we grab osmId if available, or fallback to id
+        osmType: place.osmType,
+        osmTags: place.osmTags,
       };
 
       try {
@@ -161,33 +163,33 @@ export default class PlacesSidebar extends Component {
           <div class="place-details">
             <h3>{{or
                 @selectedPlace.title
-                @selectedPlace.tags.name
-                @selectedPlace.tags.name:en
+                @selectedPlace.osmTags.name
+                @selectedPlace.osmTags.name:en
                 "Unnamed Place"
               }}</h3>
             <p class="place-meta">
-              {{#if @selectedPlace.tags.amenity}}
-                {{or
-                  @selectedPlace.tags.amenity
-                  @selectedPlace.tags.shop
-                  @selectedPlace.tags.tourism
-                }}
-              {{else}}
+              {{or
+                @selectedPlace.osmTags.amenity
+                @selectedPlace.osmTags.shop
+                @selectedPlace.osmTags.tourism
+                "Point of Interest"
+              }}
+              {{#if @selectedPlace.description}}
                 {{@selectedPlace.description}}
               {{/if}}
             </p>
 
-            {{#if (or @selectedPlace.url @selectedPlace.tags.website)}}
+            {{#if (or @selectedPlace.url @selectedPlace.osmTags.website)}}
               <p><a
-                  href={{or @selectedPlace.url @selectedPlace.tags.website}}
+                  href={{or @selectedPlace.url @selectedPlace.osmTags.website}}
                   target="_blank"
                   rel="noopener noreferrer"
                 >Website</a></p>
             {{/if}}
 
-            {{#if @selectedPlace.tags.opening_hours}}
+            {{#if @selectedPlace.osmTags.opening_hours}}
               <p><strong>Open:</strong>
-                {{@selectedPlace.tags.opening_hours}}</p>
+                {{@selectedPlace.osmTags.opening_hours}}</p>
             {{/if}}
 
             <div class="actions">
@@ -215,9 +217,9 @@ export default class PlacesSidebar extends Component {
                 <p><small>OSM ID:
                     <a
                       href="https://www.openstreetmap.org/{{if
-                        @selectedPlace.type
-                        @selectedPlace.type
-                        'node'
+                        @selectedPlace.osmType
+                        @selectedPlace.osmType
+                        (if @selectedPlace.osmType @selectedPlace.osmType 'node')
                       }}/{{or @selectedPlace.osmId @selectedPlace.id}}"
                       target="_blank"
                       rel="noopener noreferrer"

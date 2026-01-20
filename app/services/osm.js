@@ -14,11 +14,11 @@ export default class OsmService extends Service {
     const query = `
 [out:json][timeout:25];
 (
-  nwr["amenity"](around:${radius},${lat},${lon});
-  nwr["shop"](around:${radius},${lat},${lon});
-  nwr["tourism"](around:${radius},${lat},${lon});
-  nwr["leisure"](around:${radius},${lat},${lon});
-  nwr["historic"](around:${radius},${lat},${lon});
+  nw["amenity"](around:${radius},${lat},${lon});
+  nw["shop"](around:${radius},${lat},${lon});
+  nw["tourism"](around:${radius},${lat},${lon});
+  nw["leisure"](around:${radius},${lat},${lon});
+  nw["historic"](around:${radius},${lat},${lon});
 );
 out center;
     `.trim();
@@ -77,7 +77,6 @@ out center;
 (
   node(${id});
   way(${id});
-  relation(${id});
 );
 out center;
     `.trim();

@@ -34,9 +34,10 @@ export default class PlaceRoute extends Route {
           title: poi.tags.name || poi.tags['name:en'] || 'Untitled Place',
           lat: poi.lat || poi.center?.lat,
           lon: poi.lon || poi.center?.lon,
-          tags: poi.tags, // raw tags
           url: poi.tags.website,
           osmId: String(poi.id),
+          osmTags: poi.tags, // raw tags
+          osmType: poi.type, // "node" or "way"
           description: poi.tags.description, // ensure description maps
           // No ID/Geohash/CreatedAt means it's not saved
         };
