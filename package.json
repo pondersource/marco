@@ -17,7 +17,7 @@
     "./*": "./app/*"
   },
   "scripts": {
-    "build": "vite build",
+    "build": "vite build --outDir release/",
     "format": "prettier . --cache --write",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",
     "lint:css": "stylelint \"**/*.css\"",
@@ -29,7 +29,8 @@
     "lint:js": "eslint . --cache",
     "lint:js:fix": "eslint . --fix",
     "start": "vite",
-    "test": "vite build --mode development && testem ci --port 0"
+    "test": "vite build --mode development && testem ci --port 0",
+    "version": "pnpm build && git add release/"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
