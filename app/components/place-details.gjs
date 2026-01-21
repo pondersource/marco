@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import capitalize from '../helpers/capitalize';
+import Icon from '../components/icon';
 
 export default class PlaceDetails extends Component {
   get place() {
@@ -129,55 +130,66 @@ export default class PlaceDetails extends Component {
 
       <div class="meta-info">
         {{#if this.cuisine}}
-          <p><strong>Cuisine:</strong> {{this.cuisine}}</p>
+          <p>
+            <strong>Cuisine:</strong>
+            {{this.cuisine}}
+          </p>
         {{/if}}
 
         {{#if this.openingHours}}
-          <p><strong>Open:</strong> {{this.openingHours}}</p>
+          <p class="content-with-icon">
+            <Icon @name="clock" @title="Opening hours" />
+            <span>{{this.openingHours}}</span>
+          </p>
         {{/if}}
 
         {{#if this.phone}}
-          <p><strong>Phone:</strong> <a href="tel:{{this.phone}}">{{this.phone}}</a></p>
+          <p class="content-with-icon">
+            <Icon @name="phone" @title="Phone" />
+            <span><a href="tel:{{this.phone}}">{{this.phone}}</a></span>
+          </p>
         {{/if}}
 
         {{#if this.website}}
-          <p>
-            <strong>Website:</strong>
-            <a href={{this.website}} target="_blank" rel="noopener noreferrer">
-              Visit Link
-            </a>
+          <p class="content-with-icon">
+            <Icon @name="globe" @title="Website" />
+            <span><a href={{this.website}} target="_blank" rel="noopener noreferrer">Website</a></span>
           </p>
         {{/if}}
 
         {{#if this.wikipedia}}
           <p>
             <strong>Wikipedia:</strong>
-            <a href="https://wikipedia.org/wiki/{{this.wikipedia}}" target="_blank" rel="noopener noreferrer">
-              Article
-            </a>
+            <a href="https://wikipedia.org/wiki/{{this.wikipedia}}" target="_blank" rel="noopener noreferrer">Article</a>
           </p>
         {{/if}}
 
         <hr class="meta-divider">
 
         {{#if this.address}}
-          <p><strong>Address:</strong> {{this.address}}</p>
+          <p class="content-with-icon">
+            <Icon @name="home" @title="Address" />
+            <span>{{this.address}}</span>
+          </p>
         {{/if}}
 
-
-        <p>
-          <strong>Geo:</strong>
-          <a href={{this.geoLink}} target="_blank" rel="noopener noreferrer">
-            {{this.visibleGeoLink}}
-          </a>
+        <p class="content-with-icon">
+          <Icon @name="mapPin" @title="Geo link" />
+          <span>
+            <a href={{this.geoLink}} target="_blank" rel="noopener noreferrer">
+              {{this.visibleGeoLink}}
+            </a>
+          </span>
         </p>
 
         {{#if this.osmUrl}}
-          <p>
-            <strong>OSM ID:</strong>
-            <a href={{this.osmUrl}} target="_blank" rel="noopener noreferrer">
-              {{this.place.osmId}}
-            </a>
+          <p class="content-with-icon">
+            <Icon @name="map" @title="OSM ID" />
+            <span>
+              <a href={{this.osmUrl}} target="_blank" rel="noopener noreferrer">
+                OpenStreetMap
+              </a>
+            </span>
           </p>
         {{/if}}
       </div>

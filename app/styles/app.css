@@ -223,3 +223,28 @@ body {
 .ol-touch .ol-control.ol-locate {
   top: 5.5em; /* Adjust for touch devices where controls might be larger */
 }
+
+span.icon {
+  display: inline-block;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.content-with-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
