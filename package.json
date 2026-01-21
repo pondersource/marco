@@ -46,6 +46,7 @@
     "@embroider/vite": "^1.5.0",
     "@eslint/js": "^9.39.2",
     "@glimmer/component": "^2.0.0",
+    "@remotestorage/module-places": "link:vendor/remotestorage-module-places",
     "@rollup/plugin-babel": "^6.1.0",
     "@warp-drive/core": "~5.8.0",
     "@warp-drive/ember": "~5.8.0",
@@ -62,6 +63,7 @@
     "ember-resolver": "^13.1.1",
     "ember-source": "~6.11.0-alpha.6",
     "ember-template-lint": "^7.9.3",
+    "ember-truth-helpers": "^5.0.0",
     "ember-welcome-page": "^8.0.4",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
@@ -69,11 +71,17 @@
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-qunit": "^8.2.5",
     "eslint-plugin-warp-drive": "^5.8.0",
+    "feather-icons": "^4.29.2",
     "globals": "^16.5.0",
+    "latlon-geohash": "^2.0.0",
+    "ol": "^10.7.0",
+    "ol-mapbox-style": "^13.2.0",
     "prettier": "^3.7.4",
     "prettier-plugin-ember-template-tag": "^2.1.2",
     "qunit": "^2.25.0",
     "qunit-dom": "^3.5.0",
+    "remotestorage-widget": "^1.8.0",
+    "remotestoragejs": "2.0.0-beta.8",
     "sinon": "^21.0.1",
     "stylelint": "^16.26.1",
     "stylelint-config-standard": "^38.0.0",
@@ -85,14 +93,5 @@
   },
   "ember": {
     "edition": "octane"
-  },
-  "dependencies": {
-    "@remotestorage/module-places": "link:vendor/remotestorage-module-places",
-    "ember-truth-helpers": "^5.0.0",
-    "latlon-geohash": "^2.0.0",
-    "ol": "^10.7.0",
-    "ol-mapbox-style": "^13.2.0",
-    "remotestorage-widget": "^1.8.0",
-    "remotestoragejs": "2.0.0-beta.8"
   }
 }
