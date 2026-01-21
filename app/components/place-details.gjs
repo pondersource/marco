@@ -1,0 +1,186 @@
+import Component from '@glimmer/component';
+import { fn } from '@ember/helper';
+import { on } from '@ember/modifier';
+import capitalize from '../helpers/capitalize';
+
+export default class PlaceDetails extends Component {
+  get place() {
+    return this.args.place || {};
+  }
+
+  get tags() {
+    return this.place.osmTags || {};
+  }
+
+  get name() {
+    return (
+      this.place.title ||
+      this.tags.name ||
+      this.tags['name:en'] ||
+      'Unnamed Place'
+    );
+  }
+
+  get type() {
+    return (
+      this.tags.amenity ||
+      this.tags.shop ||
+      this.tags.tourism ||
+      this.tags.leisure ||
+      this.tags.historic ||
+      'Point of Interest'
+    );
+  }
+
+  get address() {
+    const t = this.tags;
+    const parts = [];
+
+    // Street + Number
+    if (t['addr:street']) {
+      let street = t['addr:street'];
+      if (t['addr:housenumber']) {
+        street += ` ${t['addr:housenumber']}`;
+      }
+      parts.push(street);
+    }
+
+    // Postcode + City
+    if (t['addr:city']) {
+      let city = t['addr:city'];
+      if (t['addr:postcode']) {
+        city = `${t['addr:postcode']} ${city}`;
+      }
+      parts.push(city);
+    }
+
+    if (parts.length === 0) return null;
+    return parts.join(', ');
+  }
+
+  get phone() {
+    return this.tags.phone || this.tags['contact:phone'];
+  }
+
+  get website() {
+    return this.place.url || this.tags.website || this.tags['contact:website'];
+  }
+
+  get openingHours() {
+    return this.tags.opening_hours;
+  }
+
+  get cuisine() {
+    if (!this.tags.cuisine) return null;
+    return this.tags.cuisine
+               .split(';')
+               .map(c => capitalize.compute([c]))
+               .map(c => c.replace('_', ' '))
+               .join(', ');
+  }
+
+  get wikipedia() {
+    return this.tags.wikipedia;
+  }
+
+  get geoLink() {
+    const lat = this.place.lat;
+    const lon = this.place.lon;
+    if (!lat || !lon) return '#';
+    const label = encodeURIComponent(this.name);
+    return `geo:${lat},${lon}?q=${lat},${lon}(${label})`;
+  }
+
+  get visibleGeoLink() {
+    const lat = this.place.lat;
+    const lon = this.place.lon;
+    if (!lat || !lon) return '';
+    return `${lat}, ${lon}`;
+  }
+
+  get osmUrl() {
+    const id = this.place.osmId;
+    if (!id) return null;
+    const type = this.place.osmType || 'node';
+    return `https://www.openstreetmap.org/${type}/${id}`;
+  }
+
+  <template>
+    <div class="place-details">
+      <h3>{{this.name}}</h3>
+      <p class="place-type">
+        {{this.type}}
+      </p>
+      {{#if this.place.description}}
+        <p class="place-description">
+            {{this.place.description}}
+        </p>
+      {{/if}}
+
+      <div class="actions">
+        <button
+          type="button"
+          class={{if this.place.createdAt "btn-secondary" "btn-primary"}}
+          {{on "click" (fn @onToggleSave this.place)}}
+        >
+          {{if this.place.createdAt "Saved ✓" "Save"}}
+        </button>
+      </div>
+
+      <div class="meta-info">
+        {{#if this.cuisine}}
+          <p><strong>Cuisine:</strong> {{this.cuisine}}</p>
+        {{/if}}
+
+        {{#if this.openingHours}}
+          <p><strong>Open:</strong> {{this.openingHours}}</p>
+        {{/if}}
+
+        {{#if this.phone}}
+          <p><strong>Phone:</strong> <a href="tel:{{this.phone}}">{{this.phone}}</a></p>
+        {{/if}}
+
+        {{#if this.website}}
+          <p>
+            <strong>Website:</strong>
+            <a href={{this.website}} target="_blank" rel="noopener noreferrer">
+              Visit Link
+            </a>
+          </p>
+        {{/if}}
+
+        {{#if this.wikipedia}}
+          <p>
+            <strong>Wikipedia:</strong>
+            <a href="https://wikipedia.org/wiki/{{this.wikipedia}}" target="_blank" rel="noopener noreferrer">
+              Article
+            </a>
+          </p>
+        {{/if}}
+
+        <hr class="meta-divider">
+
+        {{#if this.address}}
+          <p><strong>Address:</strong> {{this.address}}</p>
+        {{/if}}
+
+
+        <p>
+          <strong>Geo:</strong>
+          <a href={{this.geoLink}} target="_blank" rel="noopener noreferrer">
+            {{this.visibleGeoLink}}
+          </a>
+        </p>
+
+        {{#if this.osmUrl}}
+          <p>
+            <strong>OSM ID:</strong>
+            <a href={{this.osmUrl}} target="_blank" rel="noopener noreferrer">
+              {{this.place.osmId}}
+            </a>
+          </p>
+        {{/if}}
+      </div>
+    </div>
+  </template>
+}

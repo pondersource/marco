@@ -37,6 +37,7 @@ body {
   bottom: 0;
   width: 300px;
   background: white;
+  color: #333;
   z-index: 2000;
   box-shadow: 2px 0 5px rgb(0 0 0 / 10%);
   display: flex;
@@ -56,6 +57,10 @@ body {
   font-size: 1.2rem;
 }
 
+.sidebar-content {
+  padding: 1rem;
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -73,18 +78,22 @@ body {
 }
 
 .place-details {
-  padding: 0.5rem;
 }
 
 .place-details h3 {
+  font-size: 1.2rem;
   margin-top: 0;
   margin-bottom: 0.5rem;
 }
 
-.place-meta {
+.place-details .place-type {
   color: #666;
+  font-size: 0.9rem;
   text-transform: capitalize;
-  margin-bottom: 1rem;
+  margin: 0 0 1rem 0;
+}
+
+.place-details .place-description {
 }
 
 .btn-primary {
@@ -133,15 +142,42 @@ body {
 }
 
 .place-type {
-  font-size: 0.85rem;
   color: #666;
+  font-size: 0.85rem;
   text-transform: capitalize;
 }
 
-.empty-state {
-  text-align: center;
-  color: #666;
-  margin-top: 2rem;
+.meta-info {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.meta-info p {
+  margin: 0.75rem 0;
+  line-height: 1.4;
+  word-break: break-word; /* Prevent long URLs from breaking layout */
+}
+
+.meta-info strong {
+  font-weight: bold;
+}
+
+.meta-info a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.meta-info a:hover {
+  text-decoration: underline;
+}
+
+.meta-divider {
+  border: 0;
+  border-top: 1px dashed #ddd;
+  margin: 1rem 0;
 }
 
 /* Map Search Pulse Animation */

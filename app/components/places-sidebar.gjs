@@ -4,6 +4,7 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import or from 'ember-truth-helpers/helpers/or';
+import PlaceDetails from './place-details';
 
 export default class PlacesSidebar extends Component {
   @service storage;
@@ -160,77 +161,10 @@ export default class PlacesSidebar extends Component {
 
       <div class="sidebar-content">
         {{#if @selectedPlace}}
-          <div class="place-details">
-            <h3>{{or
-                @selectedPlace.title
-                @selectedPlace.osmTags.name
-                @selectedPlace.osmTags.name:en
-                "Unnamed Place"
-              }}</h3>
-            <p class="place-meta">
-              {{or
-                @selectedPlace.osmTags.amenity
-                @selectedPlace.osmTags.shop
-                @selectedPlace.osmTags.tourism
-                @selectedPlace.osmTags.leisure
-                @selectedPlace.osmTags.historic
-              }}
-              {{#if @selectedPlace.description}}
-                {{@selectedPlace.description}}
-              {{/if}}
-            </p>
-
-            {{#if (or @selectedPlace.url @selectedPlace.osmTags.website)}}
-              <p><a
-                  href={{or @selectedPlace.url @selectedPlace.osmTags.website}}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >Website</a></p>
-            {{/if}}
-
-            {{#if @selectedPlace.osmTags.opening_hours}}
-              <p><strong>Open:</strong>
-                {{@selectedPlace.osmTags.opening_hours}}</p>
-            {{/if}}
-
-            <div class="actions">
-              <button
-                type="button"
-                class={{if
-                  @selectedPlace.createdAt
-                  "btn-secondary"
-                  "btn-primary"
-                }}
-                {{on "click" (fn this.toggleSave @selectedPlace)}}
-              >
-                {{if @selectedPlace.createdAt "Saved ✓" "Save"}}
-              </button>
-            </div>
-
-            <div class="meta-info">
-              {{#if (or @selectedPlace.osmId @selectedPlace.id)}}
-              <p>
-                  <a
-                    href={{this.geoLink}}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >{{this.visibleGeoLink}}</a></p>
-                <p><small>OSM ID:
-                    <a
-                      href="https://www.openstreetmap.org/{{if
-                        @selectedPlace.osmType
-                        @selectedPlace.osmType
-                        (if @selectedPlace.osmType @selectedPlace.osmType 'node')
-                      }}/{{or @selectedPlace.osmId @selectedPlace.id}}"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >{{or
-                        @selectedPlace.osmId
-                        @selectedPlace.id
-                      }}</a></small></p>
-              {{/if}}
-            </div>
-          </div>
+          <PlaceDetails 
+            @place={{@selectedPlace}} 
+            @onToggleSave={{this.toggleSave}} 
+          />
         {{else}}
           {{#if @places}}
             <ul class="places-list">
