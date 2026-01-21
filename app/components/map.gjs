@@ -359,12 +359,49 @@ export default class MapComponent extends Component {
       // Force reflow
       void this.selectedPinElement.offsetWidth;
       this.selectedPinElement.classList.add('active');
+
+      this.panIfObscured(coords);
     } else {
       this.selectedPinElement.classList.remove('active');
       // Hide it effectively by moving it away or just relying on display:none in CSS
       this.selectedPinOverlay.setPosition(undefined); 
     }
   });
+
+  panIfObscured(coords) {
+    if (!this.mapInstance) return;
+
+    const size = this.mapInstance.getSize();
+    // Check if mobile (width <= 768px matches CSS)
+    if (size[0] > 768) return;
+
+    const pixel = this.mapInstance.getPixelFromCoordinate(coords);
+    const height = size[1];
+    
+    // Sidebar covers the bottom 50%
+    const splitPoint = height / 2;
+    
+    // If the pin is in the bottom half (y > splitPoint), it is obscured
+    if (pixel[1] > splitPoint) {
+       // Target position: Center of top half = height * 0.25
+       const targetY = height * 0.25;
+       const deltaY = pixel[1] - targetY;
+       
+       const view = this.mapInstance.getView();
+       const center = view.getCenter();
+       const resolution = view.getResolution();
+       
+       // Move the map center SOUTH (decrease Y) to move the pin UP (decrease pixel Y)
+       const deltaMapUnits = deltaY * resolution;
+       const newCenter = [center[0], center[1] - deltaMapUnits];
+       
+       view.animate({
+         center: newCenter,
+         duration: 500,
+         easing: (t) => t * (2 - t) // Ease-out
+       });
+    }
+  }
 
   // Re-fetch bookmarks when the version changes (triggered by parent action or service)
   updateBookmarks = modifier(() => {
