@@ -16,15 +16,19 @@ import Geolocation from 'ol/Geolocation.js';
 import { Style, Circle, Fill, Stroke } from 'ol/style.js';
 import { apply } from 'ol-mapbox-style';
 import { getDistance } from '../utils/geo';
+import Icon from '../components/icon';
 
 export default class MapComponent extends Component {
   @service osm;
   @service storage;
+  @service mapUi;
 
   mapInstance;
   bookmarkSource;
   searchOverlay;
   searchOverlayElement;
+  selectedPinOverlay;
+  selectedPinElement;
 
   setupMap = modifier((element) => {
     if (this.mapInstance) return;
@@ -104,6 +108,34 @@ export default class MapComponent extends Component {
       stopEvent: false,
     });
     this.mapInstance.addOverlay(this.searchOverlay);
+
+    // Selected Pin Overlay (Red Marker)
+    // We create the element in the template (or JS) and attach it.
+    // Using JS creation to ensure it's cleanly managed by OpenLayers
+    this.selectedPinElement = document.createElement('div');
+    this.selectedPinElement.className = 'selected-pin-container';
+    
+    // Create the icon structure inside
+    const pinIcon = document.createElement('div');
+    pinIcon.className = 'selected-pin';
+    // We can't use the Glimmer <Icon> component easily inside a raw DOM element created here.
+    // So we'll inject the SVG string directly or mount it.
+    // Feather icons are globally available if we used the script, but we are using the module approach.
+    // Simple SVG for Map Pin:
+    pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" style="fill: #b31412; stroke: none;"></circle></svg>`;
+    
+    const pinShadow = document.createElement('div');
+    pinShadow.className = 'selected-pin-shadow';
+
+    this.selectedPinElement.appendChild(pinIcon);
+    this.selectedPinElement.appendChild(pinShadow);
+
+    this.selectedPinOverlay = new Overlay({
+      element: this.selectedPinElement,
+      positioning: 'bottom-center', // Important: Pin tip is at the bottom
+      stopEvent: false, // Let clicks pass through
+    });
+    this.mapInstance.addOverlay(this.selectedPinOverlay);
 
     // Geolocation Pulse Overlay
     this.locationOverlayElement = document.createElement('div');
@@ -310,6 +342,28 @@ export default class MapComponent extends Component {
     // this.storage.rs.on('connected', () => {
     //   this.loadBookmarks();
     // });
+  });
+
+  // Track the selected place from the UI Service (Router -> Map)
+  updateSelectedPin = modifier(() => {
+    const selected = this.mapUi.selectedPlace;
+
+    if (!this.selectedPinOverlay || !this.selectedPinElement) return;
+
+    if (selected && selected.lat && selected.lon) {
+      const coords = fromLonLat([selected.lon, selected.lat]);
+      this.selectedPinOverlay.setPosition(coords);
+      
+      // Reset animation by removing/adding class
+      this.selectedPinElement.classList.remove('active');
+      // Force reflow
+      void this.selectedPinElement.offsetWidth;
+      this.selectedPinElement.classList.add('active');
+    } else {
+      this.selectedPinElement.classList.remove('active');
+      // Hide it effectively by moving it away or just relying on display:none in CSS
+      this.selectedPinOverlay.setPosition(undefined); 
+    }
   });
 
   // Re-fetch bookmarks when the version changes (triggered by parent action or service)
@@ -532,6 +586,7 @@ export default class MapComponent extends Component {
       class="map-container"
       {{this.setupMap}}
       {{this.updateBookmarks}}
+      {{this.updateSelectedPin}}
       style="position: absolute; inset: 0;"
     ></div>
   </template>

@@ -248,3 +248,67 @@ span.icon {
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Selected Pin Animation */
+.selected-pin-container {
+  position: absolute;
+  /* Center the bottom tip of the pin at the coordinate */
+  transform: translate(-50%, -100%);
+  pointer-events: none; /* Let clicks pass through to the map features below if needed */
+  display: none;
+}
+
+.selected-pin-container.active {
+  display: block;
+  animation: dropIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.selected-pin {
+  width: 40px;
+  height: 40px;
+  color: #ea4335; /* Google Red */
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+.selected-pin svg {
+  width: 100%;
+  height: 100%;
+  fill: #ea4335;
+  stroke: #b31412; /* Darker red stroke */
+  stroke-width: 1;
+}
+
+/* Optional: Small dot at the bottom to ground it */
+.selected-pin-shadow {
+  width: 10px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: -1;
+  opacity: 0;
+  animation: shadowFade 0.5s 0.2s forwards;
+}
+
+@keyframes dropIn {
+  0% {
+    transform: translate(-50%, -200%) scale(0);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -100%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shadowFade {
+  to {
+    opacity: 1;
+  }
+}
