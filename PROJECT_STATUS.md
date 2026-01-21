@@ -19,7 +19,10 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 - **Optimization:** Added **10px hit tolerance** for easier tapping on mobile devices.
 - **Visuals:** Increased bookmark marker size (Radius 9px) and added a subtle drop shadow.
 - **Feedback:** Implemented a "pulse" animation (via OpenLayers Overlay) at the click location to visualize the search radius (30m/50m).
-- **Mobile UX:** Disabled browser tap highlights (`-webkit-tap-highlight-color: transparent`) to prevent blue flashing on Android.
+- **Mobile UX:**
+  - Disabled browser tap highlights (`-webkit-tap-highlight-color: transparent`) to prevent blue flashing on Android.
+  - Disabled "pull-to-refresh" (`overscroll-behavior: none`) on the body to prevent accidental reloads while keeping the sidebar scrollable (`contain`).
+  - **Auto-Pan:** On mobile screens, if a selected pin is obscured by the bottom sheet, the map automatically pans to center the pin in the visible top half of the screen.
 - **Geolocation ("Locate Me"):**
   - Implemented a "Locate Me" button with robust tracking logic.
   - **Dynamic Zoom:** Automatically zooms to a level where the accuracy circle covers ~10% of the map (fallback logic handles missing accuracy data).
@@ -27,6 +30,7 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   - **Auto-Stop:** Pulse and tracking automatically stop when high accuracy (≤20m) is achieved or after a 10s timeout.
 - **Persistence:** Saves and restores map center and zoom level using `localStorage` (key: `marco:map-view`).
 - **Controls:** Enabled standard OpenLayers Rotate control (re-north) and custom Locate control.
+- **Pin Animation:** Selected pins are highlighted with a custom **Red Pin** overlay that drops in with an animation. The center dot is styled as a solid dark red circle (`#b31412`).
 
 ### 2. RemoteStorage Module (`@remotestorage/module-places`)
 
@@ -49,6 +53,7 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
     - **Reliability:** Implemented `fetchWithRetry` to handle HTTP 504/502/503 timeouts and 429 rate limits, in addition to network errors.
 - **UI Components:**
   - `places-sidebar.gjs`: Displays a list of nearby POIs.
+    - **Layout:** Responsive design that transforms into a **Bottom Sheet** (50% height) on mobile screens (`<=768px`) with rounded corners and upward shadow.
   - `place-details.gjs`: Dedicated component for displaying rich place information.
     - **Features:** Icons (via `feather-icons`), Address, Phone, Website, Opening Hours, Cuisine, Wikipedia.
     - **Layout:** Polished UI with distinct sections for Actions and Meta info.
@@ -59,6 +64,7 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 ### 4. Routing & Data Optimization
 
 - **Explicit URLs:** Implemented routing support for specific OSM entities via `/place/osm:node:<id>` and `/place/osm:way:<id>`, distinguishing them from local bookmarks (ULIDs).
+- **Smart Linking:** The `showPlaces` action intercepts search results and automatically resolves them to existing **Bookmarks** if a match is found (via `storage.findPlaceById`). This ensures the app navigates to the persistent Bookmark URL (ULID) and correctly reflects the "Saved" status in the UI instead of treating it as a new generic OSM place.
 - **Data Normalization:** Refactored `OsmService` to return normalized objects (`osmTags`, `osmType`) for all queries. This ensures consistent data structures between fresh Overpass results and saved bookmarks throughout the app.
 - **Performance:** Optimized navigation to prevent redundant network requests. Clicking a map pin passes the existing data object to the route, skipping the `model` hook (no re-fetch) while maintaining correct deep-linkable URLs via a custom `serialize` hook in `PlaceRoute`.
 
@@ -68,16 +74,16 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 - **Workflow:**
   1.  User pans map -> `moveend` triggers `storage.loadPlacesInBounds`.
   2.  User clicks map -> "Pulse" animation -> hybrid hit detection (Visual Tile vs Overpass).
-  3.  **Navigation:** Selected place is passed to the route (`transitionTo` with model), updating the URL to `/place/<id>` or `/place/osm:<type>:<id>` without re-fetching data.
-  4.  Sidebar displays details via `<PlaceDetails>` component.
+  3.  **Navigation:** Selected place is checked against bookmarks; if found, it uses the Bookmark object. Otherwise, it uses the OSM object.
+  4.  Sidebar displays details via `<PlaceDetails>` component (Bottom sheet on mobile).
   5.  User clicks "Save Bookmark" -> Stores JSON in RemoteStorage.
   6.  RemoteStorage change event -> Debounced reload updates the map reactive-ly.
 
 ## Files Currently in Focus
 
-- `app/components/place-details.gjs`: UI logic for place info.
-- `app/routes/place.js`: Routing logic.
-- `app/components/map.gjs`: Map rendering and interaction.
+- `app/styles/app.css`: Responsive sidebar styles and mobile optimizations.
+- `app/components/map.gjs`: Map rendering, interaction, and mobile auto-panning.
+- `app/templates/application.gjs`: Root template handling place selection logic.
 - `app/services/storage.js`: Data sync logic.
 
 ## Next Steps & Pending Tasks
