@@ -91,7 +91,7 @@ export default class MapComponent extends Component {
       target: element,
       layers: [openfreemap, bookmarkLayer],
       view: view,
-      controls: defaultControls({ zoom: false, rotate: false, attribution: true }),
+      controls: defaultControls({ zoom: false, rotate: true, attribution: true }),
     });
 
     apply(this.mapInstance, 'https://tiles.openfreemap.org/styles/liberty');
