@@ -3,6 +3,7 @@
 html,
 body {
   height: 100%;
+  overscroll-behavior: none; /* Prevent pull-to-refresh on mobile */
 }
 
 body {
@@ -328,6 +329,7 @@ span.icon {
 
   .sidebar-content {
     overflow-y: auto;
+    overscroll-behavior: contain; /* Prevent scroll chaining */
     /* Ensure content doesn't get hidden behind bottom safe areas on mobile */
     padding-bottom: env(safe-area-inset-bottom, 20px);
   }
