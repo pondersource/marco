@@ -28,15 +28,26 @@ export default class ApplicationComponent extends Component {
 
   @action
   showPlaces(places, selectedPlace = null) {
+    // Helper to resolve a place to its bookmark if it exists
+    const resolvePlace = (p) => {
+      if (!p) return null;
+      // We use the OSM ID to check if we already have this place saved
+      const saved = this.storage.findPlaceById(p.osmId);
+      return saved || p;
+    };
+
+    const resolvedSelected = resolvePlace(selectedPlace);
+    const resolvedPlaces = places ? places.map(resolvePlace) : [];
+
     // If we have a specific place, transition to the route
-    if (selectedPlace) {
+    if (resolvedSelected) {
       // Pass the FULL object model to avoid re-fetching!
       // The Route's serialize() hook handles URL generation.
-      this.router.transitionTo('place', selectedPlace);
+      this.router.transitionTo('place', resolvedSelected);
       this.nearbyPlaces = null; // Clear list when selecting specific
-    } else if (places && places.length > 0) {
+    } else if (resolvedPlaces && resolvedPlaces.length > 0) {
       // Show list case
-      this.nearbyPlaces = places;
+      this.nearbyPlaces = resolvedPlaces;
       this.router.transitionTo('index');
     }
   }
