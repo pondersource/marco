@@ -57,9 +57,33 @@ export default class MapComponent extends Component {
       zIndex: 10, // Ensure it sits above the map tiles
     });
 
+
+    // Default view settings
+    let center = [99.05738, 7.55087];
+    let zoom = 13.0;
+
+    // Try to restore from localStorage
+    try {
+      const storedView = localStorage.getItem('marco:map-view');
+      if (storedView) {
+        const parsed = JSON.parse(storedView);
+        if (
+          parsed.center &&
+          Array.isArray(parsed.center) &&
+          parsed.center.length === 2 &&
+          typeof parsed.zoom === 'number'
+        ) {
+          center = parsed.center;
+          zoom = parsed.zoom;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to restore map view:', e);
+    }
+
     const view = new View({
-      center: fromLonLat([99.05738, 7.55087]),
-      zoom: 13.0,
+      center: fromLonLat(center),
+      zoom: zoom,
       projection: 'EPSG:3857',
     });
 
@@ -341,6 +365,22 @@ export default class MapComponent extends Component {
     const bbox = { minLat, minLon, maxLat, maxLon };
     await this.storage.loadPlacesInBounds(bbox);
     this.loadBookmarks(this.storage.savedPlaces);
+
+    // Persist view to localStorage
+    try {
+      const view = this.mapInstance.getView();
+      const currentCenter = toLonLat(view.getCenter());
+      const currentZoom = view.getZoom();
+
+      const viewState = {
+        center: currentCenter,
+        zoom: currentZoom
+      };
+
+      localStorage.setItem('marco:map-view', JSON.stringify(viewState));
+    } catch (e) {
+      console.warn('Failed to save map view:', e);
+    }
   };
 
   handleMapClick = async (event) => {
