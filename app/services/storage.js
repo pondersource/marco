@@ -8,6 +8,7 @@ import Geohash from 'latlon-geohash';
 
 export default class StorageService extends Service {
   rs;
+  @tracked placesInView = [];
   @tracked savedPlaces = [];
   @tracked loadedPrefixes = [];
   @tracked currentBbox = null;
@@ -35,15 +36,58 @@ export default class StorageService extends Service {
       // console.debug('[rs] client ready');
     });
 
-    this.rs.on('sync-done', result => {
+    this.rs.on('sync-done', (result) => {
       // console.debug('[rs] sync done:', result);
-      if (!this.initialSyncDone) { this.initialSyncDone = true; }
+      if (!this.initialSyncDone) {
+        this.initialSyncDone = true;
+      }
     });
 
     this.rs.scope('/places/').on('change', (event) => {
-      console.debug(event);
+      // console.debug(event);
+      this.handlePlaceChange(event);
       debounce(this, this.reloadCurrentView, 200);
     });
+  }
+
+  handlePlaceChange(event) {
+    const { newValue, relativePath } = event;
+
+    // Remove old entry if exists
+    // The relativePath is like "geohash/geohash/ULID" or just "ULID" depending on structure.
+    // Our structure is <2-char>/<2-char>/<id>.
+    // But let's rely on the ID inside the object if possible, or extract from path.
+
+    // We can't easily identify the ID from just relativePath without parsing logic if it's nested.
+    // However, for deletions (newValue is undefined), we might need the ID.
+    // Fortunately, our objects (newValue) contain the ID.
+
+    // If it's a deletion, we need to find the object in our array to remove it.
+    // Since we don't have the ID in newValue (it's null), we rely on `relativePath`.
+    // Let's assume the filename is the ID.
+    const pathParts = relativePath.split('/');
+    const id = pathParts[pathParts.length - 1];
+
+    if (!newValue) {
+      // Deletion
+      this.savedPlaces = this.savedPlaces.filter((p) => p.id !== id);
+    } else {
+      // Add or Update
+      // Ensure the object has the ID (it should)
+      const place = { ...newValue, id };
+
+      // Update existing or add new
+      const index = this.savedPlaces.findIndex((p) => p.id === id);
+      if (index !== -1) {
+        // Replace
+        const newPlaces = [...this.savedPlaces];
+        newPlaces[index] = place;
+        this.savedPlaces = newPlaces;
+      } else {
+        // Add
+        this.savedPlaces = [...this.savedPlaces, place];
+      }
+    }
   }
 
   get places() {
@@ -105,7 +149,7 @@ export default class StorageService extends Service {
           // Identify existing places that belong to the reloaded prefixes and remove them
           const prefixSet = new Set(prefixes);
 
-          const keptPlaces = this.savedPlaces.filter((place) => {
+          const keptPlaces = this.placesInView.filter((place) => {
             if (!place.lat || !place.lon) return false;
             try {
               // Calculate 4-char geohash for the existing place
@@ -119,15 +163,15 @@ export default class StorageService extends Service {
           });
 
           // Merge the kept places (from other areas) with the fresh places (from these areas)
-          this.savedPlaces = [...keptPlaces, ...places];
+          this.placesInView = [...keptPlaces, ...places];
         } else {
           // Full reload
-          this.savedPlaces = places;
+          this.placesInView = places;
         }
       } else {
-        if (!prefixes) this.savedPlaces = [];
+        if (!prefixes) this.placesInView = [];
       }
-      console.log('Loaded saved places:', this.savedPlaces.length);
+      console.log('Loaded saved places:', this.placesInView.length);
     } catch (e) {
       console.error('Failed to load places:', e);
     }

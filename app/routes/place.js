@@ -16,6 +16,9 @@ export default class PlaceRoute extends Route {
       return this.loadOsmPlace(osmId, type);
     }
 
+    // Wait for storage sync before checking bookmarks
+    await this.waitForSync();
+
     // 1. Try to find in local bookmarks
     let bookmark = this.storage.findPlaceById(id);
 
@@ -27,6 +30,22 @@ export default class PlaceRoute extends Route {
     // 2. Fallback: Fetch from OSM (assuming generic ID or old format)
     console.log('Not in bookmarks, fetching from OSM:', id);
     return this.loadOsmPlace(id);
+  }
+
+  async waitForSync() {
+    if (this.storage.initialSyncDone) return;
+
+    console.log('Waiting for initial storage sync...');
+    const timeout = 5000;
+    const start = Date.now();
+
+    while (!this.storage.initialSyncDone) {
+      if (Date.now() - start > timeout) {
+        console.warn('Timed out waiting for initial sync');
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   }
 
   afterModel(model) {

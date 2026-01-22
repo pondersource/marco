@@ -407,8 +407,8 @@ export default class MapComponent extends Component {
 
   // Re-fetch bookmarks when the version changes (triggered by parent action or service)
   updateBookmarks = modifier(() => {
-    // Depend on the tracked storage.savedPlaces to automatically update when they change
-    const places = this.storage.savedPlaces;
+    // Depend on the tracked storage.placesInView to automatically update when they change
+    const places = this.storage.placesInView;
     this.loadBookmarks(places);
   });
 
@@ -418,13 +418,13 @@ export default class MapComponent extends Component {
 
       if (!places || places.length === 0) {
         // Fallback or explicit check if we have tracked property usage?
-        // The service updates 'savedPlaces'. We should probably use that if we want reactiveness.
-        places = this.storage.savedPlaces;
+        // The service updates 'placesInView'. We should probably use that if we want reactiveness.
+        places = this.storage.placesInView;
       }
 
       // Previously: const places = await this.storage.places.getPlaces();
       // We no longer want to fetch everything blindly.
-      // We rely on 'savedPlaces' being updated by handleMapMove calling storage.loadPlacesInBounds.
+      // We rely on 'placesInView' being updated by handleMapMove calling storage.loadPlacesInBounds.
 
       this.bookmarkSource.clear();
 
@@ -457,7 +457,7 @@ export default class MapComponent extends Component {
 
     const bbox = { minLat, minLon, maxLat, maxLon };
     await this.storage.loadPlacesInBounds(bbox);
-    this.loadBookmarks(this.storage.savedPlaces);
+    this.loadBookmarks(this.storage.placesInView);
 
     // Persist view to localStorage
     try {
