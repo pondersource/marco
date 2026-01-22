@@ -360,13 +360,71 @@ export default class MapComponent extends Component {
       void this.selectedPinElement.offsetWidth;
       this.selectedPinElement.classList.add('active');
 
-      this.panIfObscured(coords);
+      this.handlePinVisibility(coords);
     } else {
       this.selectedPinElement.classList.remove('active');
       // Hide it effectively by moving it away or just relying on display:none in CSS
       this.selectedPinOverlay.setPosition(undefined);
     }
   });
+
+  handlePinVisibility(coords) {
+    if (!this.mapInstance) return;
+
+    const pixel = this.mapInstance.getPixelFromCoordinate(coords);
+    const size = this.mapInstance.getSize();
+
+    // Check if off-screen (not rendered or outside bounds)
+    const isOffScreen =
+      !pixel ||
+      pixel[0] < 0 ||
+      pixel[0] > size[0] ||
+      pixel[1] < 0 ||
+      pixel[1] > size[1];
+
+    if (isOffScreen) {
+      this.animateToSmartCenter(coords);
+    } else {
+      this.panIfObscured(coords);
+    }
+  }
+
+  animateToSmartCenter(coords) {
+    if (!this.mapInstance) return;
+
+    const size = this.mapInstance.getSize();
+    const view = this.mapInstance.getView();
+    const resolution = view.getResolution();
+    let targetCenter = coords;
+
+    // Check if mobile (width <= 768px matches CSS)
+    if (size[0] <= 768) {
+      // On mobile, the bottom 50% is covered by the sheet.
+      // We want the pin to be in the center of the TOP 50% (visible area).
+      // That means the pin should be at y = height * 0.25 (25% down from top).
+      // The map center is at y = height * 0.50.
+      // So the pin is "above" the center by 25% of the height in pixels.
+      // To put the pin there, the map center needs to be "below" the pin by that amount.
+
+      const height = size[1];
+      const offsetPixels = height * 0.25; // Distance from desired pin pos to map center
+      const offsetMapUnits = offsetPixels * resolution;
+
+      // Shift center SOUTH (decrease Y)
+      // Note: In Web Mercator (EPSG:3857), Y increases North.
+      // So to look "lower", we decrease Y? No wait.
+      // If we move the camera South (decrease Y), the features move North (Up) on screen.
+      // We want the Pin (fixed lat/lon) to be Higher up on screen.
+      // So we must move the Camera South (Lower Y).
+      targetCenter = [coords[0], coords[1] - offsetMapUnits];
+    }
+
+    view.animate({
+      center: targetCenter,
+      duration: 1000,
+      easing: (t) => t * (2 - t), // Ease-out
+    });
+  }
 
   panIfObscured(coords) {
     if (!this.mapInstance) return;
