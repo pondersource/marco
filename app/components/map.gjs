@@ -486,6 +486,8 @@ export default class MapComponent extends Component {
     let selectedFeatureType = null;
 
     if (features && features.length > 0) {
+      console.debug(`Found ${features.length} features in map layer:`);
+      for (const f of features) { console.debug(f) }
       const bookmarkFeature = features.find((f) => f.get('isBookmark'));
       if (bookmarkFeature) {
         clickedBookmark = bookmarkFeature.get('originalPlace');
