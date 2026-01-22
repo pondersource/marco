@@ -114,7 +114,7 @@ export default class MapComponent extends Component {
     // Using JS creation to ensure it's cleanly managed by OpenLayers
     this.selectedPinElement = document.createElement('div');
     this.selectedPinElement.className = 'selected-pin-container';
-    
+
     // Create the icon structure inside
     const pinIcon = document.createElement('div');
     pinIcon.className = 'selected-pin';
@@ -123,7 +123,7 @@ export default class MapComponent extends Component {
     // Feather icons are globally available if we used the script, but we are using the module approach.
     // Simple SVG for Map Pin:
     pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" style="fill: #b31412; stroke: none;"></circle></svg>`;
-    
+
     const pinShadow = document.createElement('div');
     pinShadow.className = 'selected-pin-shadow';
 
@@ -353,7 +353,7 @@ export default class MapComponent extends Component {
     if (selected && selected.lat && selected.lon) {
       const coords = fromLonLat([selected.lon, selected.lat]);
       this.selectedPinOverlay.setPosition(coords);
-      
+
       // Reset animation by removing/adding class
       this.selectedPinElement.classList.remove('active');
       // Force reflow
@@ -364,7 +364,7 @@ export default class MapComponent extends Component {
     } else {
       this.selectedPinElement.classList.remove('active');
       // Hide it effectively by moving it away or just relying on display:none in CSS
-      this.selectedPinOverlay.setPosition(undefined); 
+      this.selectedPinOverlay.setPosition(undefined);
     }
   });
 
@@ -376,25 +376,27 @@ export default class MapComponent extends Component {
     if (size[0] > 768) return;
 
     const pixel = this.mapInstance.getPixelFromCoordinate(coords);
+    if (!pixel) return;
+
     const height = size[1];
-    
+
     // Sidebar covers the bottom 50%
     const splitPoint = height / 2;
-    
+
     // If the pin is in the bottom half (y > splitPoint), it is obscured
     if (pixel[1] > splitPoint) {
        // Target position: Center of top half = height * 0.25
        const targetY = height * 0.25;
        const deltaY = pixel[1] - targetY;
-       
+
        const view = this.mapInstance.getView();
        const center = view.getCenter();
        const resolution = view.getResolution();
-       
+
        // Move the map center SOUTH (decrease Y) to move the pin UP (decrease pixel Y)
        const deltaMapUnits = deltaY * resolution;
        const newCenter = [center[0], center[1] - deltaMapUnits];
-       
+
        view.animate({
          center: newCenter,
          duration: 500,
