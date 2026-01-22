@@ -12,6 +12,7 @@ export default class StorageService extends Service {
   @tracked loadedPrefixes = [];
   @tracked currentBbox = null;
   @tracked version = 0; // Shared version tracker for bookmarks
+  @tracked initialSyncDone = false;
 
   constructor() {
     super(...arguments);
@@ -31,10 +32,16 @@ export default class StorageService extends Service {
     // widget.attach();
 
     this.rs.on('ready', () => {
-      // this.loadAllPlaces();
+      // console.debug('[rs] client ready');
+    });
+
+    this.rs.on('sync-done', result => {
+      // console.debug('[rs] sync done:', result);
+      if (!this.initialSyncDone) { this.initialSyncDone = true; }
     });
 
     this.rs.scope('/places/').on('change', (event) => {
+      console.debug(event);
       debounce(this, this.reloadCurrentView, 200);
     });
   }
