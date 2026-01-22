@@ -90,8 +90,9 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 
 1.  **App Header:** Implement a transparent header bar with the App Logo (left) and Login/User Info (right).
 2.  **Edit Bookmarks:** Allow users to edit the title and description of saved places.
-3.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
-4.  **Testing:** Add automated tests for the geohash coverage and retry logic.
+3.  **Linting & Code Quality:** Fix remaining CSS errors, remove inline styles in `map.gjs`, and address unused variables/runloop usage.
+4.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
+5.  **Testing:** Add automated tests for the geohash coverage and retry logic.
 
 ## Technical Constraints
 
