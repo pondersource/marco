@@ -33,7 +33,7 @@ export default class IconComponent extends Component {
   }
 
   get color() {
-    return this.args.color || '#888';
+    return this.args.color || '#898989';
   }
 
   get style() {
