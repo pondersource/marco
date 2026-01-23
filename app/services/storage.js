@@ -178,12 +178,26 @@ export default class StorageService extends Service {
   }
 
   findPlaceById(id) {
-    // Search by internal ID first
-    let place = this.savedPlaces.find((p) => p.id === id);
+    if (!id) return undefined;
+    const strId = String(id);
+
+    // Search by internal ID first (loose comparison via string cast)
+    let place = this.savedPlaces.find((p) => p.id && String(p.id) === strId);
     if (place) return place;
 
     // Then search by OSM ID
-    place = this.savedPlaces.find((p) => p.osmId === id);
+    place = this.savedPlaces.find((p) => p.osmId && String(p.osmId) === strId);
     return place;
+  }
+
+  async storePlace(placeData) {
+    const savedPlace = await this.places.store(placeData);
+    this.savedPlaces = [...this.savedPlaces, savedPlace];
+    return savedPlace;
+  }
+
+  async removePlace(place) {
+    await this.places.remove(place.id, place.geohash);
+    this.savedPlaces = this.savedPlaces.filter(p => p.id !== place.id);
   }
 }

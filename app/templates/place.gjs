@@ -23,20 +23,37 @@ export default class PlaceTemplate extends Component {
   // Let's use a modifier or just sync it.
 
   get place() {
-    // If we have a manually updated place (from save), use it.
-    // Otherwise use the route model.
-    // We need to ensure we reset `localPlace` when navigating to a NEW place.
-    // Comparing IDs is a safe bet.
-
+    // 1. Resolve the ID from the model (OSM ID or internal ID)
     const model = this.args.model;
-    if (
-      this.localPlace &&
-      (this.localPlace.id === model.id || this.localPlace.osmId === model.osmId)
-    ) {
-      // If the local place is "richer" (has createdAt), prefer it.
-      if (this.localPlace.createdAt && !model.createdAt) return this.localPlace;
-      // If we deleted it (local has no createdAt, model might?) - wait, if we delete, we close sidebar.
+    const id = model.osmId || model.id;
+
+    // 2. Check the storage service for a LIVE version of this bookmark
+    // This is the most critical fix: Storage is the source of truth.
+    // Since `this.storage.savedPlaces` is @tracked, this getter will re-compute
+    // whenever a bookmark is added or removed.
+    const saved = this.storage.findPlaceById(id);
+    if (saved) {
+      return saved;
     }
+
+    // 3. If not saved, check our local "optimistic" state (from handleUpdate)
+    // This handles the "unsaved" state immediately after deletion before any other sync
+    if (this.localPlace && (this.localPlace.osmId === id || this.localPlace.id === id)) {
+       return this.localPlace;
+    }
+
+    // 4. Fallback to the route model (which might be the stale "saved" object from when the route loaded)
+    // If the model *has* a createdAt but we didn't find it in step 2 (storage),
+    // it means it was deleted. We must return a sanitized version.
+    if (model.createdAt) {
+      return {
+        ...model,
+        id: undefined,
+        createdAt: undefined,
+        geohash: undefined
+      };
+    }
+    
     return model;
   }
 

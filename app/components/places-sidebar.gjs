@@ -31,70 +31,46 @@ export default class PlacesSidebar extends Component {
     }
   }
 
-  get geoLink() {
-    if (!this.args.selectedPlace) return '#';
-    const p = this.args.selectedPlace;
-    // geo:lat,lon?q=lat,lon(Label)
-    const label = encodeURIComponent(
-      p.title ||
-        p.tags?.name ||
-        p.tags?.['name:en'] ||
-        'Location'
-    );
-    return `geo:${p.lat},${p.lon}?q=${p.lat},${p.lon}(${label})`;
-  }
-
-  get visibleGeoLink() {
-    if (!this.args.selectedPlace) return '';
-    const p = this.args.selectedPlace;
-    return `geo:${p.lat},${p.lon}`;
-  }
-
   @action
   async toggleSave(place) {
     if (!place) return;
 
     if (place.createdAt) {
-      // It's a saved bookmark -> Delete it
       if (confirm(`Delete "${place.title}"?`)) {
         try {
-          if (place.id && place.geohash) {
-            await this.storage.places.remove(place.id, place.geohash);
-            console.log('Place deleted:', place.title);
+          await this.storage.removePlace(place);
+          console.log('Place deleted:', place.title);
 
-            // Notify parent to refresh map bookmarks
-            if (this.args.onBookmarkChange) {
-              this.args.onBookmarkChange();
-            }
+          // Notify parent to refresh map bookmarks
+          if (this.args.onBookmarkChange) {
+            this.args.onBookmarkChange();
+          }
 
-            // Update selection to the new saved place object
-            // This updates the local UI state immediately without a route refresh
-            if (this.args.onUpdate) {
-               // When deleting, we revert to a "fresh" object or just close.
-               // Since we close the sidebar below, we might not strictly need to update local state,
-               // but it's good practice.
-               // Reconstruct the "original" place without ID/Geohash/CreatedAt
-               const freshPlace = {
-                  ...place,
-                  id: undefined,
-                  geohash: undefined,
-                  createdAt: undefined
-               };
-               this.args.onUpdate(freshPlace);
-            }
+          // Update selection to the new saved place object
+          // This updates the local UI state immediately without a route refresh
+          if (this.args.onUpdate) {
+             // When deleting, we revert to a "fresh" object or just close.
+             // Since we close the sidebar below, we might not strictly need to update local state,
+             // but it's good practice.
+             // Reconstruct the "original" place without ID/Geohash/CreatedAt
+             const freshPlace = {
+                ...place,
+                id: undefined,
+                geohash: undefined,
+                createdAt: undefined
+             };
+             this.args.onUpdate(freshPlace);
+          }
 
-             // Also fire onSelect if it exists (for list view)
-            if (this.args.onSelect) {
-               // Similar logic for select if needed, but we usually close.
-               this.args.onSelect(null);
-            }
+           // Also fire onSelect if it exists (for list view)
+          if (this.args.onSelect) {
+             // Similar logic for select if needed, but we usually close.
+             this.args.onSelect(null);
+          }
 
-            // Close sidebar after delete
-            if (this.args.onClose) {
-              this.args.onClose();
-            }
-          } else {
-            alert('Cannot delete: Missing ID or Geohash');
+          // Close sidebar after delete
+          if (this.args.onClose) {
+            this.args.onClose();
           }
         } catch (e) {
           console.error('Failed to delete:', e);
@@ -115,7 +91,7 @@ export default class PlacesSidebar extends Component {
       };
 
       try {
-        const savedPlace = await this.storage.places.store(placeData);
+        const savedPlace = await this.storage.storePlace(placeData);
         console.log('Place saved:', placeData.title);
 
         // Notify parent to refresh map bookmarks
@@ -161,9 +137,9 @@ export default class PlacesSidebar extends Component {
 
       <div class="sidebar-content">
         {{#if @selectedPlace}}
-          <PlaceDetails 
-            @place={{@selectedPlace}} 
-            @onToggleSave={{this.toggleSave}} 
+          <PlaceDetails
+            @place={{@selectedPlace}}
+            @onToggleSave={{this.toggleSave}}
           />
         {{else}}
           {{#if @places}}

@@ -9,17 +9,14 @@ export default class PlaceRoute extends Route {
   async model(params) {
     const id = params.place_id;
 
-    // Check for explicit OSM prefixes
     if (id.startsWith('osm:node:') || id.startsWith('osm:way:')) {
       const [, type, osmId] = id.split(':');
       console.log(`Fetching explicit OSM ${type}:`, osmId);
       return this.loadOsmPlace(osmId, type);
     }
 
-    // Wait for storage sync before checking bookmarks
     await this.waitForSync();
 
-    // 1. Try to find in local bookmarks
     let bookmark = this.storage.findPlaceById(id);
 
     if (bookmark) {
@@ -27,9 +24,8 @@ export default class PlaceRoute extends Route {
       return bookmark;
     }
 
-    // 2. Fallback: Fetch from OSM (assuming generic ID or old format)
-    console.log('Not in bookmarks, fetching from OSM:', id);
-    return this.loadOsmPlace(id);
+    console.warn('Not in bookmarks:', id);
+    return null;
   }
 
   async waitForSync() {
