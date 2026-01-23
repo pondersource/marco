@@ -53,7 +53,7 @@ export default class PlaceTemplate extends Component {
         geohash: undefined
       };
     }
-    
+
     return model;
   }
 

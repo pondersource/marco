@@ -97,6 +97,10 @@ body {
 .place-details .place-description {
 }
 
+.place-details .actions {
+  padding-bottom: 0.3rem;
+}
+
 .btn-primary {
   background: #007bff;
   color: white;
@@ -149,11 +153,14 @@ body {
 }
 
 .meta-info {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
   font-size: 0.9rem;
   text-align: left;
+}
+
+.meta-info p:first-child {
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid #eee;
 }
 
 .meta-info p {
@@ -169,16 +176,11 @@ body {
 .meta-info a {
   color: #007bff;
   text-decoration: none;
+  padding-bottom: 4rem;
 }
 
 .meta-info a:hover {
   text-decoration: underline;
-}
-
-.meta-divider {
-  border: 0;
-  border-top: 1px dashed #ddd;
-  margin: 1rem 0;
 }
 
 /* Map Search Pulse Animation */

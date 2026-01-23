@@ -67,6 +67,11 @@ export default class PlaceDetails extends Component {
     return this.place.url || this.tags.website || this.tags['contact:website'];
   }
 
+  get websiteDomain() {
+    const url = new URL(this.website);
+    return url.hostname;
+  }
+
   get openingHours() {
     return this.tags.opening_hours;
   }
@@ -106,6 +111,10 @@ export default class PlaceDetails extends Component {
     return `https://www.openstreetmap.org/${type}/${id}`;
   }
 
+  get gmapsUrl() {
+    return `https://www.google.com/maps/search/?api=1&query=${this.name}&query=${this.place.lat},${this.place.lon}`;
+  }
+
   <template>
     <div class="place-details">
       <h3>{{this.name}}</h3>
@@ -129,6 +138,7 @@ export default class PlaceDetails extends Component {
       </div>
 
       <div class="meta-info">
+
         {{#if this.cuisine}}
           <p>
             <strong>Cuisine:</strong>
@@ -153,7 +163,7 @@ export default class PlaceDetails extends Component {
         {{#if this.website}}
           <p class="content-with-icon">
             <Icon @name="globe" @title="Website" />
-            <span><a href={{this.website}} target="_blank" rel="noopener noreferrer">Website</a></span>
+            <span><a href={{this.website}} target="_blank" rel="noopener noreferrer">{{this.websiteDomain}}</a></span>
           </p>
         {{/if}}
 
@@ -164,7 +174,8 @@ export default class PlaceDetails extends Component {
           </p>
         {{/if}}
 
-        <hr class="meta-divider">
+      </div>
+      <div class="meta-info">
 
         {{#if this.address}}
           <p class="content-with-icon">
@@ -192,6 +203,16 @@ export default class PlaceDetails extends Component {
             </span>
           </p>
         {{/if}}
+
+        <p class="content-with-icon">
+          <Icon @name="map" @title="OSM ID" />
+          <span>
+            <a href={{this.gmapsUrl}} target="_blank" rel="noopener noreferrer">
+              Google Maps
+            </a>
+          </span>
+        </p>
+
       </div>
     </div>
   </template>

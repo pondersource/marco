@@ -124,7 +124,6 @@ export default class PlacesSidebar extends Component {
             class="back-btn"
             {{on "click" this.clearSelection}}
           >←</button>
-          <h2>Details</h2>
         {{else}}
           <h2>Nearby Places</h2>
         {{/if}}
