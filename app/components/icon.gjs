@@ -1,6 +1,8 @@
 import Component from '@glimmer/component';
 import { htmlSafe } from '@ember/template';
 
+import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
+import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
 import globe from 'feather-icons/dist/icons/globe.svg?raw';
 import home from 'feather-icons/dist/icons/home.svg?raw';
@@ -8,22 +10,22 @@ import map from 'feather-icons/dist/icons/map.svg?raw';
 import mapPin from 'feather-icons/dist/icons/map-pin.svg?raw';
 import navigation from 'feather-icons/dist/icons/navigation.svg?raw';
 import phone from 'feather-icons/dist/icons/phone.svg?raw';
-import user from 'feather-icons/dist/icons/user.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
-import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
+import user from 'feather-icons/dist/icons/user.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
 
 const ICONS = {
+  'arrow-left': arrowLeft,
+  bookmark,
   clock,
   globe,
   home,
   map,
-  mapPin,
+  'map-pin': mapPin,
   navigation,
   phone,
-  user,
   settings,
-  'arrow-left': arrowLeft,
+  user,
   x
 };
 

@@ -130,10 +130,11 @@ export default class PlaceDetails extends Component {
       <div class="actions">
         <button
           type="button"
-          class={{if this.place.createdAt "btn-secondary" "btn-primary"}}
+          class={{if this.place.createdAt "btn btn-secondary" "btn btn-outline"}}
           {{on "click" (fn @onToggleSave this.place)}}
         >
-          {{if this.place.createdAt "Saved ✓" "Save"}}
+          <Icon @name="bookmark" @color={{if this.place.createdAt "currentColor" "#007bff"}} />
+          {{if this.place.createdAt "Saved" "Save"}}
         </button>
       </div>
 
@@ -185,7 +186,7 @@ export default class PlaceDetails extends Component {
         {{/if}}
 
         <p class="content-with-icon">
-          <Icon @name="mapPin" @title="Geo link" />
+          <Icon @name="map-pin" @title="Geo link" />
           <span>
             <a href={{this.geoLink}} target="_blank" rel="noopener noreferrer">
               {{this.visibleGeoLink}}
