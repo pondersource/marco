@@ -62,20 +62,26 @@ body {
   padding: 1rem;
 }
 
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0 0.5rem;
-}
-
 .back-btn {
   background: none;
   border: none;
-  font-size: 1.2rem;
   cursor: pointer;
-  margin-right: 0.5rem;
+  padding: 0 0.5rem;
+  margin-left: -0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  margin-right: -0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .place-details {

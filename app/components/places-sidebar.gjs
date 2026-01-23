@@ -5,6 +5,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import or from 'ember-truth-helpers/helpers/or';
 import PlaceDetails from './place-details';
+import Icon from './icon';
 
 export default class PlacesSidebar extends Component {
   @service storage;
@@ -123,7 +124,7 @@ export default class PlacesSidebar extends Component {
             type="button"
             class="back-btn"
             {{on "click" this.clearSelection}}
-          >←</button>
+          ><Icon @name="arrow-left" @size={{20}} @color="#333" /></button>
         {{else}}
           <h2>Nearby Places</h2>
         {{/if}}
@@ -131,7 +132,7 @@ export default class PlacesSidebar extends Component {
           type="button"
           class="close-btn"
           {{on "click" @onClose}}
-        >×</button>
+        ><Icon @name="x" @size={{20}} @color="#333" /></button>
       </div>
 
       <div class="sidebar-content">

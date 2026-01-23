@@ -10,6 +10,8 @@ import navigation from 'feather-icons/dist/icons/navigation.svg?raw';
 import phone from 'feather-icons/dist/icons/phone.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
+import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
+import x from 'feather-icons/dist/icons/x.svg?raw';
 
 const ICONS = {
   clock,
@@ -20,7 +22,9 @@ const ICONS = {
   navigation,
   phone,
   user,
-  settings
+  settings,
+  'arrow-left': arrowLeft,
+  x
 };
 
 export default class IconComponent extends Component {
