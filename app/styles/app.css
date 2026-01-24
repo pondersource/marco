@@ -8,6 +8,7 @@ body {
 
 body {
   margin: 0;
+  font-family: "Noto Serif", serif;
 }
 
 #root,
@@ -199,9 +200,9 @@ body {
   .settings-pane.sidebar {
     width: 100%;
     right: 0;
-    border-radius: 0; /* Full screen, no rounded corners needed */
-    height: 100%; /* Ensure full height */
-    top: 0; /* Start from top */
+    border-radius: 16px 16px 0 0;
+    height: 66vh;
+    top: auto;
     bottom: 0;
   }
 }
@@ -264,6 +265,19 @@ body {
   justify-content: flex-end;
 }
 
+.settings-section {
+  margin-bottom: 2rem;
+}
+
+.settings-section h3 {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #666;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .btn-full {
   width: 100%;
 }
@@ -281,6 +295,27 @@ body {
 .btn-primary:hover {
   background: #0069d9;
 }
+
+.link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.link-list li {
+  margin-bottom: 0.5rem;
+}
+
+.link-list a {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.link-list a:hover {
+  text-decoration: underline;
+}
+
 .back-btn {
   background: none;
   border: none;

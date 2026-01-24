@@ -1,19 +1,49 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import Icon from '#components/icon';
+import { service } from '@ember/service';
+import { action } from '@ember/object';
 
 export default class SettingsPane extends Component {
   <template>
     <div class="sidebar settings-pane">
       <div class="sidebar-header">
-        <h2>Settings</h2>
+        <h2>Marco</h2>
         <button type="button" class="close-btn" {{on "click" @onClose}}>
           <Icon @name="x" @size={{20}} @color="#333" />
         </button>
       </div>
 
       <div class="sidebar-content">
-        <p>Settings content placeholder...</p>
+        <section class="settings-section">
+          <h3>Settings</h3>
+        </section>
+        <section class="settings-section">
+          <h3>About</h3>
+          <p>
+            <strong>Marco</strong> (as in <a
+            href="https://en.wikipedia.org/wiki/Marco_Polo"
+            target="_blank">Marco Polo</a>) is an unhosted maps application
+            that respects your privacy and choices.
+          </p>
+          <p>
+            Connect your own <a href="https://remotestorage.io/"
+              target="_blank">remote storage</a> to sync place bookmarks across
+            devices.
+          </p>
+          <ul class="link-list">
+            <li>
+              <a href="https://gitea.kosmos.org/raucao/marco" target="_blank">
+                Source Code
+              </a> (<a href="https://en.wikipedia.org/wiki/GNU_Affero_General_Public_License" target="_blank">AGPL</a>)
+            </li>
+            <li>
+              <a href="https://openstreetmap.org/copyright" target="_blank">
+                Map Data © OpenStreetMap
+              </a>
+            </li>
+          </ul>
+        </section>
       </div>
     </div>
   </template>
