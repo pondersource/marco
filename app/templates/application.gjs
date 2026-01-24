@@ -8,7 +8,7 @@ import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { eq } from 'ember-truth-helpers';
-import { and } from 'ember-truth-helpers';
+import { and, or } from 'ember-truth-helpers';
 import { on } from '@ember/modifier';
 
 export default class ApplicationComponent extends Component {
@@ -75,6 +75,15 @@ export default class ApplicationComponent extends Component {
   }
 
   @action
+  handleOutsideClick() {
+    if (this.isSettingsOpen) {
+      this.closeSettings();
+    } else {
+      this.closeSidebar();
+    }
+  }
+
+  @action
   closeSidebar() {
     this.nearbyPlaces = null;
     this.router.transitionTo('index');
@@ -105,8 +114,8 @@ export default class ApplicationComponent extends Component {
 
     <Map
       @onPlacesFound={{this.showPlaces}}
-      @isSidebarOpen={{this.isSidebarOpen}}
-      @onOutsideClick={{this.closeSidebar}}
+      @isSidebarOpen={{or this.isSidebarOpen this.isSettingsOpen}}
+      @onOutsideClick={{this.handleOutsideClick}}
     />
 
     {{#if (and (eq this.router.currentRouteName "index") this.nearbyPlaces)}}

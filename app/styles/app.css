@@ -197,6 +197,10 @@ body {
   flex-direction: column;
 }
 
+.settings-pane.sidebar {
+  z-index: 3200; /* Higher than Places Sidebar (3100) */
+}
+
 /* Settings Pane Mobile Overrides */
 @media (width <= 768px) {
   .settings-pane.sidebar {
