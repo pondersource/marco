@@ -1,19 +1,25 @@
 import Service from '@ember/service';
 import RemoteStorage from 'remotestoragejs';
 import Places from '@remotestorage/module-places';
+import Widget from 'remotestorage-widget';
 import { tracked } from '@glimmer/tracking';
 import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
+import { action } from '@ember/object';
 import { debounce } from '@ember/runloop';
 import Geohash from 'latlon-geohash';
 
 export default class StorageService extends Service {
   rs;
+  widget;
   @tracked placesInView = [];
   @tracked savedPlaces = [];
   @tracked loadedPrefixes = [];
   @tracked currentBbox = null;
   @tracked version = 0; // Shared version tracker for bookmarks
   @tracked initialSyncDone = false;
+  @tracked connected = false;
+  @tracked userAddress = null;
+  @tracked isWidgetOpen = false;
 
   constructor() {
     super(...arguments);
@@ -29,14 +35,38 @@ export default class StorageService extends Service {
 
     window.remoteStorage = this.rs;
 
-    // const widget = new Widget(this.rs);
-    // widget.attach();
+    this.widget = new Widget(this.rs, {
+      leaveOpen: true,
+      skipInitial: true,
+    });
+    // We don't attach immediately; we'll attach when the user clicks Connect
 
     this.rs.on('ready', () => {
       // console.debug('[rs] client ready');
     });
 
-    this.rs.on('sync-done', (result) => {
+    this.rs.on('connected', () => {
+      console.debug('Remote storage connected');
+      this.connected = true;
+      this.userAddress = this.rs.remote.userAddress;
+
+      // Close widget after successful connection (respecting autoCloseAfter)
+      setTimeout(() => {
+        this.isWidgetOpen = false;
+      }, 1500);
+    });
+
+    this.rs.on('disconnected', () => {
+      console.debug('Remote storage disconnected');
+      this.connected = false;
+      this.userAddress = null;
+      this.placesInView = [];
+      this.savedPlaces = [];
+      this.loadedPrefixes = [];
+      this.initialSyncDone = false;
+    });
+
+    this.rs.on('sync-done', () => {
       // console.debug('[rs] sync done:', result);
       if (!this.initialSyncDone) {
         this.initialSyncDone = true;
@@ -157,7 +187,7 @@ export default class StorageService extends Service {
               // If the hash is in the set of reloaded prefixes, we discard the old version
               // (because the 'places' array contains the authoritative new state for this prefix)
               return !prefixSet.has(hash);
-            } catch (e) {
+            } catch {
               return true; // Keep malformed/unknown places safe
             }
           });
@@ -198,6 +228,28 @@ export default class StorageService extends Service {
 
   async removePlace(place) {
     await this.places.remove(place.id, place.geohash);
-    this.savedPlaces = this.savedPlaces.filter(p => p.id !== place.id);
+    this.savedPlaces = this.savedPlaces.filter((p) => p.id !== place.id);
+  }
+
+  @action
+  connect() {
+    this.isWidgetOpen = true;
+
+    // Check if widget is already attached
+    if (!document.querySelector('.rs-widget')) {
+      // Attach to our specific container
+      this.widget.attach('rs-widget-container');
+    }
+  }
+
+  @action
+  closeWidget() {
+    this.isWidgetOpen = false;
+  }
+
+  @action
+  disconnect() {
+    this.rs.disconnect();
+    this.isWidgetOpen = false;
   }
 }

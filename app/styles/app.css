@@ -22,12 +22,161 @@ body {
   outline: none; /* Prevent focus outline on click */
 }
 
-/* Ensure RS widget is above the map */
-#remotestorage-widget {
+/* Ensure RS widget is above the map but potentially hidden initially if needed */
+#rs-widget-container {
   position: absolute;
-  top: 10px;
+  top: 60px; /* Below header */
   right: 10px;
-  z-index: 1000;
+  z-index: 4000;
+  display: none; /* Hidden by default */
+}
+
+#rs-widget-container.visible {
+  display: block;
+}
+
+.rs-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3999; /* Below widget container but above everything else */
+  /* background: rgba(0,0,0,0.2); Optional: dim background */
+}
+
+/* App Header */
+.app-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 3000; /* Above sidebar (2000) and map */
+  pointer-events: none; /* Let clicks pass through to map where transparent */
+}
+
+.header-left,
+.header-right {
+  pointer-events: auto; /* Re-enable clicks for buttons */
+}
+
+.icon-btn {
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+.user-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.user-avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  background: #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* User Menu Popover */
+.user-menu-container {
+  position: relative;
+}
+
+.user-menu-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  width: 280px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 1rem;
+  z-index: 3001;
+}
+
+.menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3000; /* Below popover but above everything else */
+  /* background: rgba(0,0,0,0.1); Optional dimming */
+}
+
+.user-status {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.account-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+.account-item.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  padding: 0;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.text-primary {
+  color: #007bff;
+}
+.text-danger {
+  color: #dc3545;
+}
+
+.btn-text:hover {
+  text-decoration: underline;
 }
 
 /* Sidebar Styles */

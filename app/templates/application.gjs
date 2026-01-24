@@ -2,11 +2,13 @@ import Component from '@glimmer/component';
 import { pageTitle } from 'ember-page-title';
 import Map from '#components/map';
 import PlacesSidebar from '#components/places-sidebar';
+import AppHeader from '#components/app-header';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { eq } from 'ember-truth-helpers';
 import { and } from 'ember-truth-helpers';
+import { on } from '@ember/modifier';
 
 export default class ApplicationComponent extends Component {
   @service storage;
@@ -73,6 +75,21 @@ export default class ApplicationComponent extends Component {
 
   <template>
     {{pageTitle "M/\RCO"}}
+
+    <AppHeader />
+
+    <div
+      id="rs-widget-container"
+      class={{if this.storage.isWidgetOpen "visible"}}
+    ></div>
+
+    {{#if this.storage.isWidgetOpen}}
+      <div
+        class="rs-backdrop"
+        role="button"
+        {{on "click" this.storage.closeWidget}}
+      ></div>
+    {{/if}}
 
     <Map
       @onPlacesFound={{this.showPlaces}}

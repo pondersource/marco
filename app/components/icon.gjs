@@ -2,31 +2,43 @@ import Component from '@glimmer/component';
 import { htmlSafe } from '@ember/template';
 
 import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
+import activity from 'feather-icons/dist/icons/activity.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
 import globe from 'feather-icons/dist/icons/globe.svg?raw';
 import home from 'feather-icons/dist/icons/home.svg?raw';
+import logIn from 'feather-icons/dist/icons/log-in.svg?raw';
+import logOut from 'feather-icons/dist/icons/log-out.svg?raw';
 import map from 'feather-icons/dist/icons/map.svg?raw';
 import mapPin from 'feather-icons/dist/icons/map-pin.svg?raw';
+import menu from 'feather-icons/dist/icons/menu.svg?raw';
 import navigation from 'feather-icons/dist/icons/navigation.svg?raw';
 import phone from 'feather-icons/dist/icons/phone.svg?raw';
+import server from 'feather-icons/dist/icons/server.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
+import zap from 'feather-icons/dist/icons/zap.svg?raw';
 
 const ICONS = {
   'arrow-left': arrowLeft,
+  activity,
   bookmark,
   clock,
   globe,
   home,
+  'log-in': logIn,
+  'log-out': logOut,
   map,
   'map-pin': mapPin,
+  menu,
   navigation,
   phone,
+  server,
   settings,
   user,
-  x
+  x,
+  zap,
 };
 
 export default class IconComponent extends Component {
