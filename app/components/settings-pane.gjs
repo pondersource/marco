@@ -19,6 +19,9 @@ export default class SettingsPane extends Component {
       <div class="sidebar-content">
         <section class="settings-section">
           <h3>Settings</h3>
+          <p>
+            <em>App settings/preferences go here.</em>
+          </p>
         </section>
         <section class="settings-section">
           <h3>About</h3>
