@@ -280,6 +280,10 @@ body {
   letter-spacing: 0.5px;
 }
 
+.settings-section .form-group {
+  margin-top: 1rem;
+}
+
 .btn-full {
   width: 100%;
 }

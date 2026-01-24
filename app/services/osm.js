@@ -1,6 +1,8 @@
-import Service from '@ember/service';
+import Service, { service } from '@ember/service';
 
 export default class OsmService extends Service {
+  @service settings;
+
   controller = null;
 
   async getNearbyPois(lat, lon, radius = 50) {
@@ -23,10 +25,7 @@ export default class OsmService extends Service {
 out center;
     `.trim();
 
-    const url = `https://overpass.bke.ro/api/interpreter?data=${encodeURIComponent(
-      // const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
-      query
-    )}`;
+    const url = `${this.settings.overpassApi}?data=${encodeURIComponent(query)}`;
 
     try {
       const res = await this.fetchWithRetry(url, { signal });
@@ -101,10 +100,7 @@ out center;
       `.trim();
     }
 
-    const url = `https://overpass.bke.ro/api/interpreter?data=${encodeURIComponent(
-      // const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
-      query
-    )}`;
+    const url = `${this.settings.overpassApi}?data=${encodeURIComponent(query)}`;
     const res = await this.fetchWithRetry(url);
     if (!res.ok) throw new Error('Overpass request failed');
     const data = await res.json();

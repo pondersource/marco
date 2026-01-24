@@ -1,10 +1,16 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
+import { service } from '@ember/service';
+import { action } from '@ember/object';
 import Icon from '#components/icon';
+import eq from 'ember-truth-helpers/helpers/eq';
 
 export default class SettingsPane extends Component {
-  constructor() {
-    super(...arguments);
+  @service settings;
+
+  @action
+  updateApi(event) {
+    this.settings.updateOverpassApi(event.target.value);
   }
 
   <template>
@@ -19,9 +25,23 @@ export default class SettingsPane extends Component {
       <div class="sidebar-content">
         <section class="settings-section">
           <h3>Settings</h3>
-          <p>
-            <em>App settings/preferences go here.</em>
-          </p>
+          <div class="form-group">
+            <label for="overpass-api">Overpass API Provider</label>
+            <select
+              id="overpass-api"
+              class="form-control"
+              {{on "change" this.updateApi}}
+            >
+              {{#each this.settings.overpassApis as |api|}}
+                <option
+                  value={{api.url}}
+                  selected={{if (eq api.url this.settings.overpassApi) "selected"}}
+                >
+                  {{api.name}}
+                </option>
+              {{/each}}
+            </select>
+          </div>
         </section>
         <section class="settings-section">
           <h3>About</h3>
