@@ -413,13 +413,28 @@ body {
 
 /* Locate Control */
 .ol-control.ol-locate {
-  top: 5em; /* Position below zoom controls (usually at .5em or similar) */
+  top: auto;
+  bottom: 2.5em;
   right: 0.5em;
   left: auto;
 }
 
 .ol-touch .ol-control.ol-locate {
-  top: 5.5em; /* Adjust for touch devices where controls might be larger */
+  top: auto;
+  bottom: 3.5em;
+}
+
+/* Rotate Control */
+.ol-rotate {
+  top: auto;
+  bottom: 5em;
+  right: 0.5em;
+  left: auto;
+}
+
+.ol-touch .ol-rotate {
+  top: auto;
+  bottom: 6em;
 }
 
 span.icon {
