@@ -23,7 +23,12 @@ export default class AppHeaderComponent extends Component {
   <template>
     <header class="app-header">
       <div class="header-left">
-        <button class="icon-btn" type="button" aria-label="Menu">
+        <button
+          class="icon-btn"
+          type="button"
+          aria-label="Menu"
+          {{on "click" @onToggleMenu}}
+        >
           <Icon @name="menu" @size={{24}} @color="#333" />
         </button>
       </div>

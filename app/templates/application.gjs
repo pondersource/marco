@@ -3,6 +3,7 @@ import { pageTitle } from 'ember-page-title';
 import Map from '#components/map';
 import PlacesSidebar from '#components/places-sidebar';
 import AppHeader from '#components/app-header';
+import SettingsPane from '#components/settings-pane';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
@@ -15,6 +16,7 @@ export default class ApplicationComponent extends Component {
   @service router;
 
   @tracked nearbyPlaces = null;
+  @tracked isSettingsOpen = false;
   // @tracked bookmarksVersion = 0; // Moved to storage service
 
   get isSidebarOpen() {
@@ -55,6 +57,16 @@ export default class ApplicationComponent extends Component {
   }
 
   @action
+  toggleSettings() {
+    this.isSettingsOpen = !this.isSettingsOpen;
+  }
+
+  @action
+  closeSettings() {
+    this.isSettingsOpen = false;
+  }
+
+  @action
   selectFromList(place) {
     if (place) {
       // Optimize: Pass full object to avoid fetch
@@ -76,7 +88,7 @@ export default class ApplicationComponent extends Component {
   <template>
     {{pageTitle "M/\RCO"}}
 
-    <AppHeader />
+    <AppHeader @onToggleMenu={{this.toggleSettings}} />
 
     <div
       id="rs-widget-container"
@@ -103,6 +115,10 @@ export default class ApplicationComponent extends Component {
         @onSelect={{this.selectFromList}}
         @onClose={{this.closeSidebar}}
       />
+    {{/if}}
+
+    {{#if this.isSettingsOpen}}
+      <SettingsPane @onClose={{this.closeSettings}} />
     {{/if}}
 
     {{outlet}}

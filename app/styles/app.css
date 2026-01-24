@@ -188,10 +188,22 @@ body {
   width: 300px;
   background: white;
   color: #333;
-  z-index: 2000;
+  z-index: 3100; /* Higher than Header (3000) */
   box-shadow: 2px 0 5px rgb(0 0 0 / 10%);
   display: flex;
   flex-direction: column;
+}
+
+/* Settings Pane Mobile Overrides */
+@media (max-width: 768px) {
+  .settings-pane.sidebar {
+    width: 100%;
+    right: 0;
+    border-radius: 0; /* Full screen, no rounded corners needed */
+    height: 100%; /* Ensure full height */
+    top: 0; /* Start from top */
+    bottom: 0;
+  }
 }
 
 .sidebar-header {
