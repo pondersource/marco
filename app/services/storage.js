@@ -5,7 +5,7 @@ import Widget from 'remotestorage-widget';
 import { tracked } from '@glimmer/tracking';
 import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
 import { action } from '@ember/object';
-import { debounce } from '@ember/runloop';
+import { debounceTask } from 'ember-lifeline';
 import Geohash from 'latlon-geohash';
 
 export default class StorageService extends Service {
@@ -70,7 +70,7 @@ export default class StorageService extends Service {
     this.rs.scope('/places/').on('change', (event) => {
       // console.debug(event);
       this.handlePlaceChange(event);
-      debounce(this, this.reloadCurrentView, 200);
+      debounceTask(this, 'reloadCurrentView', 200);
     });
   }
 
@@ -120,7 +120,7 @@ export default class StorageService extends Service {
 
   notifyChange() {
     this.version++;
-    debounce(this, this.reloadCurrentView, 200);
+    debounceTask(this, 'reloadCurrentView', 200);
   }
 
   reloadCurrentView() {

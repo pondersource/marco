@@ -41,6 +41,7 @@ export function getGeohashPrefixesInBbox(bbox) {
       try {
         const hash = Geohash.encode(cLat, cLon, 4);
         prefixes.add(hash);
+        // eslint-disable-next-line no-unused-vars
       } catch (e) {
         // Ignore invalid coords if any
       }
@@ -50,16 +51,28 @@ export function getGeohashPrefixesInBbox(bbox) {
   // Ensure corners are definitely included (floating point steps might miss slightly)
   try {
     prefixes.add(Geohash.encode(minLat, minLon, 4));
-  } catch (e) {}
+    // eslint-disable-next-line no-unused-vars
+  } catch (e) {
+    /* ignore */
+  }
   try {
     prefixes.add(Geohash.encode(maxLat, maxLon, 4));
-  } catch (e) {}
+    // eslint-disable-next-line no-unused-vars
+  } catch (e) {
+    /* ignore */
+  }
   try {
     prefixes.add(Geohash.encode(minLat, maxLon, 4));
-  } catch (e) {}
+    // eslint-disable-next-line no-unused-vars
+  } catch (e) {
+    /* ignore */
+  }
   try {
     prefixes.add(Geohash.encode(maxLat, minLon, 4));
-  } catch (e) {}
+    // eslint-disable-next-line no-unused-vars
+  } catch (e) {
+    /* ignore */
+  }
 
   return Array.from(prefixes);
 }

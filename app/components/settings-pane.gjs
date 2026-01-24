@@ -1,10 +1,12 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import Icon from '#components/icon';
-import { service } from '@ember/service';
-import { action } from '@ember/object';
 
 export default class SettingsPane extends Component {
+  constructor() {
+    super(...arguments);
+  }
+
   <template>
     <div class="sidebar settings-pane">
       <div class="sidebar-header">

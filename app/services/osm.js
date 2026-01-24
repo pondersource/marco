@@ -59,6 +59,7 @@ out center;
 
   async fetchWithRetry(url, options = {}, retries = 3) {
     try {
+      // eslint-disable-next-line warp-drive/no-external-request-patterns
       const res = await fetch(url, options);
 
       if (!res.ok && retries > 0 && [502, 503, 504, 429].includes(res.status)) {

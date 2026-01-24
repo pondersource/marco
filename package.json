@@ -93,5 +93,8 @@
   },
   "ember": {
     "edition": "octane"
+  },
+  "dependencies": {
+    "ember-lifeline": "^7.0.0"
   }
 }

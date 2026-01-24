@@ -16,7 +16,6 @@ import Geolocation from 'ol/Geolocation.js';
 import { Style, Circle, Fill, Stroke } from 'ol/style.js';
 import { apply } from 'ol-mapbox-style';
 import { getDistance } from '../utils/geo';
-import Icon from '../components/icon';
 
 export default class MapComponent extends Component {
   @service osm;
@@ -213,7 +212,7 @@ export default class MapComponent extends Component {
           geolocation.un('change:position', zoomToLocation);
           locateListenerKey = null;
         }
-      } catch (e) {
+      } catch {
         /* ignore */
       }
 
