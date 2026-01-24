@@ -694,7 +694,6 @@ export default class MapComponent extends Component {
       {{this.setupMap}}
       {{this.updateBookmarks}}
       {{this.updateSelectedPin}}
-      style="position: absolute; inset: 0;"
     ></div>
   </template>
 }

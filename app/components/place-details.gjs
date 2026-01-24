@@ -173,8 +173,9 @@ export default class PlaceDetails extends Component {
       {{#if this.isEditing}}
         <form class="edit-form" {{on "submit" this.saveChanges}}>
           <div class="form-group">
-            <label>Title</label>
+            <label for="edit-title">Title</label>
             <input
+              id="edit-title"
               type="text"
               value={{this.editTitle}}
               {{on "input" this.updateTitle}}
@@ -182,8 +183,9 @@ export default class PlaceDetails extends Component {
             />
           </div>
           <div class="form-group">
-            <label>Description</label>
+            <label for="edit-desc">Description</label>
             <textarea
+              id="edit-desc"
               value={{this.editDescription}}
               {{on "input" this.updateDescription}}
               class="form-control"

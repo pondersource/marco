@@ -8,7 +8,7 @@ body {
 
 body {
   margin: 0;
-  font-family: "Noto Serif", serif;
+  font-family: 'Noto Serif', serif;
 }
 
 #root,
@@ -21,6 +21,8 @@ body {
   background: #f8f9fa;
   -webkit-tap-highlight-color: transparent;
   outline: none; /* Prevent focus outline on click */
+  position: absolute;
+  inset: 0;
 }
 
 /* Ensure RS widget is above the map but potentially hidden initially if needed */
