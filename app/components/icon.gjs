@@ -5,6 +5,7 @@ import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
 import activity from 'feather-icons/dist/icons/activity.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
+import edit from 'feather-icons/dist/icons/edit.svg?raw';
 import globe from 'feather-icons/dist/icons/globe.svg?raw';
 import home from 'feather-icons/dist/icons/home.svg?raw';
 import logIn from 'feather-icons/dist/icons/log-in.svg?raw';
@@ -25,6 +26,7 @@ const ICONS = {
   activity,
   bookmark,
   clock,
+  edit,
   globe,
   home,
   'log-in': logIn,

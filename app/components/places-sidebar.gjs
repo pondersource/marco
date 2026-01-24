@@ -117,6 +117,27 @@ export default class PlacesSidebar extends Component {
     }
   }
 
+  @action
+  async updateBookmark(updatedPlace) {
+    try {
+      const savedPlace = await this.storage.updatePlace(updatedPlace);
+      console.log('Place updated:', savedPlace.title);
+      
+      // Notify parent to refresh map/lists
+      if (this.args.onBookmarkChange) {
+        this.args.onBookmarkChange();
+      }
+
+      // Update local view
+      if (this.args.onUpdate) {
+        this.args.onUpdate(savedPlace);
+      }
+    } catch (e) {
+      console.error('Failed to update place:', e);
+      alert('Failed to update place: ' + e.message);
+    }
+  }
+
   <template>
     <div class="sidebar">
       <div class="sidebar-header">
@@ -141,6 +162,7 @@ export default class PlacesSidebar extends Component {
           <PlaceDetails
             @place={{@selectedPlace}}
             @onToggleSave={{this.toggleSave}}
+            @onSave={{this.updateBookmark}}
           />
         {{else}}
           {{#if @places}}

@@ -30,7 +30,6 @@ export default class StorageService extends Service {
     });
 
     this.rs.access.claim('places', 'rw');
-    // Caching strategy:
     this.rs.caching.enable('/places/');
 
     window.remoteStorage = this.rs;
@@ -49,11 +48,6 @@ export default class StorageService extends Service {
       console.debug('Remote storage connected');
       this.connected = true;
       this.userAddress = this.rs.remote.userAddress;
-
-      // Close widget after successful connection (respecting autoCloseAfter)
-      setTimeout(() => {
-        this.isWidgetOpen = false;
-      }, 1500);
     });
 
     this.rs.on('disconnected', () => {
@@ -222,7 +216,23 @@ export default class StorageService extends Service {
 
   async storePlace(placeData) {
     const savedPlace = await this.places.store(placeData);
-    this.savedPlaces = [...this.savedPlaces, savedPlace];
+    // Only append if not already there (handlePlaceChange might also fire)
+    if (!this.savedPlaces.some((p) => p.id === savedPlace.id)) {
+      this.savedPlaces = [...this.savedPlaces, savedPlace];
+    }
+    return savedPlace;
+  }
+
+  async updatePlace(placeData) {
+    const savedPlace = await this.places.store(placeData);
+
+    // Update local list
+    const index = this.savedPlaces.findIndex((p) => p.id === savedPlace.id);
+    if (index !== -1) {
+      const newPlaces = [...this.savedPlaces];
+      newPlaces[index] = savedPlace;
+      this.savedPlaces = newPlaces;
+    }
     return savedPlace;
   }
 

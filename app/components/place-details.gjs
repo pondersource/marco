@@ -4,7 +4,19 @@ import { on } from '@ember/modifier';
 import capitalize from '../helpers/capitalize';
 import Icon from '../components/icon';
 
+import { tracked } from '@glimmer/tracking';
+import { action } from '@ember/object';
+
 export default class PlaceDetails extends Component {
+  @tracked isEditing = false;
+  @tracked editTitle = '';
+  @tracked editDescription = '';
+
+  constructor() {
+    super(...arguments);
+    this.resetEditFields();
+  }
+
   get place() {
     return this.args.place || {};
   }
@@ -20,6 +32,47 @@ export default class PlaceDetails extends Component {
       this.tags['name:en'] ||
       'Unnamed Place'
     );
+  }
+
+  @action
+  resetEditFields() {
+    this.editTitle = this.name;
+    this.editDescription = this.place.description || '';
+  }
+
+  @action
+  startEditing() {
+    if (!this.place.createdAt) return; // Only allow editing saved places
+    this.resetEditFields();
+    this.isEditing = true;
+  }
+
+  @action
+  cancelEditing() {
+    this.isEditing = false;
+  }
+
+  @action
+  async saveChanges(event) {
+    event.preventDefault();
+    if (this.args.onSave) {
+      await this.args.onSave({
+        ...this.place,
+        title: this.editTitle,
+        description: this.editDescription,
+      });
+    }
+    this.isEditing = false;
+  }
+
+  @action
+  updateTitle(e) {
+    this.editTitle = e.target.value;
+  }
+
+  @action
+  updateDescription(e) {
+    this.editDescription = e.target.value;
   }
 
   get type() {
@@ -117,14 +170,41 @@ export default class PlaceDetails extends Component {
 
   <template>
     <div class="place-details">
-      <h3>{{this.name}}</h3>
-      <p class="place-type">
-        {{this.type}}
-      </p>
-      {{#if this.place.description}}
-        <p class="place-description">
-          {{this.place.description}}
+      {{#if this.isEditing}}
+        <form class="edit-form" {{on "submit" this.saveChanges}}>
+          <div class="form-group">
+            <label>Title</label>
+            <input
+              type="text"
+              value={{this.editTitle}}
+              {{on "input" this.updateTitle}}
+              class="form-control"
+            />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea
+              value={{this.editDescription}}
+              {{on "input" this.updateDescription}}
+              class="form-control"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="edit-actions">
+            <button type="submit" class="btn btn-blue btn-sm">Save</button>
+            <button type="button" class="btn btn-outline btn-sm" {{on "click" this.cancelEditing}}>Cancel</button>
+          </div>
+        </form>
+      {{else}}
+        <h3>{{this.name}}</h3>
+        <p class="place-type">
+          {{this.type}}
         </p>
+        {{#if this.place.description}}
+          <p class="place-description">
+            {{this.place.description}}
+          </p>
+        {{/if}}
       {{/if}}
 
       <div class="actions">
@@ -143,6 +223,18 @@ export default class PlaceDetails extends Component {
           />
           {{if this.place.createdAt "Saved" "Save"}}
         </button>
+
+        {{#if this.place.createdAt}}
+          <button
+            type="button"
+            class="btn btn-outline"
+            title="Edit"
+            {{on "click" this.startEditing}}
+          >
+            <Icon @name="edit" @color="#007bff" />
+            Edit
+          </button>
+        {{/if}}
       </div>
 
       <div class="meta-info">
