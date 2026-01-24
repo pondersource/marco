@@ -50,23 +50,23 @@ export default class PlacesSidebar extends Component {
           // Update selection to the new saved place object
           // This updates the local UI state immediately without a route refresh
           if (this.args.onUpdate) {
-             // When deleting, we revert to a "fresh" object or just close.
-             // Since we close the sidebar below, we might not strictly need to update local state,
-             // but it's good practice.
-             // Reconstruct the "original" place without ID/Geohash/CreatedAt
-             const freshPlace = {
-                ...place,
-                id: undefined,
-                geohash: undefined,
-                createdAt: undefined
-             };
-             this.args.onUpdate(freshPlace);
+            // When deleting, we revert to a "fresh" object or just close.
+            // Since we close the sidebar below, we might not strictly need to update local state,
+            // but it's good practice.
+            // Reconstruct the "original" place without ID/Geohash/CreatedAt
+            const freshPlace = {
+              ...place,
+              id: undefined,
+              geohash: undefined,
+              createdAt: undefined,
+            };
+            this.args.onUpdate(freshPlace);
           }
 
-           // Also fire onSelect if it exists (for list view)
+          // Also fire onSelect if it exists (for list view)
           if (this.args.onSelect) {
-             // Similar logic for select if needed, but we usually close.
-             this.args.onSelect(null);
+            // Similar logic for select if needed, but we usually close.
+            this.args.onSelect(null);
           }
 
           // Close sidebar after delete
@@ -81,7 +81,8 @@ export default class PlacesSidebar extends Component {
     } else {
       // It's a fresh POI -> Save it
       const placeData = {
-        title: place.osmTags.name || place.osmTags['name:en'] || 'Untitled Place',
+        title:
+          place.osmTags.name || place.osmTags['name:en'] || 'Untitled Place',
         lat: place.lat,
         lon: place.lon,
         tags: [],
@@ -128,11 +129,11 @@ export default class PlacesSidebar extends Component {
         {{else}}
           <h2>Nearby Places</h2>
         {{/if}}
-        <button
-          type="button"
-          class="close-btn"
-          {{on "click" @onClose}}
-        ><Icon @name="x" @size={{20}} @color="#333" /></button>
+        <button type="button" class="close-btn" {{on "click" @onClose}}><Icon
+            @name="x"
+            @size={{20}}
+            @color="#333"
+          /></button>
       </div>
 
       <div class="sidebar-content">

@@ -38,8 +38,11 @@ export default class PlaceTemplate extends Component {
 
     // 3. If not saved, check our local "optimistic" state (from handleUpdate)
     // This handles the "unsaved" state immediately after deletion before any other sync
-    if (this.localPlace && (this.localPlace.osmId === id || this.localPlace.id === id)) {
-       return this.localPlace;
+    if (
+      this.localPlace &&
+      (this.localPlace.osmId === id || this.localPlace.id === id)
+    ) {
+      return this.localPlace;
     }
 
     // 4. Fallback to the route model (which might be the stale "saved" object from when the route loaded)
@@ -50,7 +53,7 @@ export default class PlaceTemplate extends Component {
         ...model,
         id: undefined,
         createdAt: undefined,
-        geohash: undefined
+        geohash: undefined,
       };
     }
 

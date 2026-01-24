@@ -61,7 +61,6 @@ export default class MapComponent extends Component {
       zIndex: 10, // Ensure it sits above the map tiles
     });
 
-
     // Default view settings
     let center = [99.05738, 7.55087];
     let zoom = 13.0;
@@ -95,7 +94,11 @@ export default class MapComponent extends Component {
       target: element,
       layers: [openfreemap, bookmarkLayer],
       view: view,
-      controls: defaultControls({ zoom: false, rotate: true, attribution: true }),
+      controls: defaultControls({
+        zoom: false,
+        rotate: true,
+        attribution: true,
+      }),
     });
 
     apply(this.mapInstance, 'https://tiles.openfreemap.org/styles/liberty');
@@ -210,7 +213,9 @@ export default class MapComponent extends Component {
           geolocation.un('change:position', zoomToLocation);
           locateListenerKey = null;
         }
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        /* ignore */
+      }
 
       // Hide pulse
       if (this.locationOverlayElement) {
@@ -261,7 +266,8 @@ export default class MapComponent extends Component {
       else if (accuracy) {
         const viewportWidthMeters = 6.325 * accuracy;
         const minDimensionPixels = Math.min(size[0], size[1]);
-        const requiredResolutionMeters = viewportWidthMeters / minDimensionPixels;
+        const requiredResolutionMeters =
+          viewportWidthMeters / minDimensionPixels;
         const metersPerMapUnit = getPointResolution(
           view.getProjection(),
           1,
@@ -443,23 +449,23 @@ export default class MapComponent extends Component {
 
     // If the pin is in the bottom half (y > splitPoint), it is obscured
     if (pixel[1] > splitPoint) {
-       // Target position: Center of top half = height * 0.25
-       const targetY = height * 0.25;
-       const deltaY = pixel[1] - targetY;
+      // Target position: Center of top half = height * 0.25
+      const targetY = height * 0.25;
+      const deltaY = pixel[1] - targetY;
 
-       const view = this.mapInstance.getView();
-       const center = view.getCenter();
-       const resolution = view.getResolution();
+      const view = this.mapInstance.getView();
+      const center = view.getCenter();
+      const resolution = view.getResolution();
 
-       // Move the map center SOUTH (decrease Y) to move the pin UP (decrease pixel Y)
-       const deltaMapUnits = deltaY * resolution;
-       const newCenter = [center[0], center[1] - deltaMapUnits];
+      // Move the map center SOUTH (decrease Y) to move the pin UP (decrease pixel Y)
+      const deltaMapUnits = deltaY * resolution;
+      const newCenter = [center[0], center[1] - deltaMapUnits];
 
-       view.animate({
-         center: newCenter,
-         duration: 500,
-         easing: (t) => t * (2 - t) // Ease-out
-       });
+      view.animate({
+        center: newCenter,
+        duration: 500,
+        easing: (t) => t * (2 - t), // Ease-out
+      });
     }
   }
 
@@ -525,7 +531,7 @@ export default class MapComponent extends Component {
 
       const viewState = {
         center: currentCenter,
-        zoom: currentZoom
+        zoom: currentZoom,
       };
 
       localStorage.setItem('marco:map-view', JSON.stringify(viewState));
@@ -545,7 +551,9 @@ export default class MapComponent extends Component {
 
     if (features && features.length > 0) {
       console.debug(`Found ${features.length} features in map layer:`);
-      for (const f of features) { console.debug(f) }
+      for (const f of features) {
+        console.debug(f);
+      }
       const bookmarkFeature = features.find((f) => f.get('isBookmark'));
       if (bookmarkFeature) {
         clickedBookmark = bookmarkFeature.get('originalPlace');

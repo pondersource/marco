@@ -79,10 +79,10 @@ export default class PlaceDetails extends Component {
   get cuisine() {
     if (!this.tags.cuisine) return null;
     return this.tags.cuisine
-               .split(';')
-               .map(c => capitalize.compute([c]))
-               .map(c => c.replace('_', ' '))
-               .join(', ');
+      .split(';')
+      .map((c) => capitalize.compute([c]))
+      .map((c) => c.replace('_', ' '))
+      .join(', ');
   }
 
   get wikipedia() {
@@ -123,17 +123,24 @@ export default class PlaceDetails extends Component {
       </p>
       {{#if this.place.description}}
         <p class="place-description">
-            {{this.place.description}}
+          {{this.place.description}}
         </p>
       {{/if}}
 
       <div class="actions">
         <button
           type="button"
-          class={{if this.place.createdAt "btn btn-secondary" "btn btn-outline"}}
+          class={{if
+            this.place.createdAt
+            "btn btn-secondary"
+            "btn btn-outline"
+          }}
           {{on "click" (fn @onToggleSave this.place)}}
         >
-          <Icon @name="bookmark" @color={{if this.place.createdAt "currentColor" "#007bff"}} />
+          <Icon
+            @name="bookmark"
+            @color={{if this.place.createdAt "currentColor" "#007bff"}}
+          />
           {{if this.place.createdAt "Saved" "Save"}}
         </button>
       </div>
@@ -164,14 +171,22 @@ export default class PlaceDetails extends Component {
         {{#if this.website}}
           <p class="content-with-icon">
             <Icon @name="globe" @title="Website" />
-            <span><a href={{this.website}} target="_blank" rel="noopener noreferrer">{{this.websiteDomain}}</a></span>
+            <span><a
+                href={{this.website}}
+                target="_blank"
+                rel="noopener noreferrer"
+              >{{this.websiteDomain}}</a></span>
           </p>
         {{/if}}
 
         {{#if this.wikipedia}}
           <p>
             <strong>Wikipedia:</strong>
-            <a href="https://wikipedia.org/wiki/{{this.wikipedia}}" target="_blank" rel="noopener noreferrer">Article</a>
+            <a
+              href="https://wikipedia.org/wiki/{{this.wikipedia}}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >Article</a>
           </p>
         {{/if}}
 
