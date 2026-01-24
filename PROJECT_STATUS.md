@@ -16,6 +16,7 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   - Detects clicks on visual vector tiles.
   - Falls back to fetching authoritative data from an **Overpass API** service.
   - Uses a **heuristic** (distance + type matching) to link visual clicks to API results (handling data desynchronization).
+  - **Logic Upgrade:** Map intelligently detects if _any_ sidebar/pane is open and handles outside clicks to close them instead of initiating new searches.
 - **Optimization:** Added **10px hit tolerance** for easier tapping on mobile devices.
 - **Visuals:** Increased bookmark marker size (Radius 9px) and added a subtle drop shadow.
 - **Feedback:** Implemented a "pulse" animation (via OpenLayers Overlay) at the click location to visualize the search radius (30m/50m).
@@ -50,7 +51,9 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
     - **Optimization:** Implemented **Debounced Reload** (200ms) for bookmark updates to handle rapid change events efficiently.
     - **Optimization:** Correctly handles deletion/updates by clearing stale data for reloaded geohash sectors.
   - `osm.js`: Fetches nearby POIs from Overpass API.
+    - **Configurable:** Now supports dynamic API endpoints via `SettingsService`.
     - **Reliability:** Implemented `fetchWithRetry` to handle HTTP 504/502/503 timeouts and 429 rate limits, in addition to network errors.
+  - `settings.js`: Manages user preferences (currently Overpass API provider) persisted to `localStorage`.
 - **UI Components:**
   - `places-sidebar.gjs`: Displays a list of nearby POIs.
     - **Layout:** Responsive design that transforms into a **Bottom Sheet** (50% height) on mobile screens (`<=768px`) with rounded corners and upward shadow.
@@ -59,7 +62,9 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
     - **Layout:** Polished UI with distinct sections for Actions and Meta info.
   - `app-header.gjs`: Transparent header with "Menu" button (Settings) and User Avatar (Login).
   - `settings-pane.gjs`: Sidebar component for app info ("About" section) and settings.
+    - **Features:** Dropdown to select Overpass API provider (bke.ro, overpass-api.de, private.coffee).
     - **Mobile:** Renders as a 2/3 height bottom sheet on mobile.
+    - **Z-Index:** Configured to overlay the Places sidebar correctly (`z-index: 3200`).
 - **Geo Utils:**
   - `app/utils/geo.js`: Haversine distance calculations.
   - `app/utils/geohash-coverage.js`: Logic to calculate required 4-char geohash prefixes for a given bounding box.
@@ -82,12 +87,13 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   5.  User clicks "Save Bookmark" -> Stores JSON in RemoteStorage.
   6.  RemoteStorage change event -> Debounced reload updates the map reactive-ly.
   7.  **Editing:** User can edit the Title and Description of saved bookmarks via an "Edit" button in the details view.
+  8.  **Settings:** User can change the Overpass API provider via the new Settings menu.
 
 ## Files Currently in Focus
 
-- `app/styles/app.css`: Responsive sidebar styles and mobile optimizations.
-- `app/components/place-details.gjs`: Place display and editing logic.
-- `app/services/storage.js`: Data sync and update logic.
+- `app/templates/application.gjs`: Core layout and "Outside Click" logic.
+- `app/components/settings-pane.gjs`: Settings UI.
+- `app/services/settings.js`: Settings persistence.
 
 ## Next Steps & Pending Tasks
 
