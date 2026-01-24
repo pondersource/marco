@@ -135,11 +135,11 @@ body {
 .btn-secondary {
   color: #333;
   border: 1px solid rgba(255, 204, 51, 0.2);
-  background: rgba(255, 204, 51, 0.2);
+  background: rgba(255, 204, 51, 0.3);
 }
 
 .btn-secondary:hover {
- border: 1px solid #898989;
+  background: rgba(255, 204, 51, 0.4);
 }
 
 .btn-blue {
