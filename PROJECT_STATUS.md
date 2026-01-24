@@ -1,6 +1,6 @@
 # Project Status: Marco
 
-**Last Updated:** Wed Jan 21 2026
+**Last Updated:** Sat Jan 24 2026
 
 ## Project Context
 
@@ -57,6 +57,9 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   - `place-details.gjs`: Dedicated component for displaying rich place information.
     - **Features:** Icons (via `feather-icons`), Address, Phone, Website, Opening Hours, Cuisine, Wikipedia.
     - **Layout:** Polished UI with distinct sections for Actions and Meta info.
+  - `app-header.gjs`: Transparent header with "Menu" button (Settings) and User Avatar (Login).
+  - `settings-pane.gjs`: Sidebar component for app info ("About" section) and settings.
+    - **Mobile:** Renders as a 2/3 height bottom sheet on mobile.
 - **Geo Utils:**
   - `app/utils/geo.js`: Haversine distance calculations.
   - `app/utils/geohash-coverage.js`: Logic to calculate required 4-char geohash prefixes for a given bounding box.
@@ -78,21 +81,20 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   4.  Sidebar displays details via `<PlaceDetails>` component (Bottom sheet on mobile).
   5.  User clicks "Save Bookmark" -> Stores JSON in RemoteStorage.
   6.  RemoteStorage change event -> Debounced reload updates the map reactive-ly.
+  7.  **Editing:** User can edit the Title and Description of saved bookmarks via an "Edit" button in the details view.
 
 ## Files Currently in Focus
 
 - `app/styles/app.css`: Responsive sidebar styles and mobile optimizations.
-- `app/components/map.gjs`: Map rendering, interaction, and mobile auto-panning.
-- `app/templates/application.gjs`: Root template handling place selection logic.
-- `app/services/storage.js`: Data sync logic.
+- `app/components/place-details.gjs`: Place display and editing logic.
+- `app/services/storage.js`: Data sync and update logic.
 
 ## Next Steps & Pending Tasks
 
-1.  **App Header:** Implement a transparent header bar with the App Logo (left) and Login/User Info (right).
-2.  **Edit Bookmarks:** Allow users to edit the title and description of saved places.
-3.  **Linting & Code Quality:** Fix remaining CSS errors, remove inline styles in `map.gjs`, and address unused variables/runloop usage.
-4.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
-5.  **Testing:** Add automated tests for the geohash coverage and retry logic.
+1.  **Collections/Lists:** Implement ability to organize bookmarks into lists/collections.
+2.  **Linting & Code Quality:** Fix remaining CSS errors, remove inline styles in `map.gjs`, and address unused variables/runloop usage.
+3.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
+4.  **Testing:** Add automated tests for the geohash coverage, retry logic, and new editing features.
 
 ## Technical Constraints
 
