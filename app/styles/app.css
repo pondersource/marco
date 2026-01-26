@@ -288,6 +288,15 @@ body {
   margin-top: 1rem;
 }
 
+.settings-section p a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.settings-section p a:hover {
+  text-decoration: underline;
+}
+
 .btn-full {
   width: 100%;
 }

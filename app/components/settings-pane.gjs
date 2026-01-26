@@ -54,7 +54,7 @@ export default class SettingsPane extends Component {
           <p>
             Connect your own <a href="https://remotestorage.io/"
               target="_blank" rel="noopener">remote storage</a> to sync place bookmarks across
-            devices.
+            apps and devices.
           </p>
           <ul class="link-list">
             <li>
