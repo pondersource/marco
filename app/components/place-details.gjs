@@ -193,8 +193,8 @@ export default class PlaceDetails extends Component {
             ></textarea>
           </div>
           <div class="edit-actions">
-            <button type="submit" class="btn btn-blue btn-sm">Save</button>
-            <button type="button" class="btn btn-outline btn-sm" {{on "click" this.cancelEditing}}>Cancel</button>
+            <button type="submit" class="btn btn-blue">Save</button>
+            <button type="button" class="btn btn-outline" {{on "click" this.cancelEditing}}>Cancel</button>
           </div>
         </form>
       {{else}}
