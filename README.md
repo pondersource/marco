@@ -46,6 +46,11 @@ Make use of the many generators for code, try `pnpm ember help generate` for mor
 
 - `pnpm build:icons` generates PNGs of all sizes from `public/icons/icon.svg`
 
+To run the script, you need `imagemagick` and `librsvg` installed:
+
+- **Arch Linux:** `pacman -S imagemagick librsvg`
+- **Ubuntu/Debian:** `apt install imagemagick librsvg2-bin`
+
 ### Deploying
 
 - `git push 5apps master` (needs collaborator permission on 5apps)
