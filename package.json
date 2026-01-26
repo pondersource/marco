@@ -2,10 +2,13 @@
   "name": "marco",
   "version": "1.8.1",
   "private": true,
-  "description": "Small description for marco goes here",
-  "repository": "",
-  "license": "MIT",
-  "author": "",
+  "description": "Unhosted maps app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitea.kosmos.org/raucao/marco.git"
+  },
+  "license": "AGPL-3.0-only",
+  "author": "Râu Cao <raucao@kosmos.org>",
   "type": "module",
   "imports": {
     "#app/*": "./app/*",
