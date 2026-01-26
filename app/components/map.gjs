@@ -61,8 +61,8 @@ export default class MapComponent extends Component {
     });
 
     // Default view settings
-    let center = [99.05738, 7.55087];
-    let zoom = 13.0;
+    let center = [14.21683569, 27.060114248];
+    let zoom = 2.661;
 
     // Try to restore from localStorage
     try {
