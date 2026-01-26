@@ -73,6 +73,7 @@ To run the script, you need `imagemagick` and `librsvg` installed:
 
 - [ember.js](https://emberjs.com/)
 - [remoteStorage.js](https://remotestorage.io/rs.js/docs/)
+- [@remotestorage/module-places](https://gitea.kosmos.org/raucao/remotestorage-module-places)
 - [Vite](https://vite.dev)
 - Development Browser Extensions
   - [ember inspector for chrome](https://chrome.google.com/webstore/detail/ember-inspector/bmdblncegkenkacieihfhpjfppoconhi)
