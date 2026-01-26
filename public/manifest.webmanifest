@@ -1,7 +1,7 @@
 {
   "name": "Marco",
   "short_name": "Marco",
-  "description": "Marco (as in Marco Polo) is an unhosted maps application that respects your privacy and choices",
+  "description": "Marco is an unhosted maps application that respects your privacy and choices",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

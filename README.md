@@ -1,7 +1,14 @@
-# marco
+<div align="center">
+  <img src="public/icons/icon-rounded.svg" width="128" height="128" alt="Marco App Icon">
+  <h1>Marco</h1>
+</div>
 
-This README outlines the details of collaborating on this Ember application.
-A short introduction of this app could easily go here.
+Marco (as in [Marco Polo][1]) is an unhosted maps application that respects
+your privacy and choices. It allows users to connect their own remote storage
+to sync place bookmarks across apps and devices.
+
+This README outlines the details of collaborating on this Ember application, or
+just building and deploying it for yourself.
 
 ## Prerequisites
 
@@ -60,7 +67,10 @@ To run the script, you need `imagemagick` and `librsvg` installed:
 ## Further Reading / Useful Links
 
 - [ember.js](https://emberjs.com/)
+- [remoteStorage.js](https://remotestorage.io/rs.js/docs/)
 - [Vite](https://vite.dev)
 - Development Browser Extensions
   - [ember inspector for chrome](https://chrome.google.com/webstore/detail/ember-inspector/bmdblncegkenkacieihfhpjfppoconhi)
   - [ember inspector for firefox](https://addons.mozilla.org/en-US/firefox/addon/ember-inspector/)
+
+[1]: https://en.wikipedia.org/wiki/Marco_Polo
