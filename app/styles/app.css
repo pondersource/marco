@@ -533,7 +533,7 @@ body {
 }
 
 .ol-touch .ol-control.ol-locate {
-  inset: auto auto 3.5em;
+  inset: auto 0.5em 3.5em auto;
 }
 
 /* Rotate Control */
@@ -542,7 +542,7 @@ body {
 }
 
 .ol-touch .ol-rotate {
-  inset: auto auto 6em;
+  inset: auto 0.5em 6em auto;
 }
 
 span.icon {
