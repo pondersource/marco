@@ -1,6 +1,6 @@
 # Project Status: Marco
 
-**Last Updated:** Sat Jan 24 2026
+**Last Updated:** Mon Jan 26 2026
 
 ## Project Context
 
@@ -21,9 +21,14 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 - **Visuals:** Increased bookmark marker size (Radius 9px) and added a subtle drop shadow.
 - **Feedback:** Implemented a "pulse" animation (via OpenLayers Overlay) at the click location to visualize the search radius (30m/50m).
 - **Mobile UX:**
-  - Disabled browser tap highlights (`-webkit-tap-highlight-color: transparent`) to prevent blue flashing on Android.
-  - Disabled "pull-to-refresh" (`overscroll-behavior: none`) on the body to prevent accidental reloads while keeping the sidebar scrollable (`contain`).
+  - **Touch:** Disabled browser tap highlights (`-webkit-tap-highlight-color: transparent`) to prevent blue flashing on Android.
+  - **Scroll:** Disabled "pull-to-refresh" (`overscroll-behavior: none`) on the body to prevent accidental reloads while keeping the sidebar scrollable (`contain`).
   - **Auto-Pan:** On mobile screens, if a selected pin is obscured by the bottom sheet, the map automatically pans to center the pin in the visible top half of the screen.
+  - **Controls:** Fixed positioning of "Locate" and "Rotate" buttons on mobile by correcting CSS `inset` syntax.
+  - **iOS Polish:**
+    - Prevented input auto-zoom by ensuring `.form-control` font size is `1rem` (16px).
+    - Added `-webkit-text-size-adjust: 100%` to prevent text inflation on rotation.
+    - Set base `body` font size to `16px`.
 - **Geolocation ("Locate Me"):**
   - Implemented a "Locate Me" button with robust tracking logic.
   - **Dynamic Zoom:** Automatically zooms to a level where the accuracy circle covers ~10% of the map (fallback logic handles missing accuracy data).
@@ -44,7 +49,7 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   - configured with `maxAge: false` to ensure data freshness.
 - **Dependencies:** Uses `ulid` and `latlon-geohash` internally.
 
-### 3. App Infrastructure
+### 3. App Infrastructure & Build
 
 - **Services:**
   - `storage.js`: Initializes RemoteStorage, claims access, enables caching, and sets up the widget. Consumes the new `getPlaces` API.
@@ -68,6 +73,11 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 - **Geo Utils:**
   - `app/utils/geo.js`: Haversine distance calculations.
   - `app/utils/geohash-coverage.js`: Logic to calculate required 4-char geohash prefixes for a given bounding box.
+- **Build & DevOps:**
+  - **Icon Generation:** Added `build:icons` script using `magick` and `rsvg-convert` to automate PNG generation from SVG.
+  - **Dependencies:** Documented system requirements (ImageMagick, librsvg) in `README.md`.
+  - **Ember CLI:** Added as dev dependency to support generator commands.
+  - **License:** Added AGPLv3 license.
 
 ### 4. Routing & Data Optimization
 
@@ -91,16 +101,17 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 
 ## Files Currently in Focus
 
-- `app/templates/application.gjs`: Core layout and "Outside Click" logic.
-- `app/components/settings-pane.gjs`: Settings UI.
-- `app/services/settings.js`: Settings persistence.
+- `app/styles/app.css`: Mobile CSS fixes (font sizes, control positioning).
+- `package.json`: New scripts and dependencies.
+- `README.md`: Updated documentation.
 
 ## Next Steps & Pending Tasks
 
-1.  **Collections/Lists:** Implement ability to organize bookmarks into lists/collections.
-2.  **Linting & Code Quality:** Fix remaining CSS errors, remove inline styles in `map.gjs`, and address unused variables/runloop usage.
-3.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
-4.  **Testing:** Add automated tests for the geohash coverage, retry logic, and new editing features.
+1.  **Mobile Polish:** Verify "Locate Me" animation on iOS Safari.
+2.  **Collections/Lists:** Implement ability to organize bookmarks into lists/collections.
+3.  **Linting & Code Quality:** Fix remaining CSS errors, remove inline styles in `map.gjs`, and address unused variables/runloop usage.
+4.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
+5.  **Testing:** Add automated tests for the geohash coverage, retry logic, and new editing features.
 
 ## Technical Constraints
 
