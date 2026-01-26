@@ -257,7 +257,7 @@ body {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 1rem;
   box-sizing: border-box; /* Ensure padding doesn't overflow width */
 }
 
