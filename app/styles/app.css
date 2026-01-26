@@ -502,11 +502,15 @@ body {
   border: 2px solid rgb(255 204 51 / 80%); /* Gold/Yellow to match markers */
   background: rgb(255 204 51 / 20%);
   position: absolute;
-  transform: translate(-50%, -50%);
+  /* Use translate3d for GPU acceleration on iOS */
+  transform: translate3d(-50%, -50%, 0);
   pointer-events: none;
   animation: pulse 1.5s infinite ease-out;
   box-sizing: border-box; /* Ensure border is included in width/height */
   display: none; /* Hidden by default */
+  will-change: transform, opacity;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .search-pulse.active {
@@ -520,12 +524,12 @@ body {
 
 @keyframes pulse {
   0% {
-    transform: translate(-50%, -50%) scale(0.8);
+    transform: translate3d(-50%, -50%, 0) scale(0.8);
     opacity: 0.8;
   }
 
   100% {
-    transform: translate(-50%, -50%) scale(1.4);
+    transform: translate3d(-50%, -50%, 0) scale(1.4);
     opacity: 0;
   }
 }
