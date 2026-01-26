@@ -95,7 +95,7 @@ export default class ApplicationComponent extends Component {
   }
 
   <template>
-    {{pageTitle "M/\RCO"}}
+    {{pageTitle "Marco"}}
 
     <AppHeader @onToggleMenu={{this.toggleSettings}} />
 

@@ -1,0 +1,45 @@
+<svg
+  width="1024"
+  height="1024"
+  viewBox="0 0 1024 1024"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Background -->
+  <rect
+    x="0"
+    y="0"
+    width="1024"
+    height="1024"
+    rx="220"
+    fill="#F6E9A6"
+  />
+
+  <!-- Subtle map grid (kept well outside safe zone) -->
+  <g stroke="#E6D88A" stroke-width="10" opacity="0.6">
+    <line x1="256" y1="0" x2="256" y2="1024" />
+    <line x1="512" y1="0" x2="512" y2="1024" />
+    <line x1="768" y1="0" x2="768" y2="1024" />
+
+    <line x1="0" y1="256" x2="1024" y2="256" />
+    <line x1="0" y1="512" x2="1024" y2="512" />
+    <line x1="0" y1="768" x2="1024" y2="768" />
+  </g>
+
+  <!-- Location pin (exact app shape, larger, centered, safe-zone compliant) -->
+  <!-- Safe zone target: ~680px diameter -->
+  <g
+    transform="
+      translate(512 512)
+      scale(22)
+      translate(-12 -12)
+    "
+    fill="#ea4335"
+    stroke="#b31412"
+    stroke-width="1"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" fill="#b31412" stroke="none" />
+  </g>
+</svg>
