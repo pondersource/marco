@@ -321,6 +321,11 @@ body {
   font-size: 0.9rem;
 }
 
+.meta-info p {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
 .meta-info p:first-child {
   margin-top: 1.2rem;
   padding-top: 1.2rem;
@@ -428,8 +433,8 @@ body {
   margin: 0 0 1rem;
 }
 
-.place-details .place-description {
-  margin-bottom: 1.5rem;
+.place-details p.place-description {
+  line-height: 1.4;
 }
 
 .place-details .actions {
@@ -437,6 +442,7 @@ body {
   display: flex;
   flex-direction: row;
   gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .btn {
