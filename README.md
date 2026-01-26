@@ -1,7 +1,12 @@
+
+<br>
+
 <div align="center">
   <img src="public/icons/icon-rounded.svg" width="128" height="128" alt="Marco App Icon">
   <h1>Marco</h1>
 </div>
+
+<br>
 
 Marco (as in [Marco Polo][1]) is an unhosted maps application that respects
 your privacy and choices. It allows users to connect their own remote storage
