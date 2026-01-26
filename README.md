@@ -42,6 +42,10 @@ Make use of the many generators for code, try `pnpm ember help generate` for mor
 - `pnpm vite build --mode development` (development)
 - `pnpm build` (production)
 
+### App Icon
+
+- `pnpm build:icons` generates PNGs of all sizes from `public/icons/icon.svg`
+
 ### Deploying
 
 Specify what it takes to deploy your app.
