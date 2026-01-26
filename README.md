@@ -48,7 +48,9 @@ Make use of the many generators for code, try `pnpm ember help generate` for mor
 
 ### Deploying
 
-Specify what it takes to deploy your app.
+- `git push 5apps master` (needs collaborator permission on 5apps)
+- Or deploy `release/` to any static file host (ideally routing all 404s to
+  `index.html` for launching with client-side routes to work)
 
 ## Further Reading / Useful Links
 
