@@ -140,6 +140,8 @@ export default class PlaceDetails extends Component {
   }
 
   get gmapsUrl() {
+    const id = this.place.gmapsId || this.place.osmId;
+    if (!id) return null;
     return `https://www.google.com/maps/search/?api=1&query=${this.name}&query=${this.place.lat},${this.place.lon}`;
   }
 
@@ -259,7 +261,7 @@ export default class PlaceDetails extends Component {
 
         {{#if this.osmUrl}}
           <p class="content-with-icon">
-            <Icon @name="map" @title="OSM ID" />
+            <Icon @name="map" />
             <span>
               <a href={{this.osmUrl}} target="_blank" rel="noopener noreferrer">
                 OpenStreetMap
@@ -268,14 +270,16 @@ export default class PlaceDetails extends Component {
           </p>
         {{/if}}
 
-        <p class="content-with-icon">
-          <Icon @name="map" @title="OSM ID" />
-          <span>
-            <a href={{this.gmapsUrl}} target="_blank" rel="noopener noreferrer">
-              Google Maps
-            </a>
-          </span>
-        </p>
+        {{#if this.gmapsUrl}}
+          <p class="content-with-icon">
+            <Icon @name="map" />
+            <span>
+              <a href={{this.gmapsUrl}} target="_blank" rel="noopener noreferrer">
+                Google Maps
+              </a>
+            </span>
+          </p>
+        {{/if}}
 
       </div>
     </div>
