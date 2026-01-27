@@ -6,6 +6,7 @@ import { fn } from '@ember/helper';
 import or from 'ember-truth-helpers/helpers/or';
 import PlaceDetails from './place-details';
 import Icon from './icon';
+import humanizeOsmTag from '../helpers/humanize-osm-tag';
 
 export default class PlacesSidebar extends Component {
   @service storage;
@@ -173,13 +174,13 @@ export default class PlacesSidebar extends Component {
                         place.osmTags.name:en
                         "Unnamed Place"
                       }}</div>
-                    <div class="place-type">{{or
+                    <div class="place-type">{{humanizeOsmTag (or
                         place.osmTags.amenity
                         place.osmTags.shop
                         place.osmTags.tourism
                         place.osmTags.leisure
                         place.osmTags.historic
-                      }}</div>
+                      )}}</div>
                   </button>
                 </li>
               {{/each}}

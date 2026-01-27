@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
-import capitalize from '../helpers/capitalize';
+import { humanizeOsmTag } from '../utils/format-text';
 import Icon from '../components/icon';
 
 import { tracked } from '@glimmer/tracking';
@@ -76,14 +76,15 @@ export default class PlaceDetails extends Component {
   }
 
   get type() {
-    return (
+    const rawType =
       this.tags.amenity ||
       this.tags.shop ||
       this.tags.tourism ||
       this.tags.leisure ||
       this.tags.historic ||
-      'Point of Interest'
-    );
+      'Point of Interest';
+
+    return humanizeOsmTag(rawType);
   }
 
   get address() {
@@ -133,8 +134,7 @@ export default class PlaceDetails extends Component {
     if (!this.tags.cuisine) return null;
     return this.tags.cuisine
       .split(';')
-      .map((c) => capitalize.compute([c]))
-      .map((c) => c.replace('_', ' '))
+      .map((c) => humanizeOsmTag(c))
       .join(', ');
   }
 

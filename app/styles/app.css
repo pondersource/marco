@@ -402,7 +402,6 @@ body {
 .place-type {
   color: #666;
   font-size: 0.85rem;
-  text-transform: capitalize;
 }
 
 .back-btn {
@@ -436,7 +435,6 @@ body {
 .place-details .place-type {
   color: #666;
   font-size: 0.9rem;
-  text-transform: capitalize;
   margin: 0 0 1rem;
 }
 
