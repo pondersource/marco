@@ -10,6 +10,22 @@ import humanizeOsmTag from '../helpers/humanize-osm-tag';
 
 export default class PlacesSidebar extends Component {
   @service storage;
+  @service router;
+  @service mapUi;
+
+  @action
+  createNewPlace() {
+    const qp = this.router.currentRoute.queryParams;
+    const lat = qp.lat;
+    const lon = qp.lon;
+
+    if (lat && lon) {
+      this.router.transitionTo('place.new', { queryParams: { lat, lon } });
+    } else {
+       // Fallback (shouldn't happen in search context)
+       this.router.transitionTo('place.new', { queryParams: { lat: 0, lon: 0 } });
+    }
+  }
 
   @action
   selectPlace(place) {
@@ -180,6 +196,7 @@ export default class PlacesSidebar extends Component {
                         place.osmTags.tourism
                         place.osmTags.leisure
                         place.osmTags.historic
+                        "Point of Interest"
                       )}}</div>
                   </button>
                 </li>
@@ -188,6 +205,15 @@ export default class PlacesSidebar extends Component {
           {{else}}
             <p class="empty-state">No places found nearby.</p>
           {{/if}}
+
+          <button
+            type="button"
+            class="create-place-btn"
+            {{on "click" this.createNewPlace}}
+          >
+            <Icon @name="plus" @size={{18}} />
+            Create new place
+          </button>
         {{/if}}
       </div>
     </div>

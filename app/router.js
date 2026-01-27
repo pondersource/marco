@@ -8,5 +8,6 @@ export default class Router extends EmberRouter {
 
 Router.map(function () {
   this.route('place', { path: '/place/:place_id' });
+  this.route('place.new', { path: '/place/new' });
   this.route('search');
 });

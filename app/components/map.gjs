@@ -15,7 +15,6 @@ import Point from 'ol/geom/Point.js';
 import Geolocation from 'ol/Geolocation.js';
 import { Style, Circle, Fill, Stroke } from 'ol/style.js';
 import { apply } from 'ol-mapbox-style';
-import { getDistance } from '../utils/geo';
 
 export default class MapComponent extends Component {
   @service osm;
@@ -29,6 +28,8 @@ export default class MapComponent extends Component {
   searchOverlayElement;
   selectedPinOverlay;
   selectedPinElement;
+  crosshairElement; // New crosshair
+  crosshairOverlay; // New crosshair overlay
 
   setupMap = modifier((element) => {
     if (this.mapInstance) return;
@@ -139,6 +140,29 @@ export default class MapComponent extends Component {
       stopEvent: false, // Let clicks pass through
     });
     this.mapInstance.addOverlay(this.selectedPinOverlay);
+
+    // Crosshair Overlay (for Creating New Place)
+    this.crosshairElement = document.createElement('div');
+    this.crosshairElement.className = 'map-crosshair';
+    // Use an SVG or simple CSS cross
+    this.crosshairElement.innerHTML = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    `;
+    // We attach it to the map control container OR keep it as an overlay centered on map center?
+    // Actually, a fixed center overlay is trickier in OpenLayers because Overlays move with the map.
+    // If we want it FIXED in the center of the VIEWPORT, it should be a Control or just an absolute HTML element on top of the map div.
+    // Adding it as a Control is cleaner.
+
+    // HOWEVER, the request says "cross hair drawn on the map... which should be removed when saving".
+    // A fixed element in the center of the screen is best for "choose location by dragging map".
+    // So let's append it to the map container directly via Glimmer template or JS.
+
+    // We'll append it to the map target element (this.element is the target).
+    element.appendChild(this.crosshairElement);
+
 
     // Geolocation Pulse Overlay
     this.locationOverlayElement = document.createElement('div');
@@ -522,8 +546,127 @@ export default class MapComponent extends Component {
     }
   });
 
+  // Sync the creation mode (Crosshair)
+  syncCreationMode = modifier(() => {
+    if (!this.crosshairElement || !this.mapInstance) return;
+
+    if (this.mapUi.isCreating) {
+      this.crosshairElement.classList.add('visible');
+
+      // If we have initial coordinates from the route (e.g. reload or link),
+      // we need to pan the map so those coordinates are UNDER the crosshair.
+      const coords = this.mapUi.creationCoordinates;
+      if (coords && coords.lat && coords.lon) {
+        // We only animate if the map center isn't already "roughly" correct
+        // But actually, updateCreationCoordinates is called by handleMapMove too.
+        // We need to distinguish "initial set" vs "drag update".
+        // The Service doesn't distinguish, but if we are just entering mode,
+        // we can check if the current map center aligns.
+
+        // Better approach:
+        // We calculate where the map center *should* be to put the target coords
+        // under the crosshair.
+        const targetCoords = fromLonLat([coords.lon, coords.lat]);
+        this.animateToCrosshair(targetCoords);
+      }
+    } else {
+      this.crosshairElement.classList.remove('visible');
+    }
+  });
+
+  animateToCrosshair(targetCoords) {
+    if (!this.mapInstance || !this.crosshairElement) return;
+
+    // 1. Get current visual position of the crosshair
+    const mapRect = this.mapInstance.getTargetElement().getBoundingClientRect();
+    const crosshairRect = this.crosshairElement.getBoundingClientRect();
+
+    const crosshairPixelX =
+      crosshairRect.left + crosshairRect.width / 2 - mapRect.left;
+    const crosshairPixelY =
+      crosshairRect.top + crosshairRect.height / 2 - mapRect.top;
+
+    // 2. Get the center pixel of the map viewport
+    const size = this.mapInstance.getSize();
+    const mapCenterX = size[0] / 2;
+    const mapCenterY = size[1] / 2;
+
+    // 3. Calculate the offset (how far the crosshair is from the geometric center)
+    const offsetX = crosshairPixelX - mapCenterX;
+    const offsetY = crosshairPixelY - mapCenterY;
+
+    // 4. Calculate the new map center
+    // We want 'targetCoords' to be at [crosshairPixelX, crosshairPixelY].
+    // If we center the map on 'targetCoords', it will be at [mapCenterX, mapCenterY].
+    // So we need to shift the map center by the OPPOSITE of the offset.
+    // Wait.
+    // If crosshair is to the right (+X), we need to move the camera LEFT (-X) to bring the point there?
+    // Let's think in map units.
+    const view = this.mapInstance.getView();
+    const resolution = view.getResolution();
+
+    const offsetMapUnitsX = offsetX * resolution;
+    const offsetMapUnitsY = -offsetY * resolution; // Y is inverted in pixel vs map coords usually?
+    // In Web Mercator: Y increases North (Up).
+    // In Pixels: Y increases South (Down).
+    // So +PixelY (Down) = -MapY (South). Correct.
+
+    // If crosshair is at +100px (Right), we want the target to be there.
+    // If we center on target, it is at 0px.
+    // To make it appear at +100px, we must shift the camera center by -100px (Left).
+    // So CenterX_new = TargetX - offsetMapUnitsX.
+
+    const targetX = targetCoords[0];
+    const targetY = targetCoords[1];
+
+    const newCenterX = targetX - offsetMapUnitsX;
+    const newCenterY = targetY - offsetMapUnitsY;
+
+    // Only animate if the difference is significant (avoid micro-jitters/loops)
+    const currentCenter = view.getCenter();
+    const dist = Math.sqrt(
+      Math.pow(currentCenter[0] - newCenterX, 2) +
+        Math.pow(currentCenter[1] - newCenterY, 2)
+    );
+
+    // 1 meter is approx 1 unit in Mercator near equator, varies by latitude.
+    // Resolution at zoom 18 is approx 0.6m/pixel.
+    // Let's use a small pixel threshold.
+    if (dist > resolution * 5) {
+      view.animate({
+        center: [newCenterX, newCenterY],
+        duration: 800,
+        easing: (t) => t * (2 - t), // Ease-out
+      });
+    }
+  }
+
   handleMapMove = async () => {
     if (!this.mapInstance) return;
+
+    // If in creation mode, update the coordinates in the service AND the URL
+    if (this.mapUi.isCreating) {
+      // Calculate coordinates under the crosshair element
+      // We need the pixel position of the crosshair relative to the map viewport
+      // The crosshair is positioned via CSS, so we can use getBoundingClientRect
+      const mapRect = this.mapInstance.getTargetElement().getBoundingClientRect();
+      const crosshairRect = this.crosshairElement.getBoundingClientRect();
+
+      const centerX = crosshairRect.left + crosshairRect.width / 2 - mapRect.left;
+      const centerY = crosshairRect.top + crosshairRect.height / 2 - mapRect.top;
+
+      const coordinate = this.mapInstance.getCoordinateFromPixel([centerX, centerY]);
+      const center = toLonLat(coordinate);
+
+      const lat = parseFloat(center[1].toFixed(6));
+      const lon = parseFloat(center[0].toFixed(6));
+
+      this.mapUi.updateCreationCoordinates(lat, lon);
+
+      // Update URL without triggering a full refresh
+      // We use replaceWith to avoid cluttering history
+      this.router.replaceWith('place.new', { queryParams: { lat, lon } });
+    }
 
     const size = this.mapInstance.getSize();
     const extent = this.mapInstance.getView().calculateExtent(size);
@@ -640,11 +783,12 @@ export default class MapComponent extends Component {
 
   <template>
     <div
-      class="map-container"
+      class="map-container {{if @isSidebarOpen 'sidebar-open'}}"
       {{this.setupMap}}
       {{this.updateBookmarks}}
       {{this.updateSelectedPin}}
       {{this.syncPulse}}
+      {{this.syncCreationMode}}
     ></div>
   </template>
 }

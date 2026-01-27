@@ -28,6 +28,26 @@ export default class SearchRoute extends Route {
     // Fetch POIs
     let pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
 
+    // Get cached/saved places in search radius
+    const localMatches = this.storage.savedPlaces.filter((p) => {
+      const dist = getDistance(lat, lon, p.lat, p.lon);
+      return dist <= searchRadius;
+    });
+
+    // Add local matches to the list if they aren't already there
+    // We use osmId to deduplicate if possible
+    localMatches.forEach((local) => {
+      const exists = pois.find(
+        (poi) =>
+          (local.osmId && poi.osmId === local.osmId) ||
+          (poi.id && poi.id === local.id)
+      );
+
+      if (!exists) {
+        pois.push(local);
+      }
+    });
+
     // Sort by distance from click
     pois = pois
       .map((p) => {

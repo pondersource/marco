@@ -3,19 +3,13 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { humanizeOsmTag } from '../utils/format-text';
 import Icon from '../components/icon';
+import PlaceEditForm from './place-edit-form';
 
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 
 export default class PlaceDetails extends Component {
   @tracked isEditing = false;
-  @tracked editTitle = '';
-  @tracked editDescription = '';
-
-  constructor() {
-    super(...arguments);
-    this.resetEditFields();
-  }
 
   get place() {
     return this.args.place || {};
@@ -35,15 +29,8 @@ export default class PlaceDetails extends Component {
   }
 
   @action
-  resetEditFields() {
-    this.editTitle = this.name;
-    this.editDescription = this.place.description || '';
-  }
-
-  @action
   startEditing() {
     if (!this.place.createdAt) return; // Only allow editing saved places
-    this.resetEditFields();
     this.isEditing = true;
   }
 
@@ -53,26 +40,14 @@ export default class PlaceDetails extends Component {
   }
 
   @action
-  async saveChanges(event) {
-    event.preventDefault();
+  async saveChanges(changes) {
     if (this.args.onSave) {
       await this.args.onSave({
         ...this.place,
-        title: this.editTitle,
-        description: this.editDescription,
+        ...changes,
       });
     }
     this.isEditing = false;
-  }
-
-  @action
-  updateTitle(e) {
-    this.editTitle = e.target.value;
-  }
-
-  @action
-  updateDescription(e) {
-    this.editDescription = e.target.value;
   }
 
   get type() {
@@ -171,32 +146,11 @@ export default class PlaceDetails extends Component {
   <template>
     <div class="place-details">
       {{#if this.isEditing}}
-        <form class="edit-form" {{on "submit" this.saveChanges}}>
-          <div class="form-group">
-            <label for="edit-title">Title</label>
-            <input
-              id="edit-title"
-              type="text"
-              value={{this.editTitle}}
-              {{on "input" this.updateTitle}}
-              class="form-control"
-            />
-          </div>
-          <div class="form-group">
-            <label for="edit-desc">Description</label>
-            <textarea
-              id="edit-desc"
-              value={{this.editDescription}}
-              {{on "input" this.updateDescription}}
-              class="form-control"
-              rows="3"
-            ></textarea>
-          </div>
-          <div class="edit-actions">
-            <button type="submit" class="btn btn-blue">Save</button>
-            <button type="button" class="btn btn-outline" {{on "click" this.cancelEditing}}>Cancel</button>
-          </div>
-        </form>
+        <PlaceEditForm
+          @place={{this.place}}
+          @onSave={{this.saveChanges}}
+          @onCancel={{this.cancelEditing}}
+        />
       {{else}}
         <h3>{{this.name}}</h3>
         <p class="place-type">

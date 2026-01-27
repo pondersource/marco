@@ -216,29 +216,54 @@ export default class StorageService extends Service {
 
   async storePlace(placeData) {
     const savedPlace = await this.places.store(placeData);
-    // Only append if not already there (handlePlaceChange might also fire)
+
+    // Optimistic Update: Global List
     if (!this.savedPlaces.some((p) => p.id === savedPlace.id)) {
       this.savedPlaces = [...this.savedPlaces, savedPlace];
+    } else {
+      // Update if exists
+      this.savedPlaces = this.savedPlaces.map((p) =>
+        p.id === savedPlace.id ? savedPlace : p
+      );
     }
+
+    // Optimistic Update: Map View (same logic as Global List)
+    if (!this.placesInView.some((p) => p.id === savedPlace.id)) {
+      this.placesInView = [...this.placesInView, savedPlace];
+    } else {
+      this.placesInView = this.placesInView.map((p) =>
+        p.id === savedPlace.id ? savedPlace : p
+      );
+    }
+
     return savedPlace;
   }
 
   async updatePlace(placeData) {
     const savedPlace = await this.places.store(placeData);
 
-    // Update local list
+    // Optimistic Update: Global List
     const index = this.savedPlaces.findIndex((p) => p.id === savedPlace.id);
     if (index !== -1) {
       const newPlaces = [...this.savedPlaces];
       newPlaces[index] = savedPlace;
       this.savedPlaces = newPlaces;
     }
+
+    // Update Map View
+    this.placesInView = this.placesInView.map((p) =>
+      p.id === savedPlace.id ? savedPlace : p
+    );
+
     return savedPlace;
   }
 
   async removePlace(place) {
     await this.places.remove(place.id, place.geohash);
+
+    // Update both lists
     this.savedPlaces = this.savedPlaces.filter((p) => p.id !== place.id);
+    this.placesInView = this.placesInView.filter((p) => p.id !== place.id);
   }
 
   @action

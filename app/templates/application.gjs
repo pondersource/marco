@@ -21,6 +21,7 @@ export default class ApplicationComponent extends Component {
      // This helps the map know if it should shift the center or adjust view.
     return (
       this.router.currentRouteName === 'place' ||
+      this.router.currentRouteName === 'place.new' ||
       this.router.currentRouteName === 'search'
     );
   }

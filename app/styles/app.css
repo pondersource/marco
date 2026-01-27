@@ -649,6 +649,82 @@ span.icon {
   }
 }
 
+/* Map Crosshair for "Create Place" mode */
+.map-crosshair {
+  position: absolute;
+  /* Default Center */
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  color: #333;
+  pointer-events: none;
+  z-index: 2000;
+  display: none;
+  transition:
+    top 0.3s ease,
+    left 0.3s ease;
+}
+
+.map-crosshair.visible {
+  display: block;
+}
+
+/* Sidebar is open (Desktop: Left 300px) */
+/* We want to center in the remaining space (width - 300px) */
+/* Center X = 300 + (width - 300) / 2 = 300 + width/2 - 150 = width/2 + 150 */
+/* So shift left by 150px from center */
+.map-container.sidebar-open .map-crosshair {
+  left: calc(50% + 150px);
+}
+
+@media (width <= 768px) {
+  /* Sidebar/Bottom Sheet is open (Mobile: Bottom 50%) */
+  /* Center Y = (height/2) / 2 = height/4 = 25% */
+  .map-container.sidebar-open .map-crosshair {
+    left: 50%; /* Reset desktop shift */
+    top: 25%;
+  }
+}
+
+/* Helper Text */
+.helper-text {
+  background: #eef4fc;
+  color: #1a5c9b;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Create Place Button */
+.create-place-btn {
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: white;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  color: #666;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.create-place-btn:hover {
+  background: #f8f9fa;
+  border-color: #999;
+  color: #333;
+}
+
 @media (width <= 768px) {
   .sidebar {
     width: 100%;
