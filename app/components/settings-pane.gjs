@@ -4,6 +4,7 @@ import { service } from '@ember/service';
 import { action } from '@ember/object';
 import Icon from '#components/icon';
 import eq from 'ember-truth-helpers/helpers/eq';
+import not from 'ember-truth-helpers/helpers/not';
 
 export default class SettingsPane extends Component {
   @service settings;
@@ -11,6 +12,11 @@ export default class SettingsPane extends Component {
   @action
   updateApi(event) {
     this.settings.updateOverpassApi(event.target.value);
+  }
+
+  @action
+  toggleKinetic(event) {
+    this.settings.updateMapKinetic(event.target.value === 'true');
   }
 
   <template>
@@ -25,6 +31,27 @@ export default class SettingsPane extends Component {
       <div class="sidebar-content">
         <section class="settings-section">
           <h3>Settings</h3>
+          <div class="form-group">
+            <label for="map-kinetic">Map Inertia (Kinetic Panning)</label>
+            <select
+              id="map-kinetic"
+              class="form-control"
+              {{on "change" this.toggleKinetic}}
+            >
+              <option
+                value="true"
+                selected={{if this.settings.mapKinetic "selected"}}
+              >
+                On
+              </option>
+              <option
+                value="false"
+                selected={{if (not this.settings.mapKinetic) "selected"}}
+              >
+                Off
+              </option>
+            </select>
+          </div>
           <div class="form-group">
             <label for="overpass-api">Overpass API Provider</label>
             <select

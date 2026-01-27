@@ -4,6 +4,8 @@ import { modifier } from 'ember-modifier';
 import 'ol/ol.css';
 import Map from 'ol/Map.js';
 import { defaults as defaultControls, Control } from 'ol/control.js';
+import { defaults as defaultInteractions, DragPan } from 'ol/interaction.js';
+import Kinetic from 'ol/Kinetic.js';
 import View from 'ol/View.js';
 import { fromLonLat, toLonLat, getPointResolution } from 'ol/proj.js';
 import Overlay from 'ol/Overlay.js';
@@ -21,6 +23,7 @@ export default class MapComponent extends Component {
   @service storage;
   @service mapUi;
   @service router;
+  @service settings;
 
   mapInstance;
   bookmarkSource;
@@ -99,6 +102,9 @@ export default class MapComponent extends Component {
         zoom: false,
         rotate: true,
         attribution: true,
+      }),
+      interactions: defaultInteractions({
+        dragPan: false, // Disable default DragPan to add a custom one
       }),
     });
 
@@ -351,6 +357,28 @@ export default class MapComponent extends Component {
     this.storage.rs.on('ready', () => {
       this.handleMapMove();
     });
+  });
+
+  updateInteractions = modifier(() => {
+    if (!this.mapInstance) return;
+
+    // Remove existing DragPan interactions
+    this.mapInstance.getInteractions().getArray().slice().forEach((interaction) => {
+      if (interaction instanceof DragPan) {
+        this.mapInstance.removeInteraction(interaction);
+      }
+    });
+
+    // Add new DragPan with current setting
+    const kinetic = this.settings.mapKinetic
+      ? new Kinetic(-0.005, 0.05, 100)
+      : false;
+
+    this.mapInstance.addInteraction(
+      new DragPan({
+        kinetic: kinetic,
+      })
+    );
   });
 
   // Track the selected place from the UI Service (Router -> Map)
@@ -736,6 +764,7 @@ export default class MapComponent extends Component {
     <div
       class="map-container {{if @isSidebarOpen 'sidebar-open'}}"
       {{this.setupMap}}
+      {{this.updateInteractions}}
       {{this.updateBookmarks}}
       {{this.updateSelectedPin}}
       {{this.syncPulse}}
