@@ -92,6 +92,17 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 - **Smart Linking:** The `showPlaces` action intercepts search results and automatically resolves them to existing **Bookmarks** if a match is found (via `storage.findPlaceById`). This ensures the app navigates to the persistent Bookmark URL (ULID) and correctly reflects the "Saved" status in the UI instead of treating it as a new generic OSM place.
 - **Data Normalization:** Refactored `OsmService` to return normalized objects (`osmTags`, `osmType`) for all queries. This ensures consistent data structures between fresh Overpass results and saved bookmarks throughout the app.
 
+### 5. Creation & Editing Workflow
+
+- **Create Place:**
+  - Implemented `/place/new` route for creating new private places.
+  - **UX:** Map displays a central crosshair for precise location selection.
+  - **Mobile Optimization:**
+    - Disabled map inertia (`kinetic: false`) to ensure the map stops exactly where the finger releases.
+    - `PlaceEditForm` conditionally disables autofocus on mobile screens (`<= 768px`) to prevent the onscreen keyboard from obscuring the map view immediately.
+    - Responsive crosshair sizing (48px desktop / 24px mobile).
+  - **Persistence:** Form data (Title, Description) and Map coordinates are securely saved to RemoteStorage via `storage.storePlace`.
+
 ## Current State
 
 - **Repo:** The app runs via `pnpm start`.
@@ -102,20 +113,20 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
       - If direct match: Redirect to `/place/:id`.
       - If multiple results: Show `/search` list view.
   4.  Sidebar displays details via `<PlaceDetails>` component (Bottom sheet on mobile).
-  5.  User clicks "Save Bookmark" -> Stores JSON in RemoteStorage.
-  6.  RemoteStorage change event -> Debounced reload updates the map reactive-ly.
+  5.  **Creation:** User clicks "Create Place" -> Enters creation mode (crosshair) -> Positions map -> Enters details -> Save.
+  6.  **Persistence:** RemoteStorage change event -> Debounced reload updates the map reactive-ly.
   7.  **Editing:** User can edit the Title and Description of saved bookmarks via an "Edit" button in the details view.
   8.  **Settings:** User can change the Overpass API provider via the new Settings menu.
 
 ## Files Currently in Focus
 
-- `app/services/osm.js`: Caching logic.
-- `app/routes/search.js`: Search heuristics.
-- `app/components/place-details.gjs`: Formatting logic.
+- `app/components/map.gjs`
+- `app/components/place-edit-form.gjs`
+- `app/templates/place/new.gjs`
 
 ## Next Steps & Pending Tasks
 
-1.  **Linting & Code Quality:** Fix remaining CSS errors, remove inline styles in `map.gjs`, and address unused variables/runloop usage.
+1.  **Linting & Code Quality:** Fix remaining CSS errors and address unused variables/runloop usage.
 2.  **Testing:** Add automated tests for the geohash coverage, retry logic, and new editing features.
 3.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
 
