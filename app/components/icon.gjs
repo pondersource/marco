@@ -17,6 +17,7 @@ import navigation from 'feather-icons/dist/icons/navigation.svg?raw';
 import phone from 'feather-icons/dist/icons/phone.svg?raw';
 import server from 'feather-icons/dist/icons/server.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
+import target from 'feather-icons/dist/icons/target.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
@@ -38,6 +39,7 @@ const ICONS = {
   phone,
   server,
   settings,
+  target,
   user,
   x,
   zap,

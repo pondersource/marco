@@ -122,7 +122,7 @@ export default class PlacesSidebar extends Component {
     try {
       const savedPlace = await this.storage.updatePlace(updatedPlace);
       console.log('Place updated:', savedPlace.title);
-      
+
       // Notify parent to refresh map/lists
       if (this.args.onBookmarkChange) {
         this.args.onBookmarkChange();
@@ -148,7 +148,7 @@ export default class PlacesSidebar extends Component {
             {{on "click" this.clearSelection}}
           ><Icon @name="arrow-left" @size={{20}} @color="#333" /></button>
         {{else}}
-          <h2>Nearby Places</h2>
+        <h2><Icon @name="target" @size={{20}} @color="#ea4335" /> Nearby</h2>
         {{/if}}
         <button type="button" class="close-btn" {{on "click" @onClose}}><Icon
             @name="x"
