@@ -1,6 +1,6 @@
 # Project Status: Marco
 
-**Last Updated:** Mon Jan 26 2026
+**Last Updated:** Tue Jan 27 2026
 
 ## Project Context
 
@@ -15,7 +15,6 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 - Implemented a hybrid click handler:
   - Detects clicks on visual vector tiles.
   - Falls back to fetching authoritative data from an **Overpass API** service.
-  - Uses a **heuristic** (distance + type matching) to link visual clicks to API results (handling data desynchronization).
   - **Logic Upgrade:** Map intelligently detects if _any_ sidebar/pane is open and handles outside clicks to close them instead of initiating new searches.
 - **Optimization:** Added **10px hit tolerance** for easier tapping on mobile devices.
 - **Visuals:** Increased bookmark marker size (Radius 9px) and added a subtle drop shadow.
@@ -58,6 +57,7 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   - `osm.js`: Fetches nearby POIs from Overpass API.
     - **Configurable:** Now supports dynamic API endpoints via `SettingsService`.
     - **Reliability:** Implemented `fetchWithRetry` to handle HTTP 504/502/503 timeouts and 429 rate limits, in addition to network errors.
+    - **Caching:** Implemented in-memory cache for repeated `getNearbyPois` requests (same lat/lon/radius) to enable instant "Back" navigation.
   - `settings.js`: Manages user preferences (currently Overpass API provider) persisted to `localStorage`.
 - **UI Components:**
   - `places-sidebar.gjs`: Displays a list of nearby POIs.
@@ -73,26 +73,34 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 - **Geo Utils:**
   - `app/utils/geo.js`: Haversine distance calculations.
   - `app/utils/geohash-coverage.js`: Logic to calculate required 4-char geohash prefixes for a given bounding box.
+- **Format Utils:**
+  - `app/utils/format-text.js` & `humanize-osm-tag` helper: Standardized logic (Title Case, space replacement) for displaying OSM tags like `guest_house` -> "Guest House".
 - **Build & DevOps:**
   - **Icon Generation:** Added `build:icons` script using `magick` and `rsvg-convert` to automate PNG generation from SVG.
   - **Dependencies:** Documented system requirements (ImageMagick, librsvg) in `README.md`.
   - **Ember CLI:** Added as dev dependency to support generator commands.
   - **License:** Added AGPLv3 license.
 
-### 4. Routing & Data Optimization
+### 4. Routing & Architecture (Refactored)
 
-- **Explicit URLs:** Implemented routing support for specific OSM entities via `/place/osm:node:<id>` and `/place/osm:way:<id>`, distinguishing them from local bookmarks (ULIDs).
+- **URL-Driven Architecture:** Moved from service-based state to proper route-based state management.
+  - `/search?lat=...&lon=...&q=...`: Displays search results list.
+  - `/place/:place_id`: Displays details for a specific place (OSM POI or Bookmark).
+- **Heuristic Navigation:** The `search` route implements "visual click matching" logic. If a search yields a direct match (exact name or very close proximity), it automatically redirects to the `/place/` route, skipping the list view.
+- **Back Button Support:** Browser history works correctly. Navigating "Back" from a place returns to the cached search results instantly without network requests.
+- **Explicit URLs:** Routes support specific OSM entities via `/place/osm:node:<id>` and `/place/osm:way:<id>`, distinguishing them from local bookmarks (ULIDs).
 - **Smart Linking:** The `showPlaces` action intercepts search results and automatically resolves them to existing **Bookmarks** if a match is found (via `storage.findPlaceById`). This ensures the app navigates to the persistent Bookmark URL (ULID) and correctly reflects the "Saved" status in the UI instead of treating it as a new generic OSM place.
 - **Data Normalization:** Refactored `OsmService` to return normalized objects (`osmTags`, `osmType`) for all queries. This ensures consistent data structures between fresh Overpass results and saved bookmarks throughout the app.
-- **Performance:** Optimized navigation to prevent redundant network requests. Clicking a map pin passes the existing data object to the route, skipping the `model` hook (no re-fetch) while maintaining correct deep-linkable URLs via a custom `serialize` hook in `PlaceRoute`.
 
 ## Current State
 
 - **Repo:** The app runs via `pnpm start`.
 - **Workflow:**
   1.  User pans map -> `moveend` triggers `storage.loadPlacesInBounds`.
-  2.  User clicks map -> "Pulse" animation -> hybrid hit detection (Visual Tile vs Overpass).
-  3.  **Navigation:** Selected place is checked against bookmarks; if found, it uses the Bookmark object. Otherwise, it uses the OSM object.
+  2.  User clicks map -> Route transition to `/search` -> "Pulse" animation -> hybrid hit detection (Visual Tile vs Overpass).
+  3.  **Navigation:**
+      - If direct match: Redirect to `/place/:id`.
+      - If multiple results: Show `/search` list view.
   4.  Sidebar displays details via `<PlaceDetails>` component (Bottom sheet on mobile).
   5.  User clicks "Save Bookmark" -> Stores JSON in RemoteStorage.
   6.  RemoteStorage change event -> Debounced reload updates the map reactive-ly.
@@ -101,17 +109,15 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 
 ## Files Currently in Focus
 
-- `app/styles/app.css`: Mobile CSS fixes (font sizes, control positioning).
-- `package.json`: New scripts and dependencies.
-- `README.md`: Updated documentation.
+- `app/services/osm.js`: Caching logic.
+- `app/routes/search.js`: Search heuristics.
+- `app/components/place-details.gjs`: Formatting logic.
 
 ## Next Steps & Pending Tasks
 
-1.  **Mobile Polish:** Verify "Locate Me" animation on iOS Safari.
-2.  **Collections/Lists:** Implement ability to organize bookmarks into lists/collections.
-3.  **Linting & Code Quality:** Fix remaining CSS errors, remove inline styles in `map.gjs`, and address unused variables/runloop usage.
-4.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
-5.  **Testing:** Add automated tests for the geohash coverage, retry logic, and new editing features.
+1.  **Linting & Code Quality:** Fix remaining CSS errors, remove inline styles in `map.gjs`, and address unused variables/runloop usage.
+2.  **Testing:** Add automated tests for the geohash coverage, retry logic, and new editing features.
+3.  **Performance:** Monitor performance with large datasets (thousands of bookmarks).
 
 ## Technical Constraints
 
