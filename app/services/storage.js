@@ -244,7 +244,9 @@ export default class StorageService extends Service {
 
     // Update both lists
     this.savedPlaces = this.savedPlaces.filter((p) => p.id !== place.id);
-    this.placesInView = this.placesInView.filter((p) => p.id !== place.id);
+    if (this.placesInView.length > 0) {
+      this.placesInView = this.placesInView.filter((p) => p.id !== place.id);
+    }
   }
 
   @action

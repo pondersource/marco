@@ -688,41 +688,22 @@ span.icon {
   }
 }
 
-/* Helper Text */
 .helper-text {
   background: #eef4fc;
   color: #1a5c9b;
   padding: 0.75rem;
   border-radius: 4px;
   font-size: 0.9rem;
+  margin-top: 0;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* Create Place Button */
-.create-place-btn {
+button.create-place {
   width: 100%;
-  padding: 1rem;
-  margin-top: 1rem;
-  background: white;
-  border: 1px dashed #ccc;
-  border-radius: 8px;
-  color: #666;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-}
-
-.create-place-btn:hover {
-  background: #f8f9fa;
-  border-color: #999;
-  color: #333;
+  margin: 1.5rem auto;
 }
 
 @media (width <= 768px) {

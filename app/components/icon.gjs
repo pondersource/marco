@@ -15,6 +15,7 @@ import mapPin from 'feather-icons/dist/icons/map-pin.svg?raw';
 import menu from 'feather-icons/dist/icons/menu.svg?raw';
 import navigation from 'feather-icons/dist/icons/navigation.svg?raw';
 import phone from 'feather-icons/dist/icons/phone.svg?raw';
+import plus from 'feather-icons/dist/icons/plus.svg?raw';
 import server from 'feather-icons/dist/icons/server.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
 import target from 'feather-icons/dist/icons/target.svg?raw';
@@ -37,6 +38,7 @@ const ICONS = {
   menu,
   navigation,
   phone,
+  plus,
   server,
   settings,
   target,
