@@ -12,7 +12,7 @@ export default class OsmService extends Service {
 
     // Return cached results if the query is identical to the last one
     if (this.lastQueryKey === queryKey && this.cachedResults) {
-      console.log('Returning cached Overpass results for:', queryKey);
+      console.debug('Returning cached Overpass results for:', queryKey);
       return this.cachedResults;
     }
 
@@ -52,7 +52,7 @@ out center;
       return results;
     } catch (e) {
       if (e.name === 'AbortError') {
-        console.log('Overpass request aborted');
+        console.debug('Overpass request aborted');
         return [];
       }
       throw e;
@@ -78,7 +78,7 @@ out center;
       const res = await fetch(url, options);
 
       if (!res.ok && retries > 0 && [502, 503, 504, 429].includes(res.status)) {
-        console.log(
+        console.warn(
           `Overpass request failed with ${res.status}. Retrying... (${retries} left)`
         );
         await new Promise((r) => setTimeout(r, 1000));
@@ -88,7 +88,7 @@ out center;
       return res;
     } catch (e) {
       if (retries > 0 && e.name !== 'AbortError') {
-        console.log(`Retrying Overpass request... (${retries} left)`);
+        console.debug(`Retrying Overpass request... (${retries} left)`);
         await new Promise((r) => setTimeout(r, 1000));
         return this.fetchWithRetry(url, options, retries - 1);
       }

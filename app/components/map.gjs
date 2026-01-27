@@ -722,7 +722,7 @@ export default class MapComponent extends Component {
     if (this.args.isSidebarOpen) {
       // If it's a bookmark, we allow "switching" to it even if sidebar is open
       if (clickedBookmark) {
-        console.log(
+        console.debug(
           'Clicked bookmark while sidebar open (switching):',
           clickedBookmark
         );
@@ -739,7 +739,7 @@ export default class MapComponent extends Component {
 
     // Normal behavior (sidebar is closed)
     if (clickedBookmark) {
-      console.log('Clicked bookmark:', clickedBookmark);
+      console.debug('Clicked bookmark:', clickedBookmark);
       this.router.transitionTo('place', clickedBookmark);
       return;
     }

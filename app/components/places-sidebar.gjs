@@ -50,7 +50,7 @@ export default class PlacesSidebar extends Component {
       if (confirm(`Delete "${place.title}"?`)) {
         try {
           await this.storage.removePlace(place);
-          console.log('Place deleted:', place.title);
+          console.debug('Place deleted:', place.title);
 
           // Notify parent to refresh map bookmarks
           if (this.args.onBookmarkChange) {
@@ -104,7 +104,7 @@ export default class PlacesSidebar extends Component {
 
       try {
         const savedPlace = await this.storage.storePlace(placeData);
-        console.log('Place saved:', placeData.title);
+        console.debug('Place saved:', placeData.title);
 
         // Notify parent to refresh map bookmarks
         if (this.args.onBookmarkChange) {
@@ -131,7 +131,7 @@ export default class PlacesSidebar extends Component {
   async updateBookmark(updatedPlace) {
     try {
       const savedPlace = await this.storage.updatePlace(updatedPlace);
-      console.log('Place updated:', savedPlace.title);
+      console.debug('Place updated:', savedPlace.title);
 
       // Notify parent to refresh map/lists
       if (this.args.onBookmarkChange) {

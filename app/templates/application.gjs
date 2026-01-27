@@ -28,7 +28,7 @@ export default class ApplicationComponent extends Component {
 
   constructor() {
     super(...arguments);
-    console.log('Application component constructed');
+    console.debug('Application component constructed');
     // Access the service to ensure it is instantiated
     this.storage;
   }

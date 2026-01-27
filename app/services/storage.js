@@ -23,7 +23,6 @@ export default class StorageService extends Service {
 
   constructor() {
     super(...arguments);
-    console.log('ohai');
 
     this.rs = new RemoteStorage({
       modules: [Places],
@@ -45,13 +44,11 @@ export default class StorageService extends Service {
     });
 
     this.rs.on('connected', () => {
-      console.debug('Remote storage connected');
       this.connected = true;
       this.userAddress = this.rs.remote.userAddress;
     });
 
     this.rs.on('disconnected', () => {
-      console.debug('Remote storage disconnected');
       this.connected = false;
       this.userAddress = null;
       this.placesInView = [];
@@ -128,7 +125,7 @@ export default class StorageService extends Service {
 
     // Recalculate prefixes for the current view
     const required = getGeohashPrefixesInBbox(this.currentBbox);
-    console.log('Reloading view due to changes, prefixes:', required);
+    console.debug('Reloading view due to changes, prefixes:', required);
 
     // Force load these prefixes (bypassing the 'already loaded' check in loadPlacesInBounds)
     this.loadAllPlaces(required);
@@ -144,11 +141,11 @@ export default class StorageService extends Service {
     );
 
     if (missingPrefixes.length === 0) {
-      // console.log('All prefixes already loaded for this view');
+      // console.debug('All prefixes already loaded for this view');
       return;
     }
 
-    console.log('Loading new prefixes:', missingPrefixes);
+    console.debug('Loading new prefixes:', missingPrefixes);
 
     // 3. Load places for only the new prefixes
     await this.loadAllPlaces(missingPrefixes);
@@ -195,7 +192,7 @@ export default class StorageService extends Service {
       } else {
         if (!prefixes) this.placesInView = [];
       }
-      console.log('Loaded saved places:', this.placesInView.length);
+      console.debug('Loaded saved places:', this.placesInView.length);
     } catch (e) {
       console.error('Failed to load places:', e);
     }

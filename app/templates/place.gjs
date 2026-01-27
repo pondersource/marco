@@ -63,7 +63,7 @@ export default class PlaceTemplate extends Component {
 
   @action
   handleUpdate(newPlace) {
-    console.log('Updating local place state:', newPlace);
+    console.debug('Updating local place state:', newPlace);
     this.localPlace = newPlace;
     this.storage.notifyChange();
   }

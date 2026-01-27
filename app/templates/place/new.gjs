@@ -45,7 +45,7 @@ export default class PlaceNewTemplate extends Component {
       };
 
       const savedPlace = await this.storage.storePlace(placeData);
-      console.log('Created private place:', savedPlace.title);
+      console.debug('Created private place:', savedPlace.title);
 
       // Transition to the new place
       this.router.replaceWith('place', savedPlace);

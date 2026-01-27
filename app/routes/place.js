@@ -11,7 +11,7 @@ export default class PlaceRoute extends Route {
 
     if (id.startsWith('osm:node:') || id.startsWith('osm:way:')) {
       const [, type, osmId] = id.split(':');
-      console.log(`Fetching explicit OSM ${type}:`, osmId);
+      console.debug(`Fetching explicit OSM ${type}:`, osmId);
       return this.loadOsmPlace(osmId, type);
     }
 
@@ -20,7 +20,7 @@ export default class PlaceRoute extends Route {
     let bookmark = this.storage.findPlaceById(id);
 
     if (bookmark) {
-      console.log('Found in bookmarks:', bookmark.title);
+      console.debug('Found in bookmarks:', bookmark.title);
       return bookmark;
     }
 
@@ -31,7 +31,7 @@ export default class PlaceRoute extends Route {
   async waitForSync() {
     if (this.storage.initialSyncDone) return;
 
-    console.log('Waiting for initial storage sync...');
+    console.debug('Waiting for initial storage sync...');
     const timeout = 5000;
     const start = Date.now();
 
