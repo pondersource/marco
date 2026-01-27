@@ -374,6 +374,16 @@ export default class MapComponent extends Component {
       ? new Kinetic(-0.005, 0.05, 100)
       : false;
 
+    // Fix for "sticky" touches on mobile:
+    // If we're on mobile (width <= 768) AND using kinetic,
+    // we increase the minimum velocity required to trigger kinetic panning.
+    // This prevents slow drags from being interpreted as a "throw"
+    if (this.settings.mapKinetic && window.innerWidth <= 768) {
+      // Default minVelocity is 0.05. We bump it up significantly.
+      // This means the user has to really "flick" the map to get inertia.
+      kinetic.minVelocity_ = 0.25;
+    }
+
     this.mapInstance.addInteraction(
       new DragPan({
         kinetic: kinetic,

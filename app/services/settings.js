@@ -28,13 +28,8 @@ export default class SettingsService extends Service {
     const savedKinetic = localStorage.getItem('marco:map-kinetic');
     if (savedKinetic !== null) {
       this.mapKinetic = savedKinetic === 'true';
-    } else {
-      // Default: disabled on small screens (mobile), enabled on desktop
-      // We check for typical mobile width (<= 768px)
-      if (typeof window !== 'undefined') {
-        this.mapKinetic = window.innerWidth > 768;
-      }
     }
+    // Default is true (initialized in class field)
   }
 
   updateOverpassApi(url) {
