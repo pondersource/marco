@@ -13,6 +13,13 @@ export default class PlaceEditForm extends Component {
     this.description = this.args.place?.description || '';
   }
 
+  get shouldAutofocus() {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 768;
+    }
+    return false;
+  }
+
   @action
   handleSubmit(event) {
     event.preventDefault();
@@ -45,7 +52,7 @@ export default class PlaceEditForm extends Component {
           {{on "input" this.updateTitle}}
           class="form-control"
           placeholder="Name of the place"
-          autofocus
+          autofocus={{this.shouldAutofocus}}
         />
       </div>
       <div class="form-group">
