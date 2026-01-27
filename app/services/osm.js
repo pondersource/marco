@@ -4,8 +4,18 @@ export default class OsmService extends Service {
   @service settings;
 
   controller = null;
+  cachedResults = null;
+  lastQueryKey = null;
 
   async getNearbyPois(lat, lon, radius = 50) {
+    const queryKey = `${lat},${lon},${radius}`;
+
+    // Return cached results if the query is identical to the last one
+    if (this.lastQueryKey === queryKey && this.cachedResults) {
+      console.log('Returning cached Overpass results for:', queryKey);
+      return this.cachedResults;
+    }
+
     // Cancel previous request if it exists
     if (this.controller) {
       this.controller.abort();
@@ -33,7 +43,13 @@ out center;
       const data = await res.json();
 
       // Normalize data
-      return data.elements.map(this.normalizePoi);
+      const results = data.elements.map(this.normalizePoi);
+
+      // Update cache
+      this.lastQueryKey = queryKey;
+      this.cachedResults = results;
+
+      return results;
     } catch (e) {
       if (e.name === 'AbortError') {
         console.log('Overpass request aborted');
