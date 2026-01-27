@@ -23,13 +23,6 @@ export default class PlacesSidebar extends Component {
     if (this.args.onSelect) {
       this.args.onSelect(null);
     }
-
-    // Fallback logic: if no list available, close sidebar
-    if (!this.args.places || this.args.places.length === 0) {
-      if (this.args.onClose) {
-        this.args.onClose();
-      }
-    }
   }
 
   @action

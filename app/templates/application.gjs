@@ -1,26 +1,28 @@
 import Component from '@glimmer/component';
 import { pageTitle } from 'ember-page-title';
 import Map from '#components/map';
-import PlacesSidebar from '#components/places-sidebar';
 import AppHeader from '#components/app-header';
 import SettingsPane from '#components/settings-pane';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { eq } from 'ember-truth-helpers';
-import { and, or } from 'ember-truth-helpers';
+import { or } from 'ember-truth-helpers';
 import { on } from '@ember/modifier';
 
 export default class ApplicationComponent extends Component {
   @service storage;
+  @service mapUi;
   @service router;
 
-  @tracked nearbyPlaces = null;
   @tracked isSettingsOpen = false;
-  // @tracked bookmarksVersion = 0; // Moved to storage service
 
   get isSidebarOpen() {
-    return !!this.nearbyPlaces || this.router.currentRouteName === 'place';
+     // We consider the sidebar "open" if we are in search or place routes.
+     // This helps the map know if it should shift the center or adjust view.
+    return (
+      this.router.currentRouteName === 'place' ||
+      this.router.currentRouteName === 'search'
+    );
   }
 
   constructor() {
@@ -28,32 +30,6 @@ export default class ApplicationComponent extends Component {
     console.log('Application component constructed');
     // Access the service to ensure it is instantiated
     this.storage;
-  }
-
-  @action
-  showPlaces(places, selectedPlace = null) {
-    // Helper to resolve a place to its bookmark if it exists
-    const resolvePlace = (p) => {
-      if (!p) return null;
-      // We use the OSM ID to check if we already have this place saved
-      const saved = this.storage.findPlaceById(p.osmId);
-      return saved || p;
-    };
-
-    const resolvedSelected = resolvePlace(selectedPlace);
-    const resolvedPlaces = places ? places.map(resolvePlace) : [];
-
-    // If we have a specific place, transition to the route
-    if (resolvedSelected) {
-      // Pass the FULL object model to avoid re-fetching!
-      // The Route's serialize() hook handles URL generation.
-      this.router.transitionTo('place', resolvedSelected);
-      this.nearbyPlaces = null; // Clear list when selecting specific
-    } else if (resolvedPlaces && resolvedPlaces.length > 0) {
-      // Show list case
-      this.nearbyPlaces = resolvedPlaces;
-      this.router.transitionTo('index');
-    }
   }
 
   @action
@@ -67,26 +43,17 @@ export default class ApplicationComponent extends Component {
   }
 
   @action
-  selectFromList(place) {
-    if (place) {
-      // Optimize: Pass full object to avoid fetch
-      this.router.transitionTo('place', place);
-    }
-  }
-
-  @action
   handleOutsideClick() {
     if (this.isSettingsOpen) {
       this.closeSettings();
-    } else {
-      this.closeSidebar();
+    } else if (this.router.currentRouteName === 'search') {
+       this.router.transitionTo('index');
+    } else if (this.router.currentRouteName === 'place') {
+       // If in place route, decide if we want to go back to search or index
+       // For now, let's go to index or maybe back to search if search params exist?
+       // Simplest behavior: clear selection
+       this.router.transitionTo('index');
     }
-  }
-
-  @action
-  closeSidebar() {
-    this.nearbyPlaces = null;
-    this.router.transitionTo('index');
   }
 
   @action
@@ -113,18 +80,9 @@ export default class ApplicationComponent extends Component {
     {{/if}}
 
     <Map
-      @onPlacesFound={{this.showPlaces}}
       @isSidebarOpen={{or this.isSidebarOpen this.isSettingsOpen}}
       @onOutsideClick={{this.handleOutsideClick}}
     />
-
-    {{#if (and (eq this.router.currentRouteName "index") this.nearbyPlaces)}}
-      <PlacesSidebar
-        @places={{this.nearbyPlaces}}
-        @onSelect={{this.selectFromList}}
-        @onClose={{this.closeSidebar}}
-      />
-    {{/if}}
 
     {{#if this.isSettingsOpen}}
       <SettingsPane @onClose={{this.closeSettings}} />

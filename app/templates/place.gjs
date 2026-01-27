@@ -7,6 +7,7 @@ import { tracked } from '@glimmer/tracking';
 export default class PlaceTemplate extends Component {
   @service router;
   @service storage;
+  @service mapUi;
 
   @tracked localPlace = null;
 
@@ -73,7 +74,25 @@ export default class PlaceTemplate extends Component {
   }
 
   @action
+  navigateBack(place) {
+    // The sidebar calls this with null when "Back" is clicked.
+    if (place === null) {
+      // If we have history, go back (preserves search state)
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // Fallback if opened directly
+        this.router.transitionTo('index');
+      }
+    } else {
+      // If a place is selected (unlikely in this view, but possible if we add related links)
+      this.router.transitionTo('place', place);
+    }
+  }
+
+  @action
   close() {
+    // Clear search results so we don't fall back to the list
     this.router.transitionTo('index');
   }
 
@@ -81,6 +100,7 @@ export default class PlaceTemplate extends Component {
     <PlacesSidebar
       @selectedPlace={{this.place}}
       @onClose={{this.close}}
+      @onSelect={{this.navigateBack}}
       @onBookmarkChange={{this.refreshMap}}
       @onUpdate={{this.handleUpdate}}
     />

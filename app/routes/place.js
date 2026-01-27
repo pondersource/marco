@@ -49,6 +49,8 @@ export default class PlaceRoute extends Route {
     if (model) {
       this.mapUi.selectPlace(model);
     }
+    // Stop the pulse animation if it was running (e.g. redirected from search)
+    this.mapUi.stopSearch();
   }
 
   deactivate() {

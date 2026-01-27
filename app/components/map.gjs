@@ -21,6 +21,7 @@ export default class MapComponent extends Component {
   @service osm;
   @service storage;
   @service mapUi;
+  @service router;
 
   mapInstance;
   bookmarkSource;
@@ -510,6 +511,17 @@ export default class MapComponent extends Component {
     }
   }
 
+  // Sync the pulse animation with the UI service state
+  syncPulse = modifier(() => {
+    if (!this.searchOverlayElement) return;
+
+    if (this.mapUi.isSearching) {
+      this.searchOverlayElement.classList.add('active');
+    } else {
+      this.searchOverlayElement.classList.remove('active');
+    }
+  });
+
   handleMapMove = async () => {
     if (!this.mapInstance) return;
 
@@ -546,7 +558,6 @@ export default class MapComponent extends Component {
     });
     let clickedBookmark = null;
     let selectedFeatureName = null;
-    let selectedFeatureType = null;
 
     if (features && features.length > 0) {
       console.debug(`Found ${features.length} features in map layer:`);
@@ -561,7 +572,6 @@ export default class MapComponent extends Component {
       const props = features[0].getProperties();
       if (props.name) {
         selectedFeatureName = props.name;
-        selectedFeatureType = props.class || props.subclass;
       }
     }
 
@@ -573,9 +583,7 @@ export default class MapComponent extends Component {
           'Clicked bookmark while sidebar open (switching):',
           clickedBookmark
         );
-        if (this.args.onPlacesFound) {
-          this.args.onPlacesFound([], clickedBookmark);
-        }
+        this.router.transitionTo('place', clickedBookmark);
         return;
       }
 
@@ -589,9 +597,7 @@ export default class MapComponent extends Component {
     // Normal behavior (sidebar is closed)
     if (clickedBookmark) {
       console.log('Clicked bookmark:', clickedBookmark);
-      if (this.args.onPlacesFound) {
-        this.args.onPlacesFound([], clickedBookmark);
-      }
+      this.router.transitionTo('place', clickedBookmark);
       return;
     }
 
@@ -615,76 +621,21 @@ export default class MapComponent extends Component {
       this.searchOverlayElement.style.width = `${diameterInPixels}px`;
       this.searchOverlayElement.style.height = `${diameterInPixels}px`;
       this.searchOverlay.setPosition(event.coordinate);
-      this.searchOverlayElement.classList.add('active');
     }
 
-    // 2. Fetch authoritative data via Overpass
-    try {
-      let pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
+    // Start Search State
+    this.mapUi.startSearch();
 
-      // Sort by distance from click
-      pois = pois
-        .map((p) => {
-          // p is already normalized by service, so lat/lon are at top level
-          return {
-            ...p,
-            _distance: getDistance(lat, lon, p.lat, p.lon),
-          };
-        })
-        .sort((a, b) => a._distance - b._distance);
-
-      let matchedPlace = null;
-
-      if (selectedFeatureName && pois.length > 0) {
-        // Heuristic:
-        // 1. Exact Name Match
-        matchedPlace = pois.find(
-          (p) =>
-            p.osmTags &&
-            (p.osmTags.name === selectedFeatureName ||
-              p.osmTags['name:en'] === selectedFeatureName)
-        );
-
-        // 2. If no exact match, look for VERY close (<=20m) and matching type
-        if (!matchedPlace) {
-          const topCandidate = pois[0];
-          if (topCandidate._distance <= 20) {
-            // Check type compatibility if available
-            // (visual tile 'class' is often 'cafe', osm tag is 'amenity'='cafe')
-            const pType =
-              topCandidate.osmTags.amenity ||
-              topCandidate.osmTags.shop ||
-              topCandidate.osmTags.tourism;
-            if (
-              selectedFeatureType &&
-              pType &&
-              (selectedFeatureType === pType ||
-                pType.includes(selectedFeatureType))
-            ) {
-              console.log(
-                'Heuristic match found (distance + type):',
-                topCandidate
-              );
-              matchedPlace = topCandidate;
-            } else if (topCandidate._distance <= 10) {
-              // Even without type match, if it's super close (<=10m), it's likely the one.
-              console.log('Heuristic match found (proximity):', topCandidate);
-              matchedPlace = topCandidate;
-            }
-          }
-        }
-      }
-
-      if (this.args.onPlacesFound) {
-        this.args.onPlacesFound(pois, matchedPlace);
-      }
-    } catch (error) {
-      console.error('Failed to fetch POIs:', error);
-    } finally {
-      if (this.searchOverlayElement) {
-        this.searchOverlayElement.classList.remove('active');
-      }
+    // Transition to Search Route
+    const queryParams = {
+      lat: lat.toFixed(6),
+      lon: lon.toFixed(6),
+    };
+    if (selectedFeatureName) {
+      queryParams.q = selectedFeatureName;
     }
+
+    this.router.transitionTo('search', { queryParams });
   };
 
   <template>
@@ -693,6 +644,7 @@ export default class MapComponent extends Component {
       {{this.setupMap}}
       {{this.updateBookmarks}}
       {{this.updateSelectedPin}}
+      {{this.syncPulse}}
     ></div>
   </template>
 }
