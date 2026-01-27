@@ -57,12 +57,7 @@ export default class PlacesSidebar extends Component {
             this.args.onBookmarkChange();
           }
 
-          // Update selection to the new saved place object
-          // This updates the local UI state immediately without a route refresh
           if (this.args.onUpdate) {
-            // When deleting, we revert to a "fresh" object or just close.
-            // Since we close the sidebar below, we might not strictly need to update local state,
-            // but it's good practice.
             // Reconstruct the "original" place without ID/Geohash/CreatedAt
             const freshPlace = {
               ...place,
@@ -75,7 +70,6 @@ export default class PlacesSidebar extends Component {
 
           // Also fire onSelect if it exists (for list view)
           if (this.args.onSelect) {
-            // Similar logic for select if needed, but we usually close.
             this.args.onSelect(null);
           }
 

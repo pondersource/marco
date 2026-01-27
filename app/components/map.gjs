@@ -28,8 +28,8 @@ export default class MapComponent extends Component {
   searchOverlayElement;
   selectedPinOverlay;
   selectedPinElement;
-  crosshairElement; // New crosshair
-  crosshairOverlay; // New crosshair overlay
+  crosshairElement;
+  crosshairOverlay;
 
   setupMap = modifier((element) => {
     if (this.mapInstance) return;
@@ -114,18 +114,13 @@ export default class MapComponent extends Component {
     this.mapInstance.addOverlay(this.searchOverlay);
 
     // Selected Pin Overlay (Red Marker)
-    // We create the element in the template (or JS) and attach it.
-    // Using JS creation to ensure it's cleanly managed by OpenLayers
     this.selectedPinElement = document.createElement('div');
     this.selectedPinElement.className = 'selected-pin-container';
 
     // Create the icon structure inside
     const pinIcon = document.createElement('div');
     pinIcon.className = 'selected-pin';
-    // We can't use the Glimmer <Icon> component easily inside a raw DOM element created here.
-    // So we'll inject the SVG string directly or mount it.
-    // Feather icons are globally available if we used the script, but we are using the module approach.
-    // Simple SVG for Map Pin:
+    // Simple SVG for Map Pin
     pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" style="fill: #b31412; stroke: none;"></circle></svg>`;
 
     const pinShadow = document.createElement('div');
@@ -136,7 +131,7 @@ export default class MapComponent extends Component {
 
     this.selectedPinOverlay = new Overlay({
       element: this.selectedPinElement,
-      positioning: 'bottom-center', // Important: Pin tip is at the bottom
+      positioning: 'bottom-center', // Pin tip is at the bottom
       stopEvent: false, // Let clicks pass through
     });
     this.mapInstance.addOverlay(this.selectedPinOverlay);
@@ -144,24 +139,15 @@ export default class MapComponent extends Component {
     // Crosshair Overlay (for Creating New Place)
     this.crosshairElement = document.createElement('div');
     this.crosshairElement.className = 'map-crosshair';
-    // Use an SVG or simple CSS cross
     this.crosshairElement.innerHTML = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>
       </svg>
     `;
-    // We attach it to the map control container OR keep it as an overlay centered on map center?
-    // Actually, a fixed center overlay is trickier in OpenLayers because Overlays move with the map.
-    // If we want it FIXED in the center of the VIEWPORT, it should be a Control or just an absolute HTML element on top of the map div.
-    // Adding it as a Control is cleaner.
-
-    // HOWEVER, the request says "cross hair drawn on the map... which should be removed when saving".
-    // A fixed element in the center of the screen is best for "choose location by dragging map".
-    // So let's append it to the map container directly via Glimmer template or JS.
-
-    // We'll append it to the map target element (this.element is the target).
     element.appendChild(this.crosshairElement);
+
+
 
 
     // Geolocation Pulse Overlay
@@ -306,7 +292,7 @@ export default class MapComponent extends Component {
       };
 
       if (targetResolution) {
-        const maxResolution = view.getResolutionForZoom(17); // Use 17 as safe max zoom for accuracy < 20m
+        const maxResolution = view.getResolutionForZoom(17);
         viewOptions.resolution = Math.max(targetResolution, maxResolution);
       } else {
         viewOptions.zoom = 16;
@@ -362,16 +348,9 @@ export default class MapComponent extends Component {
       this.mapInstance.getTarget().style.cursor = hit ? 'pointer' : '';
     });
 
-    // Load initial bookmarks
     this.storage.rs.on('ready', () => {
-      // Initial load based on current view
       this.handleMapMove();
     });
-
-    // Listen for remote storage changes
-    // this.storage.rs.on('connected', () => {
-    //   this.loadBookmarks();
-    // });
   });
 
   // Track the selected place from the UI Service (Router -> Map)
@@ -440,12 +419,9 @@ export default class MapComponent extends Component {
       const offsetPixels = height * 0.25; // Distance from desired pin pos to map center
       const offsetMapUnits = offsetPixels * resolution;
 
-      // Shift center SOUTH (decrease Y)
+      // Shift center SOUTH (decrease Y).
       // Note: In Web Mercator (EPSG:3857), Y increases North.
-      // So to look "lower", we decrease Y? No wait.
-      // If we move the camera South (decrease Y), the features move North (Up) on screen.
-      // We want the Pin (fixed lat/lon) to be Higher up on screen.
-      // So we must move the Camera South (Lower Y).
+      // To move the camera South (Lower Y), we subtract.
       targetCenter = [coords[0], coords[1] - offsetMapUnits];
     }
 
@@ -493,7 +469,6 @@ export default class MapComponent extends Component {
     }
   }
 
-  // Re-fetch bookmarks when the version changes (triggered by parent action or service)
   updateBookmarks = modifier(() => {
     // Depend on the tracked storage.placesInView to automatically update when they change
     const places = this.storage.placesInView;
@@ -505,15 +480,10 @@ export default class MapComponent extends Component {
       if (!this.bookmarkSource) return;
 
       if (!places || places.length === 0) {
-        // Fallback or explicit check if we have tracked property usage?
-        // The service updates 'placesInView'. We should probably use that if we want reactiveness.
         places = this.storage.placesInView;
       }
 
-      // Previously: const places = await this.storage.places.getPlaces();
-      // We no longer want to fetch everything blindly.
       // We rely on 'placesInView' being updated by handleMapMove calling storage.loadPlacesInBounds.
-
       this.bookmarkSource.clear();
 
       if (places && Array.isArray(places)) {
@@ -557,15 +527,7 @@ export default class MapComponent extends Component {
       // we need to pan the map so those coordinates are UNDER the crosshair.
       const coords = this.mapUi.creationCoordinates;
       if (coords && coords.lat && coords.lon) {
-        // We only animate if the map center isn't already "roughly" correct
-        // But actually, updateCreationCoordinates is called by handleMapMove too.
-        // We need to distinguish "initial set" vs "drag update".
-        // The Service doesn't distinguish, but if we are just entering mode,
-        // we can check if the current map center aligns.
-
-        // Better approach:
-        // We calculate where the map center *should* be to put the target coords
-        // under the crosshair.
+        // We only animate if the map center isn't already "roughly" correct.
         const targetCoords = fromLonLat([coords.lon, coords.lat]);
         this.animateToCrosshair(targetCoords);
       }
@@ -599,22 +561,11 @@ export default class MapComponent extends Component {
     // We want 'targetCoords' to be at [crosshairPixelX, crosshairPixelY].
     // If we center the map on 'targetCoords', it will be at [mapCenterX, mapCenterY].
     // So we need to shift the map center by the OPPOSITE of the offset.
-    // Wait.
-    // If crosshair is to the right (+X), we need to move the camera LEFT (-X) to bring the point there?
-    // Let's think in map units.
     const view = this.mapInstance.getView();
     const resolution = view.getResolution();
 
     const offsetMapUnitsX = offsetX * resolution;
-    const offsetMapUnitsY = -offsetY * resolution; // Y is inverted in pixel vs map coords usually?
-    // In Web Mercator: Y increases North (Up).
-    // In Pixels: Y increases South (Down).
-    // So +PixelY (Down) = -MapY (South). Correct.
-
-    // If crosshair is at +100px (Right), we want the target to be there.
-    // If we center on target, it is at 0px.
-    // To make it appear at +100px, we must shift the camera center by -100px (Left).
-    // So CenterX_new = TargetX - offsetMapUnitsX.
+    const offsetMapUnitsY = -offsetY * resolution; // Y is inverted in pixel vs map coords
 
     const targetX = targetCoords[0];
     const targetY = targetCoords[1];

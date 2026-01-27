@@ -74,18 +74,7 @@ export default class StorageService extends Service {
   handlePlaceChange(event) {
     const { newValue, relativePath } = event;
 
-    // Remove old entry if exists
-    // The relativePath is like "geohash/geohash/ULID" or just "ULID" depending on structure.
-    // Our structure is <2-char>/<2-char>/<id>.
-    // But let's rely on the ID inside the object if possible, or extract from path.
-
-    // We can't easily identify the ID from just relativePath without parsing logic if it's nested.
-    // However, for deletions (newValue is undefined), we might need the ID.
-    // Fortunately, our objects (newValue) contain the ID.
-
-    // If it's a deletion, we need to find the object in our array to remove it.
-    // Since we don't have the ID in newValue (it's null), we rely on `relativePath`.
-    // Let's assume the filename is the ID.
+    // Extract ID from path (structure: <2-char>/<2-char>/<id>)
     const pathParts = relativePath.split('/');
     const id = pathParts[pathParts.length - 1];
 
@@ -141,7 +130,6 @@ export default class StorageService extends Service {
     );
 
     if (missingPrefixes.length === 0) {
-      // console.debug('All prefixes already loaded for this view');
       return;
     }
 
@@ -151,10 +139,6 @@ export default class StorageService extends Service {
     await this.loadAllPlaces(missingPrefixes);
 
     // 4. Update our tracked list of loaded prefixes
-    // Using assignment to trigger reactivity if needed, though simple push/mutation might suffice
-    // depending on usage. Tracked arrays need reassignment or specific Ember array methods
-    // if we want to observe the array itself, but here we just check inclusion.
-    // Let's do a reassignment to be safe and clean.
     this.loadedPrefixes = [...this.loadedPrefixes, ...missingPrefixes];
     this.currentBbox = bbox;
   }
