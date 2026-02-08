@@ -56,6 +56,8 @@ export default class PlaceRoute extends Route {
   deactivate() {
     // Clear the pin when leaving the route
     this.mapUi.clearSelection();
+    // Reset the "return to search" flag so it doesn't persist to subsequent navigations
+    this.mapUi.returnToSearch = false;
   }
 
   async loadOsmPlace(id, type = null) {

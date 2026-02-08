@@ -6,6 +6,7 @@ export default class MapUiService extends Service {
   @tracked isSearching = false;
   @tracked isCreating = false;
   @tracked creationCoordinates = null;
+  @tracked returnToSearch = false;
 
   selectPlace(place) {
     this.selectedPlace = place;
