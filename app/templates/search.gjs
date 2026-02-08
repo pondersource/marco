@@ -5,10 +5,12 @@ import { action } from '@ember/object';
 
 export default class SearchTemplate extends Component {
   @service router;
+  @service mapUi;
 
   @action
   selectPlace(place) {
     if (place) {
+      this.mapUi.returnToSearch = true;
       this.router.transitionTo('place', place);
     }
   }
