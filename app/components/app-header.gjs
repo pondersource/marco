@@ -24,7 +24,7 @@ export default class AppHeaderComponent extends Component {
     <header class="app-header">
       <div class="header-left">
         <button
-          class="icon-btn"
+          class="menu-btn btn-press"
           type="button"
           aria-label="Menu"
           {{on "click" @onToggleMenu}}
@@ -36,7 +36,7 @@ export default class AppHeaderComponent extends Component {
       <div class="header-right">
         <div class="user-menu-container">
           <button
-            class="user-btn"
+            class="user-btn btn-press"
             type="button"
             aria-label="User Menu"
             {{on "click" this.toggleUserMenu}}

@@ -68,6 +68,7 @@ export default class MapComponent extends Component {
     // Default view settings
     let center = [14.21683569, 27.060114248];
     let zoom = 2.661;
+    let restoredFromStorage = false;
 
     // Try to restore from localStorage
     try {
@@ -82,6 +83,7 @@ export default class MapComponent extends Component {
         ) {
           center = parsed.center;
           zoom = parsed.zoom;
+          restoredFromStorage = true;
         }
       }
     } catch (e) {
@@ -99,7 +101,7 @@ export default class MapComponent extends Component {
       layers: [openfreemap, bookmarkLayer],
       view: view,
       controls: defaultControls({
-        zoom: false,
+        zoom: true,
         rotate: true,
         attribution: true,
       }),
@@ -243,6 +245,7 @@ export default class MapComponent extends Component {
       const coordinates = geolocation.getPosition();
       const accuracyGeometry = geolocation.getAccuracyGeometry();
       const accuracy = geolocation.getAccuracy();
+      console.debug('Geolocation change:', { coordinates, accuracy });
 
       if (!coordinates) return;
 
@@ -307,7 +310,8 @@ export default class MapComponent extends Component {
       this.mapInstance.getView().animate(viewOptions);
     };
 
-    locateBtn.addEventListener('click', () => {
+    const startLocating = () => {
+      console.debug('Getting current geolocation...')
       // 1. Clear any previous session
       stopLocating();
 
@@ -331,7 +335,9 @@ export default class MapComponent extends Component {
       locateTimeout = setTimeout(() => {
         stopLocating();
       }, 10000);
-    });
+    };
+
+    locateBtn.addEventListener('click', startLocating);
 
     const locateControl = new Control({
       element: locateElement,
@@ -339,6 +345,11 @@ export default class MapComponent extends Component {
 
     this.mapInstance.addLayer(geolocationLayer);
     this.mapInstance.addControl(locateControl);
+
+    // Auto-locate on first visit (if not restored from storage and on home page)
+    if (!restoredFromStorage && this.router.currentRouteName === 'index') {
+      startLocating();
+    }
 
     this.mapInstance.on('singleclick', this.handleMapClick);
 
@@ -730,6 +741,13 @@ export default class MapComponent extends Component {
     if (clickedBookmark) {
       console.debug('Clicked bookmark:', clickedBookmark);
       this.router.transitionTo('place', clickedBookmark);
+      return;
+    }
+
+    // Require Zoom >= 17 for generic map searches
+    // This prevents accidental searches when interacting with the map at a high level
+    const currentZoom = this.mapInstance.getView().getZoom();
+    if (currentZoom < 16) {
       return;
     }
 
