@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { humanizeOsmTag } from '../utils/format-text';
+import { getLocalizedName } from '../utils/osm';
 import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
 
@@ -22,8 +23,7 @@ export default class PlaceDetails extends Component {
   get name() {
     return (
       this.place.title ||
-      this.tags.name ||
-      this.tags['name:en'] ||
+      getLocalizedName(this.tags) ||
       'Unnamed Place'
     );
   }
