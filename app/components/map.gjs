@@ -744,6 +744,13 @@ export default class MapComponent extends Component {
       return;
     }
 
+    // Require Zoom >= 17 for generic map searches
+    // This prevents accidental searches when interacting with the map at a high level
+    const currentZoom = this.mapInstance.getView().getZoom();
+    if (currentZoom < 16) {
+      return;
+    }
+
     const coords = toLonLat(event.coordinate);
     const [lon, lat] = coords;
 
