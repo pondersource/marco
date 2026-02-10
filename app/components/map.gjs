@@ -101,7 +101,7 @@ export default class MapComponent extends Component {
       layers: [openfreemap, bookmarkLayer],
       view: view,
       controls: defaultControls({
-        zoom: false,
+        zoom: true,
         rotate: true,
         attribution: true,
       }),

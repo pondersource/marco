@@ -539,22 +539,40 @@ body {
   }
 }
 
-/* Locate Control */
+/* Zoom Control - Moved to bottom right above attribution */
+.ol-zoom {
+  top: auto !important;
+  left: auto !important;
+  bottom: 2.5em;
+  right: 0.5em;
+}
+
+.ol-touch .ol-zoom {
+  bottom: 3.5em;
+}
+
+/* Locate Control - Above Zoom */
 .ol-control.ol-locate {
-  inset: auto 0.5em 2.5em auto;
+  top: auto !important;
+  left: auto !important;
+  bottom: 6.5em;
+  right: 0.5em;
 }
 
 .ol-touch .ol-control.ol-locate {
-  inset: auto 0.5em 3.5em auto;
+  bottom: 8.5em;
 }
 
-/* Rotate Control */
+/* Rotate Control - Above Locate */
 .ol-rotate {
-  inset: auto 0.5em 5em auto;
+  top: auto !important;
+  left: auto !important;
+  bottom: 9em;
+  right: 0.5em;
 }
 
 .ol-touch .ol-rotate {
-  inset: auto 0.5em 6em auto;
+  bottom: 11.5em;
 }
 
 span.icon {
