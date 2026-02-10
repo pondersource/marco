@@ -1,4 +1,5 @@
 import Service, { service } from '@ember/service';
+import { getLocalizedName } from '../utils/osm';
 
 export default class OsmService extends Service {
   @service settings;
@@ -61,7 +62,7 @@ out center;
 
   normalizePoi(poi) {
     return {
-      title: poi.tags?.name || poi.tags?.['name:en'] || 'Untitled Place',
+      title: getLocalizedName(poi.tags),
       lat: poi.lat || poi.center?.lat,
       lon: poi.lon || poi.center?.lon,
       url: poi.tags?.website,

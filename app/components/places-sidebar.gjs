@@ -7,6 +7,7 @@ import or from 'ember-truth-helpers/helpers/or';
 import PlaceDetails from './place-details';
 import Icon from './icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
+import { getLocalizedName } from '../utils/osm';
 
 export default class PlacesSidebar extends Component {
   @service storage;
@@ -85,8 +86,7 @@ export default class PlacesSidebar extends Component {
     } else {
       // It's a fresh POI -> Save it
       const placeData = {
-        title:
-          place.osmTags.name || place.osmTags['name:en'] || 'Untitled Place',
+        title: getLocalizedName(place.osmTags, 'Untitled Place'),
         lat: place.lat,
         lon: place.lon,
         tags: [],
