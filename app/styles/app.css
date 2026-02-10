@@ -74,7 +74,15 @@ body {
   pointer-events: auto; /* Re-enable clicks for buttons */
 }
 
-.icon-btn {
+.btn-press {
+  transition: transform 0.1s;
+}
+
+.btn-press:active {
+  transform: scale(0.95);
+}
+
+.menu-btn {
   background: white;
   border: none;
   border-radius: 50%;
@@ -85,11 +93,6 @@ body {
   justify-content: center;
   box-shadow: 0 2px 5px rgb(0 0 0 / 20%);
   cursor: pointer;
-  transition: transform 0.1s;
-}
-
-.icon-btn:active {
-  transform: scale(0.95);
 }
 
 .user-btn {
