@@ -46,7 +46,7 @@ export default class SettingsPane extends Component {
               </option>
               <option
                 value="false"
-                selected={{if (not this.settings.mapKinetic) "selected"}}
+                selected={{unless this.settings.mapKinetic "selected"}}
               >
                 Off
               </option>

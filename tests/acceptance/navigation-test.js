@@ -82,7 +82,7 @@ module('Acceptance | navigation', function (hooks) {
 
     // Click the Close (X) button
     await click('.close-btn');
-    await settled();
+    
 
     assert.strictEqual(currentURL(), '/', 'Returned to index');
     assert.false(mapUi.returnToSearch, 'Flag is reset after closing sidebar');
@@ -95,7 +95,7 @@ module('Acceptance | navigation', function (hooks) {
       assert.ok(currentURL().includes('/place/'), 'Visited place directly');
 
       await click('.back-btn');
-      await settled();
+      
 
       assert.strictEqual(currentURL(), '/', 'Returned to index/map');
       assert.true(backStub.notCalled, 'window.history.back() was NOT called');
