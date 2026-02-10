@@ -5,6 +5,11 @@ body {
   height: 100%;
   overscroll-behavior: none; /* Prevent pull-to-refresh on mobile */
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
