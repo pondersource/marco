@@ -14,6 +14,6 @@ module('Integration | Component | app-header', function (hooks) {
 
     assert.dom('header.app-header').exists();
     assert.dom('.search-box').exists('Search box is present in the header');
-    assert.dom('.menu-btn').exists('Menu button is present');
+    assert.dom('.menu-btn-integrated').exists('Menu button is integrated');
   });
 });

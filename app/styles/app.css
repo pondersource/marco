@@ -87,19 +87,6 @@ body {
   transform: scale(0.95);
 }
 
-.menu-btn {
-  background: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgb(0 0 0 / 20%);
-  cursor: pointer;
-}
-
 .user-btn {
   background: none;
   border: none;
@@ -760,14 +747,14 @@ button.create-place {
 .search-box {
   position: relative;
   width: 100%;
-  max-width: 320px;
-  margin-left: 1rem;
+  max-width: 400px;
+  margin-left: 0;
   z-index: 3002; /* Higher than menu button to be safe */
 }
 
 @media (max-width: 768px) {
   .search-box {
-    max-width: 200px; /* Smaller on mobile */
+    max-width: calc(100vw - 80px); /* Smaller on mobile but wider than before */
     margin-left: 0.5rem;
   }
 }
@@ -778,8 +765,8 @@ button.create-place {
   background: white;
   border-radius: 24px; /* Pill shape */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-  padding: 0 0.75rem;
-  height: 40px;
+  padding: 0 0.5rem;
+  height: 48px; /* Slightly taller for touch targets */
   transition: box-shadow 0.2s;
 }
 
@@ -787,23 +774,45 @@ button.create-place {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Integrated Menu Button */
+.menu-btn-integrated {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  margin-right: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #5f6368;
+}
+
+.menu-btn-integrated:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Fallback Search Icon (Left) */
 .search-icon {
   display: flex;
   align-items: center;
-  color: #666;
+  justify-content: center;
+  color: #5f6368;
   margin-right: 0.5rem;
+  padding: 8px; /* Match button size */
 }
 
 .search-input {
   border: none;
   background: transparent;
   flex: 1;
+  min-width: 0;
   height: 100%;
   font-size: 1rem;
   color: #333;
   outline: none;
   width: 100%;
-  padding: 0;
+  padding: 0 4px;
   /* Remove native search cancel button in WebKit */
   -webkit-appearance: none;
 }
@@ -813,20 +822,56 @@ button.create-place {
   -webkit-appearance: none;
 }
 
-.search-clear-btn {
-  background: none;
+/* Submit Button (Right) */
+.search-submit-btn {
+  background: transparent;
   border: none;
-  padding: 4px;
+  padding: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  color: #999;
+  justify-content: center;
+  color: #5f6368;
   border-radius: 50%;
+  margin-left: 4px;
+  border-left: 1px solid #ddd; /* Separator like Google Maps */
+  padding-left: 12px;
+  border-radius: 0; /* Reset for separator look */
+}
+
+.search-submit-btn:hover {
+  /* No background on hover if we use separator style, or maybe just change icon color */
+  color: #1a73e8; /* Blue on hover */
+}
+
+/* If we want the separator style, we need to adjust border-radius carefully or use a pseudo element */
+/* Let's stick to a simple button for now, maybe without the separator if it looks cleaner */
+.search-submit-btn {
+  border-left: none; /* Remove separator for cleaner look */
+  padding-left: 8px;
+  border-radius: 50%;
+}
+.search-submit-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.search-clear-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f6368;
+  border-radius: 50%;
+  margin-left: 2px;
 }
 
 .search-clear-btn:hover {
-  background: #f0f0f0;
-  color: #666;
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
 }
 
 /* Search Results Popover */

@@ -122,9 +122,15 @@ export default class SearchBoxComponent extends Component {
   <template>
     <div class="search-box">
       <form class="search-form" {{on "submit" this.handleSubmit}}>
-        <div class="search-icon">
-          <Icon @name="search" @size={{18}} @color="#666" />
-        </div>
+        <button
+          type="button"
+          class="menu-btn-integrated"
+          aria-label="Menu"
+          {{on "click" @onToggleMenu}}
+        >
+          <Icon @name="menu" @size={{24}} @color="#5f6368" />
+        </button>
+
         <input
           type="search"
           class="search-input"
@@ -136,6 +142,15 @@ export default class SearchBoxComponent extends Component {
           {{on "blur" this.handleBlur}}
           autocomplete="off"
         />
+
+        <button
+          type="submit"
+          class="search-submit-btn"
+          aria-label="Search"
+        >
+          <Icon @name="search" @size={{20}} @color="#5f6368" />
+        </button>
+
         {{#if this.query}}
           <button
             type="button"
@@ -143,7 +158,7 @@ export default class SearchBoxComponent extends Component {
             {{on "click" this.clear}}
             aria-label="Clear"
           >
-            <Icon @name="x" @size={{16}} @color="#999" />
+            <Icon @name="x" @size={{16}} @color="#5f6368" />
           </button>
         {{/if}}
       </form>
