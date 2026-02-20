@@ -12,8 +12,8 @@ export default class PhotonService extends Service {
     });
 
     if (lat && lon) {
-      params.append('lat', String(lat));
-      params.append('lon', String(lon));
+      params.append('lat', parseFloat(lat).toFixed(4));
+      params.append('lon', parseFloat(lon).toFixed(4));
     }
 
     const url = `${this.baseUrl}?${params.toString()}`;
@@ -61,12 +61,18 @@ export default class PhotonService extends Service {
     const description = addressParts.join(', ');
     const title = props.name || description || 'Unknown Place';
 
+    const osmTypeMap = {
+      N: 'node',
+      W: 'way',
+      R: 'relation',
+    };
+
     return {
       title,
       lat,
       lon,
       osmId: props.osm_id,
-      osmType: props.osm_type, // 'N', 'W', 'R'
+      osmType: osmTypeMap[props.osm_type] || props.osm_type, // 'node', 'way', 'relation'
       osmTags: props, // Keep all properties as tags for now
       description: props.name ? description : addressParts.slice(1).join(', '),
       source: 'photon',

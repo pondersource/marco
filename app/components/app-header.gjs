@@ -5,6 +5,7 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import Icon from '#components/icon';
 import UserMenu from '#components/user-menu';
+import SearchBox from '#components/search-box';
 
 export default class AppHeaderComponent extends Component {
   @service storage;
@@ -31,6 +32,8 @@ export default class AppHeaderComponent extends Component {
         >
           <Icon @name="menu" @size={{24}} @color="#333" />
         </button>
+
+        <SearchBox />
       </div>
 
       <div class="header-right">

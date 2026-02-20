@@ -23,8 +23,10 @@ export default class PlacesSidebar extends Component {
     if (lat && lon) {
       this.router.transitionTo('place.new', { queryParams: { lat, lon } });
     } else {
-       // Fallback (shouldn't happen in search context)
-       this.router.transitionTo('place.new', { queryParams: { lat: 0, lon: 0 } });
+      // Fallback (shouldn't happen in search context)
+      this.router.transitionTo('place.new', {
+        queryParams: { lat: 0, lon: 0 },
+      });
     }
   }
 
@@ -152,7 +154,7 @@ export default class PlacesSidebar extends Component {
             {{on "click" this.clearSelection}}
           ><Icon @name="arrow-left" @size={{20}} @color="#333" /></button>
         {{else}}
-        <h2><Icon @name="target" @size={{20}} @color="#ea4335" /> Nearby</h2>
+          <h2><Icon @name="target" @size={{20}} @color="#ea4335" /> Nearby</h2>
         {{/if}}
         <button type="button" class="close-btn" {{on "click" @onClose}}><Icon
             @name="x"
@@ -184,14 +186,16 @@ export default class PlacesSidebar extends Component {
                         place.osmTags.name:en
                         "Unnamed Place"
                       }}</div>
-                    <div class="place-type">{{humanizeOsmTag (or
-                        place.osmTags.amenity
-                        place.osmTags.shop
-                        place.osmTags.tourism
-                        place.osmTags.leisure
-                        place.osmTags.historic
-                        "Point of Interest"
-                      )}}</div>
+                    <div class="place-type">{{humanizeOsmTag
+                        (or
+                          place.osmTags.amenity
+                          place.osmTags.shop
+                          place.osmTags.tourism
+                          place.osmTags.leisure
+                          place.osmTags.historic
+                          "Point of Interest"
+                        )
+                      }}</div>
                   </button>
                 </li>
               {{/each}}

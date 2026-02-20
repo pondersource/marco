@@ -7,6 +7,7 @@ export default class MapUiService extends Service {
   @tracked isCreating = false;
   @tracked creationCoordinates = null;
   @tracked returnToSearch = false;
+  @tracked currentCenter = null;
 
   selectPlace(place) {
     this.selectedPlace = place;
@@ -37,5 +38,9 @@ export default class MapUiService extends Service {
 
   updateCreationCoordinates(lat, lon) {
     this.creationCoordinates = { lat, lon };
+  }
+
+  updateCenter(lat, lon) {
+    this.currentCenter = { lat, lon };
   }
 }

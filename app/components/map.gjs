@@ -110,6 +110,10 @@ export default class MapComponent extends Component {
       }),
     });
 
+    // Initialize the UI service with the map center
+    const initialCenter = toLonLat(view.getCenter());
+    this.mapUi.updateCenter(initialCenter[1], initialCenter[0]);
+
     apply(this.mapInstance, 'https://tiles.openfreemap.org/styles/liberty');
 
     this.searchOverlayElement = document.createElement('div');
@@ -645,12 +649,18 @@ export default class MapComponent extends Component {
   handleMapMove = async () => {
     if (!this.mapInstance) return;
 
+    const view = this.mapInstance.getView();
+    const center = toLonLat(view.getCenter());
+    this.mapUi.updateCenter(center[1], center[0]);
+
     // If in creation mode, update the coordinates in the service AND the URL
     if (this.mapUi.isCreating) {
       // Calculate coordinates under the crosshair element
       // We need the pixel position of the crosshair relative to the map viewport
       // The crosshair is positioned via CSS, so we can use getBoundingClientRect
-      const mapRect = this.mapInstance.getTargetElement().getBoundingClientRect();
+      const mapRect = this.mapInstance
+        .getTargetElement()
+        .getBoundingClientRect();
       const crosshairRect = this.crosshairElement.getBoundingClientRect();
 
       const centerX =
@@ -786,10 +796,9 @@ export default class MapComponent extends Component {
     const queryParams = {
       lat: lat.toFixed(6),
       lon: lon.toFixed(6),
+      q: null, // Clear q to force spatial search
+      selected: selectedFeatureName || null,
     };
-    if (selectedFeatureName) {
-      queryParams.q = selectedFeatureName;
-    }
 
     this.router.transitionTo('search', { queryParams });
   };

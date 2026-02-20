@@ -9,6 +9,34 @@ module('Unit | Service | photon', function (hooks) {
     assert.ok(service);
   });
 
+  test('search truncates coordinates to 4 decimal places', async function (assert) {
+    let service = this.owner.lookup('service:photon');
+    const originalFetch = window.fetch;
+
+    let capturedUrl;
+    window.fetch = async (url) => {
+      capturedUrl = url;
+      return {
+        ok: true,
+        json: async () => ({ features: [] }),
+      };
+    };
+
+    try {
+      await service.search('Test', 52.123456, 13.987654);
+      assert.ok(
+        capturedUrl.includes('lat=52.1235'),
+        'lat is rounded to 4 decimals'
+      );
+      assert.ok(
+        capturedUrl.includes('lon=13.9877'),
+        'lon is rounded to 4 decimals'
+      );
+    } finally {
+      window.fetch = originalFetch;
+    }
+  });
+
   test('search handles successful response', async function (assert) {
     let service = this.owner.lookup('service:photon');
 
@@ -43,6 +71,7 @@ module('Unit | Service | photon', function (hooks) {
       assert.strictEqual(results[0].lat, 52.5);
       assert.strictEqual(results[0].lon, 13.4);
       assert.strictEqual(results[0].description, 'Test City, Test Country');
+      assert.strictEqual(results[0].osmType, 'node', 'Normalizes N to node');
     } finally {
       window.fetch = originalFetch;
     }
@@ -86,5 +115,23 @@ module('Unit | Service | photon', function (hooks) {
     assert.strictEqual(result.title, 'Main St 123, Metropolis'); // Fallback to address description
     assert.strictEqual(result.lat, 20);
     assert.strictEqual(result.lon, 10);
+  });
+
+  test('normalizeFeature normalizes OSM types correctly', function (assert) {
+    let service = this.owner.lookup('service:photon');
+
+    const checkType = (input, expected) => {
+      const feature = {
+        properties: { osm_type: input, name: 'Test' },
+        geometry: { coordinates: [0, 0] },
+      };
+      const result = service.normalizeFeature(feature);
+      assert.strictEqual(result.osmType, expected, `${input} -> ${expected}`);
+    };
+
+    checkType('N', 'node');
+    checkType('W', 'way');
+    checkType('R', 'relation');
+    checkType('unknown', 'unknown'); // Fallback
   });
 });
