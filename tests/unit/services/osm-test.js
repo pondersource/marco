@@ -1,0 +1,113 @@
+import { module, test } from 'qunit';
+import { setupTest } from 'marco/tests/helpers';
+
+module('Unit | Service | osm', function (hooks) {
+  setupTest(hooks);
+
+  test('it exists', function (assert) {
+    let service = this.owner.lookup('service:osm');
+    assert.ok(service);
+  });
+
+  test('normalizeOsmApiData handles nodes correctly', function (assert) {
+    let service = this.owner.lookup('service:osm');
+    const elements = [
+      {
+        id: 123,
+        type: 'node',
+        lat: 52.5,
+        lon: 13.4,
+        tags: { name: 'Test Node' },
+      },
+    ];
+
+    const result = service.normalizeOsmApiData(elements, 123, 'node');
+
+    assert.strictEqual(result.title, 'Test Node');
+    assert.strictEqual(result.lat, 52.5);
+    assert.strictEqual(result.lon, 13.4);
+    assert.strictEqual(result.osmId, '123');
+    assert.strictEqual(result.osmType, 'node');
+  });
+
+  test('normalizeOsmApiData calculates centroid for ways', function (assert) {
+    let service = this.owner.lookup('service:osm');
+    const elements = [
+      {
+        id: 456,
+        type: 'way',
+        nodes: [1, 2],
+        tags: { name: 'Test Way' },
+      },
+      { id: 1, type: 'node', lat: 10, lon: 10 },
+      { id: 2, type: 'node', lat: 20, lon: 20 },
+    ];
+
+    const result = service.normalizeOsmApiData(elements, 456, 'way');
+
+    assert.strictEqual(result.title, 'Test Way');
+    assert.strictEqual(result.lat, 15); // (10+20)/2
+    assert.strictEqual(result.lon, 15); // (10+20)/2
+    assert.strictEqual(result.osmId, '456');
+    assert.strictEqual(result.osmType, 'way');
+  });
+
+  test('normalizeOsmApiData calculates centroid for relations with member nodes', function (assert) {
+    let service = this.owner.lookup('service:osm');
+    const elements = [
+      {
+        id: 789,
+        type: 'relation',
+        members: [
+          { type: 'node', ref: 1, role: 'admin_centre' },
+          { type: 'node', ref: 2, role: 'label' },
+        ],
+        tags: { name: 'Test Relation' },
+      },
+      { id: 1, type: 'node', lat: 10, lon: 10 },
+      { id: 2, type: 'node', lat: 30, lon: 30 },
+    ];
+
+    const result = service.normalizeOsmApiData(elements, 789, 'relation');
+
+    assert.strictEqual(result.title, 'Test Relation');
+    assert.strictEqual(result.lat, 20); // (10+30)/2
+    assert.strictEqual(result.lon, 20); // (10+30)/2
+    assert.strictEqual(result.osmId, '789');
+    assert.strictEqual(result.osmType, 'relation');
+  });
+
+  test('normalizeOsmApiData calculates centroid for relations with member ways', function (assert) {
+    let service = this.owner.lookup('service:osm');
+    /*
+      Relation 999
+        -> Way 888
+           -> Node 1 (10, 10)
+           -> Node 2 (20, 20)
+    */
+    const elements = [
+      {
+        id: 999,
+        type: 'relation',
+        members: [{ type: 'way', ref: 888, role: 'outer' }],
+        tags: { name: 'Complex Relation' },
+      },
+      {
+        id: 888,
+        type: 'way',
+        nodes: [1, 2],
+      },
+      { id: 1, type: 'node', lat: 10, lon: 10 },
+      { id: 2, type: 'node', lat: 20, lon: 20 },
+    ];
+
+    const result = service.normalizeOsmApiData(elements, 999, 'relation');
+
+    assert.strictEqual(result.title, 'Complex Relation');
+    // It averages all nodes found. In this case, Node 1 and Node 2.
+    assert.strictEqual(result.lat, 15); // (10+20)/2
+    assert.strictEqual(result.lon, 15); // (10+20)/2
+    assert.strictEqual(result.osmId, '999');
+    assert.strictEqual(result.osmType, 'relation');
+  });
+});

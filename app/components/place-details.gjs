@@ -129,7 +129,7 @@ export default class PlaceDetails extends Component {
     const lat = this.place.lat;
     const lon = this.place.lon;
     if (!lat || !lon) return '';
-    return `${lat}, ${lon}`;
+    return `${Number(lat).toFixed(6)}, ${Number(lon).toFixed(6)}`;
   }
 
   get osmUrl() {

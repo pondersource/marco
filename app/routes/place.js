@@ -9,7 +9,11 @@ export default class PlaceRoute extends Route {
   async model(params) {
     const id = params.place_id;
 
-    if (id.startsWith('osm:node:') || id.startsWith('osm:way:')) {
+    if (
+      id.startsWith('osm:node:') ||
+      id.startsWith('osm:way:') ||
+      id.startsWith('osm:relation:')
+    ) {
       const [, type, osmId] = id.split(':');
       console.debug(`Fetching explicit OSM ${type}:`, osmId);
       return this.loadOsmPlace(osmId, type);
@@ -62,7 +66,8 @@ export default class PlaceRoute extends Route {
 
   async loadOsmPlace(id, type = null) {
     try {
-      const poi = await this.osm.getPoiById(id, type);
+      // Use the direct OSM API fetch instead of Overpass for single object lookups
+      const poi = await this.osm.fetchOsmObject(id, type);
       if (poi) {
         console.debug('Found OSM POI:', poi);
         return poi;

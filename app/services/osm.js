@@ -124,4 +124,115 @@ out center;
     if (!data.elements[0]) return null;
     return this.normalizePoi(data.elements[0]);
   }
+
+  async fetchOsmObject(osmId, osmType) {
+    if (!osmId || !osmType) return null;
+
+    let url;
+    if (osmType === 'node') {
+      url = `https://www.openstreetmap.org/api/0.6/node/${osmId}.json`;
+    } else if (osmType === 'way') {
+      url = `https://www.openstreetmap.org/api/0.6/way/${osmId}/full.json`;
+    } else if (osmType === 'relation') {
+      url = `https://www.openstreetmap.org/api/0.6/relation/${osmId}/full.json`;
+    } else {
+      console.error('Unknown OSM type:', osmType);
+      return null;
+    }
+
+    try {
+      const res = await this.fetchWithRetry(url);
+      if (!res.ok) {
+        if (res.status === 410) {
+          console.warn('OSM object has been deleted');
+          return null;
+        }
+        throw new Error(`OSM API request failed: ${res.status}`);
+      }
+      const data = await res.json();
+      return this.normalizeOsmApiData(data.elements, osmId, osmType);
+    } catch (e) {
+      console.error('Failed to fetch OSM object:', e);
+      return null;
+    }
+  }
+
+  normalizeOsmApiData(elements, targetId, targetType) {
+    if (!elements || elements.length === 0) return null;
+
+    const mainElement = elements.find(
+      (el) => String(el.id) === String(targetId) && el.type === targetType
+    );
+
+    if (!mainElement) return null;
+
+    let lat = mainElement.lat;
+    let lon = mainElement.lon;
+
+    // If it's a way, calculate center from nodes
+    if (targetType === 'way' && mainElement.nodes) {
+      const nodeMap = new Map();
+      elements.forEach((el) => {
+        if (el.type === 'node') {
+          nodeMap.set(el.id, [el.lon, el.lat]);
+        }
+      });
+
+      const coords = mainElement.nodes
+        .map((id) => nodeMap.get(id))
+        .filter(Boolean);
+
+      if (coords.length > 0) {
+        // Simple average center
+        const sumLat = coords.reduce((sum, c) => sum + c[1], 0);
+        const sumLon = coords.reduce((sum, c) => sum + c[0], 0);
+        lat = sumLat / coords.length;
+        lon = sumLon / coords.length;
+      }
+    } else if (targetType === 'relation' && mainElement.members) {
+      // Find all nodes that are part of this relation (directly or via ways)
+      const allNodes = [];
+      const nodeMap = new Map();
+      elements.forEach((el) => {
+        if (el.type === 'node') {
+          nodeMap.set(el.id, el);
+        }
+      });
+
+      mainElement.members.forEach((member) => {
+        if (member.type === 'node') {
+          const node = nodeMap.get(member.ref);
+          if (node) allNodes.push(node);
+        } else if (member.type === 'way') {
+          const way = elements.find(
+            (el) => el.type === 'way' && el.id === member.ref
+          );
+          if (way && way.nodes) {
+            way.nodes.forEach((nodeId) => {
+              const node = nodeMap.get(nodeId);
+              if (node) allNodes.push(node);
+            });
+          }
+        }
+      });
+
+      if (allNodes.length > 0) {
+        const sumLat = allNodes.reduce((sum, n) => sum + n.lat, 0);
+        const sumLon = allNodes.reduce((sum, n) => sum + n.lon, 0);
+        lat = sumLat / allNodes.length;
+        lon = sumLon / allNodes.length;
+      }
+    }
+
+    return {
+      title: getLocalizedName(mainElement.tags),
+      lat,
+      lon,
+      url: mainElement.tags?.website,
+      osmId: String(mainElement.id),
+      osmType: mainElement.type,
+      osmTags: mainElement.tags || {},
+      description: mainElement.tags?.description,
+    };
+  }
 }
