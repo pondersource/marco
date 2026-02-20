@@ -4,7 +4,7 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { debounce } from '@ember/runloop';
+import { task, timeout } from 'ember-concurrency';
 import Icon from '#components/icon';
 
 export default class SearchBoxComponent extends Component {
@@ -30,10 +30,12 @@ export default class SearchBoxComponent extends Component {
       return;
     }
 
-    debounce(this, this.performSearch, 300);
+    this.searchTask.perform();
   }
 
-  async performSearch() {
+  searchTask = task({ restartable: true }, async () => {
+    await timeout(300);
+
     if (this.query.length < 2) return;
 
     this.isLoading = true;
@@ -51,13 +53,14 @@ export default class SearchBoxComponent extends Component {
     } finally {
       this.isLoading = false;
     }
-  }
+  });
 
   @action
   handleFocus() {
     this.isFocused = true;
+    this.mapUi.setSearchBoxFocus(true);
     if (this.query.length >= 2 && this.results.length === 0) {
-      this.performSearch();
+      this.searchTask.perform();
     }
   }
 
@@ -66,7 +69,8 @@ export default class SearchBoxComponent extends Component {
     // Delay hiding so clicks on results can register
     setTimeout(() => {
       this.isFocused = false;
-    }, 200);
+      this.mapUi.setSearchBoxFocus(false);
+    }, 300);
   }
 
   @action
@@ -143,11 +147,7 @@ export default class SearchBoxComponent extends Component {
           autocomplete="off"
         />
 
-        <button
-          type="submit"
-          class="search-submit-btn"
-          aria-label="Search"
-        >
+        <button type="submit" class="search-submit-btn" aria-label="Search">
           <Icon @name="search" @size={{20}} @color="#5f6368" />
         </button>
 

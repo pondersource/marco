@@ -36,7 +36,8 @@ module('Integration | Component | search-box', function (hooks) {
     }
     this.owner.register('service:router', MockRouterService);
 
-    await render(<template><SearchBox /></template>);
+    this.noop = () => {};
+    await render(<template><SearchBox @onToggleMenu={{this.noop}} /></template>);
 
     assert.dom('.search-input').exists();
     assert.dom('.search-results-popover').doesNotExist();
@@ -72,20 +73,20 @@ module('Integration | Component | search-box', function (hooks) {
     // Mock MapUi Service
     class MockMapUiService extends Service {
       currentCenter = { lat: 52.52, lon: 13.405 };
+      setSearchBoxFocus() {}
     }
     this.owner.register('service:map-ui', MockMapUiService);
 
     // Mock Router Service
     class MockRouterService extends Service {
       transitionTo(routeName, options) {
-        assert.step(
-          `transitionTo: ${routeName} ${JSON.stringify(options)}`
-        );
+        assert.step(`transitionTo: ${routeName} ${JSON.stringify(options)}`);
       }
     }
     this.owner.register('service:router', MockRouterService);
 
-    await render(<template><SearchBox /></template>);
+    this.noop = () => {};
+    await render(<template><SearchBox @onToggleMenu={{this.noop}} /></template>);
 
     await fillIn('.search-input', 'berlin');
     await click('.search-input'); // Focus
@@ -103,6 +104,7 @@ module('Integration | Component | search-box', function (hooks) {
     // Mock MapUi Service
     class MockMapUiService extends Service {
       currentCenter = { lat: 52.52, lon: 13.405 };
+      setSearchBoxFocus() {}
     }
     this.owner.register('service:map-ui', MockMapUiService);
 
@@ -115,10 +117,11 @@ module('Integration | Component | search-box', function (hooks) {
     }
     this.owner.register('service:photon', MockPhotonService);
 
-    await render(<template><SearchBox /></template>);
+    this.noop = () => {};
+    await render(<template><SearchBox @onToggleMenu={{this.noop}} /></template>);
 
     await fillIn('.search-input', 'cafe');
-    
+
     // Wait for debounce (300ms) + execution
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await delay(400);

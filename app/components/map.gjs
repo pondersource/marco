@@ -33,6 +33,7 @@ export default class MapComponent extends Component {
   selectedPinElement;
   crosshairElement;
   crosshairOverlay;
+  ignoreNextMapClick = false;
 
   setupMap = modifier((element) => {
     if (this.mapInstance) return;
@@ -168,6 +169,18 @@ export default class MapComponent extends Component {
       stopEvent: false,
     });
     this.mapInstance.addOverlay(this.locationOverlay);
+
+    // Track search box focus state on pointer down to handle race conditions
+    // The blur event fires before click, so we need to capture state here
+    element.addEventListener(
+      'pointerdown',
+      () => {
+        if (this.mapUi.searchBoxHasFocus) {
+          this.ignoreNextMapClick = true;
+        }
+      },
+      true
+    );
 
     // Geolocation Setup
     const geolocation = new Geolocation({
@@ -711,6 +724,11 @@ export default class MapComponent extends Component {
   };
 
   handleMapClick = async (event) => {
+    if (this.ignoreNextMapClick) {
+      this.ignoreNextMapClick = false;
+      return;
+    }
+
     // Check if user clicked on a rendered feature (POI or Bookmark) FIRST
     const features = this.mapInstance.getFeaturesAtPixel(event.pixel, {
       hitTolerance: 10,

@@ -2,6 +2,9 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setConfig } from '@warp-drive/core/build-config';
 import { buildMacros } from '@embroider/macros/babel';
+import asyncArrowTaskTransform from 'ember-concurrency/async-arrow-task-transform';
+
+console.log('Babel config loading, plugin:', typeof asyncArrowTaskTransform);
 
 const macros = buildMacros({
   configure: (config) => {
@@ -14,6 +17,7 @@ const macros = buildMacros({
 
 export default {
   plugins: [
+    asyncArrowTaskTransform,
     [
       'babel-plugin-ember-template-compilation',
       {
