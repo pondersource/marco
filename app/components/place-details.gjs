@@ -21,11 +21,7 @@ export default class PlaceDetails extends Component {
   }
 
   get name() {
-    return (
-      this.place.title ||
-      getLocalizedName(this.tags) ||
-      'Unnamed Place'
-    );
+    return this.place.title || getLocalizedName(this.tags) || 'Unnamed Place';
   }
 
   @action
@@ -274,7 +270,11 @@ export default class PlaceDetails extends Component {
           <p class="content-with-icon">
             <Icon @name="map" />
             <span>
-              <a href={{this.gmapsUrl}} target="_blank" rel="noopener noreferrer">
+              <a
+                href={{this.gmapsUrl}}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Google Maps
               </a>
             </span>

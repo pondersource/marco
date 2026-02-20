@@ -155,9 +155,6 @@ export default class MapComponent extends Component {
     `;
     element.appendChild(this.crosshairElement);
 
-
-
-
     // Geolocation Pulse Overlay
     this.locationOverlayElement = document.createElement('div');
     this.locationOverlayElement.className = 'search-pulse blue';
@@ -311,7 +308,7 @@ export default class MapComponent extends Component {
     };
 
     const startLocating = () => {
-      console.debug('Getting current geolocation...')
+      console.debug('Getting current geolocation...');
       // 1. Clear any previous session
       stopLocating();
 
@@ -374,11 +371,15 @@ export default class MapComponent extends Component {
     if (!this.mapInstance) return;
 
     // Remove existing DragPan interactions
-    this.mapInstance.getInteractions().getArray().slice().forEach((interaction) => {
-      if (interaction instanceof DragPan) {
-        this.mapInstance.removeInteraction(interaction);
-      }
-    });
+    this.mapInstance
+      .getInteractions()
+      .getArray()
+      .slice()
+      .forEach((interaction) => {
+        if (interaction instanceof DragPan) {
+          this.mapInstance.removeInteraction(interaction);
+        }
+      });
 
     // Add new DragPan with current setting
     const kinetic = this.settings.mapKinetic
@@ -652,10 +653,15 @@ export default class MapComponent extends Component {
       const mapRect = this.mapInstance.getTargetElement().getBoundingClientRect();
       const crosshairRect = this.crosshairElement.getBoundingClientRect();
 
-      const centerX = crosshairRect.left + crosshairRect.width / 2 - mapRect.left;
-      const centerY = crosshairRect.top + crosshairRect.height / 2 - mapRect.top;
+      const centerX =
+        crosshairRect.left + crosshairRect.width / 2 - mapRect.left;
+      const centerY =
+        crosshairRect.top + crosshairRect.height / 2 - mapRect.top;
 
-      const coordinate = this.mapInstance.getCoordinateFromPixel([centerX, centerY]);
+      const coordinate = this.mapInstance.getCoordinateFromPixel([
+        centerX,
+        centerY,
+      ]);
       const center = toLonLat(coordinate);
 
       const lat = parseFloat(center[1].toFixed(6));
