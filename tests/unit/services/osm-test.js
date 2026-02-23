@@ -98,6 +98,41 @@ module('Unit | Service | osm', function (hooks) {
     assert.strictEqual(result.osmType, 'node');
   });
 
+  test('normalizeOsmApiData calculates bbox for relations', function (assert) {
+    let service = this.owner.lookup('service:osm');
+    const elements = [
+      {
+        id: 789,
+        type: 'relation',
+        members: [
+          { type: 'node', ref: 1, role: 'label' },
+          { type: 'node', ref: 2, role: 'border' },
+          { type: 'node', ref: 3, role: 'border' },
+        ],
+        tags: { name: 'Test Relation' },
+      },
+      { id: 1, type: 'node', lat: 10, lon: 10, tags: { name: 'Label' } },
+      { id: 2, type: 'node', lat: 0, lon: 0 },
+      { id: 3, type: 'node', lat: 20, lon: 20 },
+    ];
+
+    const result = service.normalizeOsmApiData(elements, 789, 'relation');
+
+    // Should prioritize admin centre for ID/Title/Center
+    assert.strictEqual(result.title, 'Label');
+    assert.strictEqual(result.lat, 10);
+    assert.strictEqual(result.lon, 10);
+    assert.strictEqual(result.osmId, '1');
+    assert.strictEqual(result.osmType, 'node');
+
+    // BUT should calculate BBox from ALL members (0,0 to 20,20)
+    assert.ok(result.bbox, 'BBox should be present');
+    assert.strictEqual(result.bbox.minLat, 0);
+    assert.strictEqual(result.bbox.minLon, 0);
+    assert.strictEqual(result.bbox.maxLat, 20);
+    assert.strictEqual(result.bbox.maxLon, 20);
+  });
+
   test('normalizeOsmApiData calculates centroid for relations with member ways', function (assert) {
     let service = this.owner.lookup('service:osm');
     /*

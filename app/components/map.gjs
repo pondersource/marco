@@ -436,13 +436,66 @@ export default class MapComponent extends Component {
       void this.selectedPinElement.offsetWidth;
       this.selectedPinElement.classList.add('active');
 
-      this.handlePinVisibility(coords);
+      if (selected.bbox) {
+        this.zoomToBbox(selected.bbox);
+      } else {
+        this.handlePinVisibility(coords);
+      }
     } else {
       this.selectedPinElement.classList.remove('active');
       // Hide it effectively by moving it away or just relying on display:none in CSS
       this.selectedPinOverlay.setPosition(undefined);
     }
   });
+
+  zoomToBbox(bbox) {
+    if (!this.mapInstance || !bbox) return;
+
+    const view = this.mapInstance.getView();
+    const size = this.mapInstance.getSize();
+
+    // Convert bbox to extent: [minx, miny, maxx, maxy]
+    const min = fromLonLat([bbox.minLon, bbox.minLat]);
+    const max = fromLonLat([bbox.maxLon, bbox.maxLat]);
+    const extent = [...min, ...max];
+
+    // Default padding for full screen: 15% on all sides (70% visible)
+    let padding = [
+      size[1] * 0.15, // Top
+      size[0] * 0.15, // Right
+      size[1] * 0.15, // Bottom
+      size[0] * 0.15, // Left
+    ];
+
+    // Mobile: Bottom sheet covers 50% of the screen height
+    if (size[0] <= 768) {
+      // We want the geometry to be centered in the top 50% of the screen.
+      // Top padding: 15% of the VISIBLE height (size[1] * 0.5)
+      const visibleHeight = size[1] * 0.5;
+      const topPadding = visibleHeight * 0.15;
+      const bottomPadding = (size[1] * 0.5) + (visibleHeight * 0.15); // Sheet + padding
+
+      padding[0] = topPadding;
+      padding[2] = bottomPadding;
+    }
+    // Desktop: Sidebar covers left side (approx 400px)
+    else if (this.args.isSidebarOpen) {
+      const sidebarWidth = 400; 
+      const visibleWidth = size[0] - sidebarWidth;
+
+      // Left padding: Sidebar + 15% of visible width
+      padding[3] = sidebarWidth + (visibleWidth * 0.15);
+      // Right padding: 15% of visible width
+      padding[1] = visibleWidth * 0.15;
+    }
+
+    view.fit(extent, {
+      padding: padding,
+      duration: 1000,
+      easing: (t) => t * (2 - t),
+      maxZoom: 19,
+    });
+  }
 
   handlePinVisibility(coords) {
     if (!this.mapInstance) return;

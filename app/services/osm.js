@@ -171,8 +171,12 @@ out center;
 
     if (!mainElement) return null;
 
+    // Use a separate variable for the element we want to display (tags, id, specific coords)
+    // vs the element we use for geometry calculation (bbox).
+    let displayElement = mainElement;
+
     // If it's a boundary relation, try to find the label or admin_centre node
-    // and use that as the main element (better coordinates and tags).
+    // and use that as the display element (better coordinates and tags).
     if (targetType === 'relation' && mainElement.members) {
       const labelMember = mainElement.members.find(
         (m) => m.role === 'label' && m.type === 'node'
@@ -189,13 +193,14 @@ out center;
             String(el.id) === String(targetMember.ref) && el.type === 'node'
         );
         if (targetNode) {
-          mainElement = targetNode;
+          displayElement = targetNode;
         }
       }
     }
 
-    let lat = mainElement.lat;
-    let lon = mainElement.lon;
+    let lat = displayElement.lat;
+    let lon = displayElement.lon;
+    let bbox = null;
 
     // If it's a way, calculate center from nodes
     if (targetType === 'way' && mainElement.nodes) {
@@ -211,11 +216,23 @@ out center;
         .filter(Boolean);
 
       if (coords.length > 0) {
-        // Simple average center
-        const sumLat = coords.reduce((sum, c) => sum + c[1], 0);
-        const sumLon = coords.reduce((sum, c) => sum + c[0], 0);
-        lat = sumLat / coords.length;
-        lon = sumLon / coords.length;
+        // Only override lat/lon if we haven't switched to a specific display node
+        if (displayElement === mainElement) {
+          const sumLat = coords.reduce((sum, c) => sum + c[1], 0);
+          const sumLon = coords.reduce((sum, c) => sum + c[0], 0);
+          lat = sumLat / coords.length;
+          lon = sumLon / coords.length;
+        }
+
+        // Calculate BBox
+        const lats = coords.map((c) => c[1]);
+        const lons = coords.map((c) => c[0]);
+        bbox = {
+          minLat: Math.min(...lats),
+          maxLat: Math.max(...lats),
+          minLon: Math.min(...lons),
+          maxLon: Math.max(...lons),
+        };
       }
     } else if (targetType === 'relation' && mainElement.members) {
       // Find all nodes that are part of this relation (directly or via ways)
@@ -245,23 +262,37 @@ out center;
       });
 
       if (allNodes.length > 0) {
-        const sumLat = allNodes.reduce((sum, n) => sum + n.lat, 0);
-        const sumLon = allNodes.reduce((sum, n) => sum + n.lon, 0);
-        lat = sumLat / allNodes.length;
-        lon = sumLon / allNodes.length;
+        // Only override lat/lon if we haven't switched to a specific display node
+        if (displayElement === mainElement) {
+          const sumLat = allNodes.reduce((sum, n) => sum + n.lat, 0);
+          const sumLon = allNodes.reduce((sum, n) => sum + n.lon, 0);
+          lat = sumLat / allNodes.length;
+          lon = sumLon / allNodes.length;
+        }
+
+        // Calculate BBox
+        const lats = allNodes.map((n) => n.lat);
+        const lons = allNodes.map((n) => n.lon);
+        bbox = {
+          minLat: Math.min(...lats),
+          maxLat: Math.max(...lats),
+          minLon: Math.min(...lons),
+          maxLon: Math.max(...lons),
+        };
       }
     }
 
-    const tags = mainElement.tags || {};
+    const tags = displayElement.tags || {};
     const type = getPlaceType(tags) || 'Point of Interest';
 
     return {
       title: getLocalizedName(tags),
       lat,
       lon,
+      bbox,
       url: tags.website,
-      osmId: String(mainElement.id),
-      osmType: mainElement.type,
+      osmId: String(displayElement.id),
+      osmType: displayElement.type,
       osmTags: tags,
       description: tags.description,
       source: 'osm',
