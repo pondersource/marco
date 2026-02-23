@@ -14,7 +14,7 @@ button {
 
 body {
   margin: 0;
-  font-family: 'Noto Serif', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
   font-size: 16px;
   color: #333;
 }
@@ -61,12 +61,18 @@ body {
   left: 0;
   right: 0;
   height: 60px;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 3000; /* Above sidebar (2000) and map */
   pointer-events: none; /* Let clicks pass through to map where transparent */
+}
+
+@media (width <= 768px) {
+  .app-header {
+    padding: 0 0.5rem;
+  }
 }
 
 .header-left,
@@ -203,7 +209,6 @@ body {
   z-index: 3200; /* Higher than Places Sidebar (3100) */
 }
 
-/* Settings Pane Mobile Overrides */
 @media (width <= 768px) {
   .settings-pane.sidebar {
     width: 100%;
@@ -539,41 +544,53 @@ body {
   }
 }
 
-/* Zoom Control - Moved to bottom right above attribution */
-.ol-zoom {
-  top: auto !important;
-  left: auto !important;
-  bottom: 2.5em;
-  right: 0.5em;
+/* Map controls */
+
+.ol-control.ol-attribution {
+  bottom: 1rem;
+}
+.ol-touch .ol-control.ol-attribution {
+  bottom: 0.5rem;
 }
 
-.ol-touch .ol-zoom {
-  bottom: 3.5em;
+.ol-control.ol-zoom {
+  bottom: 3rem;
+}
+.ol-touch .ol-control.ol-zoom {
+  bottom: 3.5rem;
 }
 
-/* Locate Control - Above Zoom */
 .ol-control.ol-locate {
-  top: auto !important;
-  left: auto !important;
-  bottom: 6.5em;
-  right: 0.5em;
+  bottom: 6.5rem;
 }
-
 .ol-touch .ol-control.ol-locate {
-  bottom: 8.5em;
+  bottom: 8.5rem;
 }
 
-/* Rotate Control - Above Locate */
-.ol-rotate {
-  top: auto !important;
-  left: auto !important;
-  bottom: 9em;
-  right: 0.5em;
+.ol-control.ol-rotate {
+  bottom: 9rem;
+}
+.ol-touch .ol-control.ol-rotate {
+  bottom: 11.5rem;
 }
 
-.ol-touch .ol-rotate {
-  bottom: 11.5em;
+.ol-control.ol-attribution,
+.ol-control.ol-zoom,
+.ol-control.ol-locate,
+.ol-control.ol-rotate {
+  top: auto;
+  left: auto;
+  right: 1rem;
 }
+
+.ol-touch .ol-control.ol-attribution,
+.ol-touch .ol-control.ol-zoom,
+.ol-touch .ol-control.ol-locate,
+.ol-touch .ol-control.ol-rotate {
+  right: 0.5rem;
+}
+
+/* Icons */
 
 span.icon {
   display: inline-block;
@@ -750,13 +767,6 @@ button.create-place {
   max-width: 400px;
   margin-left: 0;
   z-index: 3002; /* Higher than menu button to be safe */
-}
-
-@media (max-width: 768px) {
-  .search-box {
-    max-width: calc(100vw - 80px); /* Smaller on mobile but wider than before */
-    margin-left: 0.5rem;
-  }
 }
 
 .search-form {

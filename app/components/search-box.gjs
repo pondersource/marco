@@ -132,7 +132,7 @@ export default class SearchBoxComponent extends Component {
           aria-label="Menu"
           {{on "click" @onToggleMenu}}
         >
-          <Icon @name="menu" @size={{24}} @color="#5f6368" />
+          <Icon @name="menu" @size={{20}} @color="#5f6368" />
         </button>
 
         <input
@@ -158,7 +158,7 @@ export default class SearchBoxComponent extends Component {
             {{on "click" this.clear}}
             aria-label="Clear"
           >
-            <Icon @name="x" @size={{16}} @color="#5f6368" />
+            <Icon @name="x" @size={{20}} @color="#5f6368" />
           </button>
         {{/if}}
       </form>
