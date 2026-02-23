@@ -4,10 +4,11 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import or from 'ember-truth-helpers/helpers/or';
+import eq from 'ember-truth-helpers/helpers/eq';
 import PlaceDetails from './place-details';
 import Icon from './icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
-import { getLocalizedName } from '../utils/osm';
+import { getLocalizedName, getPlaceType } from '../utils/osm';
 
 export default class PlacesSidebar extends Component {
   @service storage;
@@ -186,16 +187,17 @@ export default class PlacesSidebar extends Component {
                         place.osmTags.name:en
                         "Unnamed Place"
                       }}</div>
-                    <div class="place-type">{{humanizeOsmTag
-                        (or
-                          place.osmTags.amenity
-                          place.osmTags.shop
-                          place.osmTags.tourism
-                          place.osmTags.leisure
-                          place.osmTags.historic
-                          "Point of Interest"
-                        )
-                      }}</div>
+                    <div class="place-type">
+                      {{#if (eq place.source "osm")}}
+                        {{humanizeOsmTag place.type}}
+                      {{else}}
+                        {{#if place.osmTags}}
+                          {{humanizeOsmTag (getPlaceType place.osmTags)}}
+                        {{else if place.description}}
+                          {{place.description}}
+                        {{/if}}
+                      {{/if}}
+                    </div>
                   </button>
                 </li>
               {{/each}}

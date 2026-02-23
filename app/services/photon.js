@@ -1,4 +1,6 @@
 import Service from '@ember/service';
+import { getPlaceType } from '../utils/osm';
+import { humanizeOsmTag } from '../utils/format-text';
 
 export default class PhotonService extends Service {
   baseUrl = 'https://photon.komoot.io/api/';
@@ -67,15 +69,24 @@ export default class PhotonService extends Service {
       R: 'relation',
     };
 
+    const osmTags = { ...props };
+    // Photon often returns osm_key and osm_value for the main tag
+    if (props.osm_key && props.osm_value) {
+      osmTags[props.osm_key] = props.osm_value;
+    }
+
+    const type = getPlaceType(osmTags) || humanizeOsmTag(props.osm_value);
+
     return {
       title,
       lat,
       lon,
       osmId: props.osm_id,
       osmType: osmTypeMap[props.osm_type] || props.osm_type, // 'node', 'way', 'relation'
-      osmTags: props, // Keep all properties as tags for now
+      osmTags,
       description: props.name ? description : addressParts.slice(1).join(', '),
       source: 'photon',
+      type: type,
     };
   }
 

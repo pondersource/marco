@@ -1,3 +1,5 @@
+import { humanizeOsmTag } from './format-text';
+
 export function getLocalizedName(tags, defaultName = 'Untitled Place') {
   if (!tags) return defaultName;
 
@@ -29,4 +31,23 @@ export function getLocalizedName(tags, defaultName = 'Untitled Place') {
 
   // 5. Final fallback
   return defaultName;
+}
+
+export function getPlaceType(tags) {
+  if (!tags) return null;
+
+  const rawType =
+    tags.amenity ||
+    tags.shop ||
+    tags.tourism ||
+    tags.leisure ||
+    tags.office ||
+    tags.craft ||
+    tags.historic ||
+    tags.place ||
+    tags.building ||
+    tags.landuse ||
+    tags.natural;
+
+  return humanizeOsmTag(rawType);
 }

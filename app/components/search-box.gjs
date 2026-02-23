@@ -6,6 +6,8 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { task, timeout } from 'ember-concurrency';
 import Icon from '#components/icon';
+import humanizeOsmTag from '../helpers/humanize-osm-tag';
+import eq from 'ember-truth-helpers/helpers/eq';
 
 export default class SearchBoxComponent extends Component {
   @service photon;
@@ -178,8 +180,12 @@ export default class SearchBoxComponent extends Component {
                   </div>
                   <div class="result-info">
                     <span class="result-title">{{result.title}}</span>
-                    {{#if result.description}}
-                      <span class="result-desc">{{result.description}}</span>
+                    {{#if (eq result.source "osm")}}
+                      <span class="result-desc">{{humanizeOsmTag result.type}}</span>
+                    {{else}}
+                       {{#if result.description}}
+                        <span class="result-desc">{{result.description}}</span>
+                      {{/if}}
                     {{/if}}
                   </div>
                 </button>

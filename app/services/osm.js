@@ -1,5 +1,5 @@
 import Service, { service } from '@ember/service';
-import { getLocalizedName } from '../utils/osm';
+import { getLocalizedName, getPlaceType } from '../utils/osm';
 
 export default class OsmService extends Service {
   @service settings;
@@ -61,15 +61,20 @@ out center;
   }
 
   normalizePoi(poi) {
+    const tags = poi.tags || {};
+    const type = getPlaceType(tags) || 'Point of Interest';
+
     return {
-      title: getLocalizedName(poi.tags),
+      title: getLocalizedName(tags),
       lat: poi.lat || poi.center?.lat,
       lon: poi.lon || poi.center?.lon,
-      url: poi.tags?.website,
+      url: tags.website,
       osmId: String(poi.id),
       osmType: poi.type,
-      osmTags: poi.tags || {},
-      description: poi.tags?.description,
+      osmTags: tags,
+      description: tags.description,
+      source: 'osm',
+      type: type,
     };
   }
 
@@ -224,15 +229,20 @@ out center;
       }
     }
 
+    const tags = mainElement.tags || {};
+    const type = getPlaceType(tags) || 'Point of Interest';
+
     return {
-      title: getLocalizedName(mainElement.tags),
+      title: getLocalizedName(tags),
       lat,
       lon,
-      url: mainElement.tags?.website,
+      url: tags.website,
       osmId: String(mainElement.id),
       osmType: mainElement.type,
-      osmTags: mainElement.tags || {},
-      description: mainElement.tags?.description,
+      osmTags: tags,
+      description: tags.description,
+      source: 'osm',
+      type: type,
     };
   }
 }

@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { humanizeOsmTag } from '../utils/format-text';
-import { getLocalizedName } from '../utils/osm';
+import { getLocalizedName, getPlaceType } from '../utils/osm';
 import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
 
@@ -47,38 +47,49 @@ export default class PlaceDetails extends Component {
   }
 
   get type() {
-    const rawType =
-      this.tags.amenity ||
-      this.tags.shop ||
-      this.tags.tourism ||
-      this.tags.leisure ||
-      this.tags.historic ||
-      'Point of Interest';
-
-    return humanizeOsmTag(rawType);
+    return getPlaceType(this.tags);
   }
 
   get address() {
     const t = this.tags;
     const parts = [];
 
+    // Helper to get value from multiple keys
+    const get = (...keys) => {
+      for (const k of keys) {
+        if (t[k]) return t[k];
+      }
+      return null;
+    };
+
     // Street + Number
-    if (t['addr:street']) {
-      let street = t['addr:street'];
-      if (t['addr:housenumber']) {
-        street += ` ${t['addr:housenumber']}`;
+    let street = get('addr:street', 'street');
+    const number = get('addr:housenumber', 'housenumber');
+
+    if (street) {
+      if (number) {
+        street = `${street} ${number}`;
       }
       parts.push(street);
     }
 
     // Postcode + City
-    if (t['addr:city']) {
-      let city = t['addr:city'];
-      if (t['addr:postcode']) {
-        city = `${t['addr:postcode']} ${city}`;
+    let city = get('addr:city', 'city');
+    const postcode = get('addr:postcode', 'postcode');
+
+    if (city) {
+      if (postcode) {
+        city = `${postcode} ${city}`;
       }
       parts.push(city);
     }
+    
+    // State + Country (if not already covered)
+    const state = get('addr:state', 'state');
+    const country = get('addr:country', 'country');
+
+    if (state && state !== city) parts.push(state);
+    if (country) parts.push(country);
 
     if (parts.length === 0) return null;
     return parts.join(', ');
@@ -140,6 +151,16 @@ export default class PlaceDetails extends Component {
     if (!id) return null;
     return `https://www.google.com/maps/search/?api=1&query=${this.name}&query=${this.place.lat},${this.place.lon}`;
   }
+  
+  get showDescription() {
+    // If it's a Photon result, the description IS the address.
+    // Since we are showing the address in the meta section (bottom),
+    // we should hide the description to avoid duplication.
+    if (this.place.source === 'photon') return false;
+
+    // Otherwise (e.g. saved place with custom description), show it.
+    return !!this.place.description;
+  }
 
   <template>
     <div class="place-details">
@@ -154,7 +175,7 @@ export default class PlaceDetails extends Component {
         <p class="place-type">
           {{this.type}}
         </p>
-        {{#if this.place.description}}
+        {{#if this.showDescription}}
           <p class="place-description">
             {{this.place.description}}
           </p>
