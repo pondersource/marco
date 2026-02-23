@@ -190,6 +190,8 @@ export default class PlacesSidebar extends Component {
                     <div class="place-type">
                       {{#if (eq place.source "osm")}}
                         {{humanizeOsmTag place.type}}
+                      {{else if (eq place.source "photon")}}
+                        {{place.description}}
                       {{else}}
                         {{#if place.osmTags}}
                           {{humanizeOsmTag (getPlaceType place.osmTags)}}
