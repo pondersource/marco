@@ -50,6 +50,7 @@ export function getPlaceType(tags) {
     tags.natural ||
     tags.public_transport ||
     tags.aeroway ||
+    tags.waterway ||
     tags.border_type ||
     tags.admin_title;
 
