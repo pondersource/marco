@@ -41,13 +41,17 @@ export function getPlaceType(tags) {
     tags.shop ||
     tags.tourism ||
     tags.leisure ||
+    tags.historic ||
     tags.office ||
     tags.craft ||
-    tags.historic ||
-    tags.place ||
     tags.building ||
     tags.landuse ||
-    tags.natural;
+    tags.place ||
+    tags.natural ||
+    tags.public_transport ||
+    tags.aeroway ||
+    tags.border_type ||
+    tags.admin_title;
 
   return humanizeOsmTag(rawType);
 }
