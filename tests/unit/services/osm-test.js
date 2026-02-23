@@ -52,7 +52,7 @@ module('Unit | Service | osm', function (hooks) {
     assert.strictEqual(result.osmType, 'way');
   });
 
-  test('normalizeOsmApiData calculates centroid for relations with member nodes', function (assert) {
+  test('normalizeOsmApiData prioritizes label node for relations', function (assert) {
     let service = this.owner.lookup('service:osm');
     const elements = [
       {
@@ -64,17 +64,38 @@ module('Unit | Service | osm', function (hooks) {
         ],
         tags: { name: 'Test Relation' },
       },
-      { id: 1, type: 'node', lat: 10, lon: 10 },
-      { id: 2, type: 'node', lat: 30, lon: 30 },
+      { id: 1, type: 'node', lat: 10, lon: 10, tags: { name: 'Admin Centre' } },
+      { id: 2, type: 'node', lat: 30, lon: 30, tags: { name: 'Label Node' } },
     ];
 
     const result = service.normalizeOsmApiData(elements, 789, 'relation');
 
-    assert.strictEqual(result.title, 'Test Relation');
-    assert.strictEqual(result.lat, 20); // (10+30)/2
-    assert.strictEqual(result.lon, 20); // (10+30)/2
-    assert.strictEqual(result.osmId, '789');
-    assert.strictEqual(result.osmType, 'relation');
+    assert.strictEqual(result.title, 'Label Node');
+    assert.strictEqual(result.lat, 30);
+    assert.strictEqual(result.lon, 30);
+    assert.strictEqual(result.osmId, '2');
+    assert.strictEqual(result.osmType, 'node');
+  });
+
+  test('normalizeOsmApiData falls back to admin_centre node for relations', function (assert) {
+    let service = this.owner.lookup('service:osm');
+    const elements = [
+      {
+        id: 789,
+        type: 'relation',
+        members: [{ type: 'node', ref: 1, role: 'admin_centre' }],
+        tags: { name: 'Test Relation' },
+      },
+      { id: 1, type: 'node', lat: 10, lon: 10, tags: { name: 'Admin Centre' } },
+    ];
+
+    const result = service.normalizeOsmApiData(elements, 789, 'relation');
+
+    assert.strictEqual(result.title, 'Admin Centre');
+    assert.strictEqual(result.lat, 10);
+    assert.strictEqual(result.lon, 10);
+    assert.strictEqual(result.osmId, '1');
+    assert.strictEqual(result.osmType, 'node');
   });
 
   test('normalizeOsmApiData calculates centroid for relations with member ways', function (assert) {

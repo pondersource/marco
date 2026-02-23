@@ -165,11 +165,34 @@ out center;
   normalizeOsmApiData(elements, targetId, targetType) {
     if (!elements || elements.length === 0) return null;
 
-    const mainElement = elements.find(
+    let mainElement = elements.find(
       (el) => String(el.id) === String(targetId) && el.type === targetType
     );
 
     if (!mainElement) return null;
+
+    // If it's a boundary relation, try to find the label or admin_centre node
+    // and use that as the main element (better coordinates and tags).
+    if (targetType === 'relation' && mainElement.members) {
+      const labelMember = mainElement.members.find(
+        (m) => m.role === 'label' && m.type === 'node'
+      );
+      const adminCentreMember = mainElement.members.find(
+        (m) => m.role === 'admin_centre' && m.type === 'node'
+      );
+
+      const targetMember = labelMember || adminCentreMember;
+
+      if (targetMember) {
+        const targetNode = elements.find(
+          (el) =>
+            String(el.id) === String(targetMember.ref) && el.type === 'node'
+        );
+        if (targetNode) {
+          mainElement = targetNode;
+        }
+      }
+    }
 
     let lat = mainElement.lat;
     let lon = mainElement.lon;
