@@ -8,7 +8,7 @@ export default class SettingsService extends Service {
   overpassApis = [
     {
       name: 'overpass-api.de (DE)',
-      url: 'https://overpass-api.de/api/interpreter'
+      url: 'https://overpass-api.de/api/interpreter',
     },
     {
       name: 'private.coffee (AT)',
@@ -32,7 +32,15 @@ export default class SettingsService extends Service {
   loadSettings() {
     const savedApi = localStorage.getItem('marco:overpass-api');
     if (savedApi) {
-      this.overpassApi = savedApi;
+      // Check if saved API is still in the allowed list
+      const isValid = this.overpassApis.some((api) => api.url === savedApi);
+      if (isValid) {
+        this.overpassApi = savedApi;
+      } else {
+        // If not valid, revert to default
+        this.overpassApi = 'https://overpass-api.de/api/interpreter';
+        localStorage.setItem('marco:overpass-api', this.overpassApi);
+      }
     }
 
     const savedKinetic = localStorage.getItem('marco:map-kinetic');
