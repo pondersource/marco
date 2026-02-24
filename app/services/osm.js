@@ -35,7 +35,6 @@ export default class OsmService extends Service {
       'building',
       'landuse',
       'public_transport',
-      'highway',
       'aeroway',
     ];
     const typeKeysQuery = [`~"^(${typeKeys.join('|')})$"~".*"`];
