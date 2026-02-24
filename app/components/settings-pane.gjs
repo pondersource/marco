@@ -21,7 +21,10 @@ export default class SettingsPane extends Component {
   <template>
     <div class="sidebar settings-pane">
       <div class="sidebar-header">
-        <h2>Marco</h2>
+        <h2>
+          <img src="/icons/icon-rounded.svg" alt="" width="32" height="32" />
+          Marco
+        </h2>
         <button type="button" class="close-btn" {{on "click" @onClose}}>
           <Icon @name="x" @size={{20}} @color="#333" />
         </button>
