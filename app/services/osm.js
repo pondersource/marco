@@ -26,7 +26,6 @@ export default class OsmService extends Service {
 
     const typeKeys = [
       'amenity',
-      'amenity',
       'shop',
       'tourism',
       'historic',
@@ -36,6 +35,7 @@ export default class OsmService extends Service {
       'building',
       'landuse',
       'public_transport',
+      'highway',
       'aeroway',
     ];
     const typeKeysQuery = [`~"^(${typeKeys.join('|')})$"~".*"`];

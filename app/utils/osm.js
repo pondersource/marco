@@ -40,8 +40,8 @@ export function getPlaceType(tags) {
     tags.amenity ||
     tags.shop ||
     tags.tourism ||
-    tags.leisure ||
     tags.historic ||
+    tags.leisure ||
     tags.office ||
     tags.craft ||
     tags.building ||
@@ -49,6 +49,7 @@ export function getPlaceType(tags) {
     tags.place ||
     tags.natural ||
     tags.public_transport ||
+    tags.highway ||
     tags.aeroway ||
     tags.waterway ||
     tags.border_type ||
