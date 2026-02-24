@@ -17,8 +17,8 @@ export default class ApplicationComponent extends Component {
   @tracked isSettingsOpen = false;
 
   get isSidebarOpen() {
-     // We consider the sidebar "open" if we are in search or place routes.
-     // This helps the map know if it should shift the center or adjust view.
+    // We consider the sidebar "open" if we are in search or place routes.
+    // This helps the map know if it should shift the center or adjust view.
     return (
       this.router.currentRouteName === 'place' ||
       this.router.currentRouteName === 'place.new' ||
@@ -48,12 +48,12 @@ export default class ApplicationComponent extends Component {
     if (this.isSettingsOpen) {
       this.closeSettings();
     } else if (this.router.currentRouteName === 'search') {
-       this.router.transitionTo('index');
+      this.router.transitionTo('index');
     } else if (this.router.currentRouteName === 'place') {
-       // If in place route, decide if we want to go back to search or index
-       // For now, let's go to index or maybe back to search if search params exist?
-       // Simplest behavior: clear selection
-       this.router.transitionTo('index');
+      // If in place route, decide if we want to go back to search or index
+      // For now, let's go to index or maybe back to search if search params exist?
+      // Simplest behavior: clear selection
+      this.router.transitionTo('index');
     }
   }
 

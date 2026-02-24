@@ -5,6 +5,7 @@ import { getDistance } from '../utils/geo';
 
 export default class SearchRoute extends Route {
   @service osm;
+  @service photon;
   @service mapUi;
   @service storage;
   @service router;
@@ -13,50 +14,76 @@ export default class SearchRoute extends Route {
     lat: { refreshModel: true },
     lon: { refreshModel: true },
     q: { refreshModel: true },
+    selected: { refreshModel: true },
   };
 
   async model(params) {
-    // If no coordinates, we can't search
-    if (!params.lat || !params.lon) {
-      return [];
+    const lat = params.lat ? parseFloat(params.lat) : null;
+    const lon = params.lon ? parseFloat(params.lon) : null;
+    let pois = [];
+
+    // Case 1: Text Search (q parameter present)
+    if (params.q) {
+      // Search with Photon (using lat/lon for bias if available)
+      pois = await this.photon.search(params.q, lat, lon);
+
+      // Search local bookmarks by name
+      const queryLower = params.q.toLowerCase();
+      const localMatches = this.storage.savedPlaces.filter((p) => {
+        return (
+          p.title?.toLowerCase().includes(queryLower) ||
+          p.description?.toLowerCase().includes(queryLower)
+        );
+      });
+
+      // Merge local matches
+      localMatches.forEach((local) => {
+        const exists = pois.find(
+          (poi) =>
+            (local.osmId && poi.osmId === local.osmId) ||
+            (poi.id && poi.id === local.id)
+        );
+        if (!exists) {
+          pois.push(local);
+        }
+      });
     }
+    // Case 2: Nearby Search (lat/lon present, no q)
+    else if (lat && lon) {
+      const searchRadius = 50; // Default radius
 
-    const lat = parseFloat(params.lat);
-    const lon = parseFloat(params.lon);
-    const searchRadius = params.q ? 30 : 50;
+      // Fetch POIs from Overpass
+      pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
 
-    // Fetch POIs
-    let pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
+      // Get cached/saved places in search radius
+      const localMatches = this.storage.savedPlaces.filter((p) => {
+        const dist = getDistance(lat, lon, p.lat, p.lon);
+        return dist <= searchRadius;
+      });
 
-    // Get cached/saved places in search radius
-    const localMatches = this.storage.savedPlaces.filter((p) => {
-      const dist = getDistance(lat, lon, p.lat, p.lon);
-      return dist <= searchRadius;
-    });
+      // Merge local matches
+      localMatches.forEach((local) => {
+        const exists = pois.find(
+          (poi) =>
+            (local.osmId && poi.osmId === local.osmId) ||
+            (poi.id && poi.id === local.id)
+        );
 
-    // Add local matches to the list if they aren't already there
-    // We use osmId to deduplicate if possible
-    localMatches.forEach((local) => {
-      const exists = pois.find(
-        (poi) =>
-          (local.osmId && poi.osmId === local.osmId) ||
-          (poi.id && poi.id === local.id)
-      );
+        if (!exists) {
+          pois.push(local);
+        }
+      });
 
-      if (!exists) {
-        pois.push(local);
-      }
-    });
-
-    // Sort by distance from click
-    pois = pois
-      .map((p) => {
-        return {
-          ...p,
-          _distance: getDistance(lat, lon, p.lat, p.lon),
-        };
-      })
-      .sort((a, b) => a._distance - b._distance);
+      // Sort by distance from click
+      pois = pois
+        .map((p) => {
+          return {
+            ...p,
+            _distance: getDistance(lat, lon, p.lat, p.lon),
+          };
+        })
+        .sort((a, b) => a._distance - b._distance);
+    }
 
     // Check if any of these are already bookmarked
     // We resolve them to the bookmark version if they exist
@@ -69,18 +96,24 @@ export default class SearchRoute extends Route {
   }
 
   afterModel(model, transition) {
-    const { q } = transition.to.queryParams;
+    const { q, selected } = transition.to.queryParams;
 
     // Heuristic Match Logic (ported from MapComponent)
-    if (q && model.length > 0) {
+    // If 'selected' is provided (from map click), try to find that specific feature.
+    // If 'q' is provided (from text search), try to find an exact match to auto-select.
+    const targetName = selected || q;
+
+    if (targetName && model.length > 0) {
       let matchedPlace = null;
 
       // 1. Exact Name Match
       matchedPlace = model.find(
-        (p) => p.osmTags && (p.osmTags.name === q || p.osmTags['name:en'] === q)
+        (p) =>
+          p.osmTags &&
+          (p.osmTags.name === targetName || p.osmTags['name:en'] === targetName)
       );
 
-      // 2. High Proximity Match (<= 10m)
+      // 2. High Proximity Match (<= 10m) - Only if we don't have a name match
       // Note: MapComponent had logic for <=20m + type match.
       // We might want to pass the 'type' in queryParams if we want to be that precise.
       // For now, let's stick to name or very close proximity.

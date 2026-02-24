@@ -5,6 +5,7 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import Icon from '#components/icon';
 import UserMenu from '#components/user-menu';
+import SearchBox from '#components/search-box';
 
 export default class AppHeaderComponent extends Component {
   @service storage;
@@ -23,14 +24,7 @@ export default class AppHeaderComponent extends Component {
   <template>
     <header class="app-header">
       <div class="header-left">
-        <button
-          class="menu-btn btn-press"
-          type="button"
-          aria-label="Menu"
-          {{on "click" @onToggleMenu}}
-        >
-          <Icon @name="menu" @size={{24}} @color="#333" />
-        </button>
+        <SearchBox @onToggleMenu={{@onToggleMenu}} />
       </div>
 
       <div class="header-right">

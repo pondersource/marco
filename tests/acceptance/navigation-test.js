@@ -25,6 +25,16 @@ class MockOsmService extends Service {
       osmType: 'node',
     };
   }
+  async fetchOsmObject(id, type) {
+    return {
+      osmId: id,
+      osmType: type,
+      lat: 1,
+      lon: 1,
+      osmTags: { name: 'Test Place', amenity: 'cafe' },
+      title: 'Test Place',
+    };
+  }
 }
 
 class MockStorageService extends Service {
@@ -82,7 +92,6 @@ module('Acceptance | navigation', function (hooks) {
 
     // Click the Close (X) button
     await click('.close-btn');
-    
 
     assert.strictEqual(currentURL(), '/', 'Returned to index');
     assert.false(mapUi.returnToSearch, 'Flag is reset after closing sidebar');
@@ -95,7 +104,6 @@ module('Acceptance | navigation', function (hooks) {
       assert.ok(currentURL().includes('/place/'), 'Visited place directly');
 
       await click('.back-btn');
-      
 
       assert.strictEqual(currentURL(), '/', 'Returned to index/map');
       assert.true(backStub.notCalled, 'window.history.back() was NOT called');

@@ -17,11 +17,13 @@ import navigation from 'feather-icons/dist/icons/navigation.svg?raw';
 import phone from 'feather-icons/dist/icons/phone.svg?raw';
 import plus from 'feather-icons/dist/icons/plus.svg?raw';
 import server from 'feather-icons/dist/icons/server.svg?raw';
+import search from 'feather-icons/dist/icons/search.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
 import target from 'feather-icons/dist/icons/target.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
+import wikipedia from '../icons/wikipedia.svg?raw';
 
 const ICONS = {
   'arrow-left': arrowLeft,
@@ -40,9 +42,11 @@ const ICONS = {
   phone,
   plus,
   server,
+  search,
   settings,
   target,
   user,
+  wikipedia,
   x,
   zap,
 };
@@ -70,7 +74,11 @@ export default class IconComponent extends Component {
 
   <template>
     {{#if this.svg}}
-      <span class="icon" style={{this.style}} title={{this.title}}>
+      <span
+        class="icon {{if @filled 'icon-filled'}}"
+        style={{this.style}}
+        title={{this.title}}
+      >
         {{htmlSafe this.svg}}
       </span>
     {{/if}}

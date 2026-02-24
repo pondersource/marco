@@ -14,7 +14,7 @@ button {
 
 body {
   margin: 0;
-  font-family: 'Noto Serif', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
   font-size: 16px;
   color: #333;
 }
@@ -61,7 +61,7 @@ body {
   left: 0;
   right: 0;
   height: 60px;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -69,9 +69,20 @@ body {
   pointer-events: none; /* Let clicks pass through to map where transparent */
 }
 
+@media (width <= 768px) {
+  .app-header {
+    padding: 0 0.5rem;
+  }
+}
+
 .header-left,
 .header-right {
   pointer-events: auto; /* Re-enable clicks for buttons */
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
 }
 
 .btn-press {
@@ -80,19 +91,6 @@ body {
 
 .btn-press:active {
   transform: scale(0.95);
-}
-
-.menu-btn {
-  background: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgb(0 0 0 / 20%);
-  cursor: pointer;
 }
 
 .user-btn {
@@ -211,7 +209,6 @@ body {
   z-index: 3200; /* Higher than Places Sidebar (3100) */
 }
 
-/* Settings Pane Mobile Overrides */
 @media (width <= 768px) {
   .settings-pane.sidebar {
     width: 100%;
@@ -348,7 +345,6 @@ body {
 .meta-info a {
   color: #007bff;
   text-decoration: none;
-  padding-bottom: 4rem;
 }
 
 .meta-info a:hover {
@@ -547,41 +543,53 @@ body {
   }
 }
 
-/* Zoom Control - Moved to bottom right above attribution */
-.ol-zoom {
-  top: auto !important;
-  left: auto !important;
-  bottom: 2.5em;
-  right: 0.5em;
+/* Map controls */
+
+.ol-control.ol-attribution {
+  bottom: 1rem;
+}
+.ol-touch .ol-control.ol-attribution {
+  bottom: 0.5rem;
 }
 
-.ol-touch .ol-zoom {
-  bottom: 3.5em;
+.ol-control.ol-zoom {
+  bottom: 3rem;
+}
+.ol-touch .ol-control.ol-zoom {
+  bottom: 3.5rem;
 }
 
-/* Locate Control - Above Zoom */
 .ol-control.ol-locate {
-  top: auto !important;
-  left: auto !important;
-  bottom: 6.5em;
-  right: 0.5em;
+  bottom: 6.5rem;
 }
-
 .ol-touch .ol-control.ol-locate {
-  bottom: 8.5em;
+  bottom: 8.5rem;
 }
 
-/* Rotate Control - Above Locate */
-.ol-rotate {
-  top: auto !important;
-  left: auto !important;
-  bottom: 9em;
-  right: 0.5em;
+.ol-control.ol-rotate {
+  bottom: 9rem;
+}
+.ol-touch .ol-control.ol-rotate {
+  bottom: 11.5rem;
 }
 
-.ol-touch .ol-rotate {
-  bottom: 11.5em;
+.ol-control.ol-attribution,
+.ol-control.ol-zoom,
+.ol-control.ol-locate,
+.ol-control.ol-rotate {
+  top: auto;
+  left: auto;
+  right: 1rem;
 }
+
+.ol-touch .ol-control.ol-attribution,
+.ol-touch .ol-control.ol-zoom,
+.ol-touch .ol-control.ol-locate,
+.ol-touch .ol-control.ol-rotate {
+  right: 0.5rem;
+}
+
+/* Icons */
 
 span.icon {
   display: inline-block;
@@ -601,11 +609,20 @@ span.icon {
   stroke-linejoin: round;
 }
 
+.icon-filled svg {
+  stroke: none;
+  fill: currentcolor;
+}
+
 .content-with-icon {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
+}
+
+.content-with-icon .icon {
+  margin-top: 0.15rem;
 }
 
 /* Selected Pin Animation */
@@ -749,4 +766,216 @@ button.create-place {
     /* Ensure content doesn't get hidden behind bottom safe areas on mobile */
     padding-bottom: env(safe-area-inset-bottom, 20px);
   }
+}
+
+/* Search Box Component */
+.search-box {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin-left: 0;
+  z-index: 3002; /* Higher than menu button to be safe */
+}
+
+@media (width <= 768px) {
+  .search-box {
+    max-width: calc(100vw - 65px);
+  }
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 24px; /* Pill shape */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  padding: 0 0.5rem;
+  height: 48px; /* Slightly taller for touch targets */
+  transition: box-shadow 0.2s;
+}
+
+.search-form:focus-within {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Integrated Menu Button */
+.menu-btn-integrated {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  margin-right: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #5f6368;
+}
+
+.menu-btn-integrated:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Fallback Search Icon (Left) */
+.search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f6368;
+  margin-right: 0.5rem;
+  padding: 8px; /* Match button size */
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  font-size: 1rem;
+  color: #333;
+  outline: none;
+  width: 100%;
+  padding: 0 4px;
+  /* Remove native search cancel button in WebKit */
+  -webkit-appearance: none;
+}
+
+/* Remove 'x' from search input in Chrome/Safari */
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/* Submit Button (Right) */
+.search-submit-btn {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f6368;
+  border-radius: 50%;
+  margin-left: 4px;
+  border-left: 1px solid #ddd; /* Separator like Google Maps */
+  padding-left: 12px;
+  border-radius: 0; /* Reset for separator look */
+}
+
+.search-submit-btn:hover {
+  /* No background on hover if we use separator style, or maybe just change icon color */
+  color: #1a73e8; /* Blue on hover */
+}
+
+/* If we want the separator style, we need to adjust border-radius carefully or use a pseudo element */
+/* Let's stick to a simple button for now, maybe without the separator if it looks cleaner */
+.search-submit-btn {
+  border-left: none; /* Remove separator for cleaner look */
+  padding-left: 8px;
+  border-radius: 50%;
+}
+.search-submit-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.search-clear-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f6368;
+  border-radius: 50%;
+  margin-left: 2px;
+}
+
+.search-clear-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+/* Search Results Popover */
+.search-results-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 3002;
+}
+
+.search-results-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.search-result-item {
+  width: 100%;
+  display: flex;
+  align-items: center; /* Vertical center alignment */
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover,
+.search-result-item:focus {
+  background: #f5f5f5;
+  outline: none;
+}
+
+.result-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #f0f0f0;
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: #666;
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* For text truncation if needed */
+}
+
+.result-title {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-desc {
+  font-size: 0.8rem;
+  color: #777;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
 }

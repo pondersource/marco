@@ -1,3 +1,5 @@
+import { humanizeOsmTag } from './format-text';
+
 export function getLocalizedName(tags, defaultName = 'Untitled Place') {
   if (!tags) return defaultName;
 
@@ -29,4 +31,40 @@ export function getLocalizedName(tags, defaultName = 'Untitled Place') {
 
   // 5. Final fallback
   return defaultName;
+}
+
+const PLACE_TYPE_KEYS = [
+  'amenity',
+  'shop',
+  'tourism',
+  'historic',
+  'leisure',
+  'office',
+  'craft',
+  'building',
+  'landuse',
+  'public_transport',
+  'highway',
+  'aeroway',
+  'waterway',
+  'natural',
+  'place',
+  'border_type',
+  'admin_title',
+];
+
+export function getPlaceType(tags) {
+  if (!tags) return null;
+
+  for (const key of PLACE_TYPE_KEYS) {
+    const value = tags[key];
+    if (value) {
+      if (value === 'yes') {
+        return humanizeOsmTag(key);
+      }
+      return humanizeOsmTag(value);
+    }
+  }
+
+  return null;
 }

@@ -4,10 +4,11 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import or from 'ember-truth-helpers/helpers/or';
+import eq from 'ember-truth-helpers/helpers/eq';
 import PlaceDetails from './place-details';
 import Icon from './icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
-import { getLocalizedName } from '../utils/osm';
+import { getLocalizedName, getPlaceType } from '../utils/osm';
 
 export default class PlacesSidebar extends Component {
   @service storage;
@@ -23,8 +24,10 @@ export default class PlacesSidebar extends Component {
     if (lat && lon) {
       this.router.transitionTo('place.new', { queryParams: { lat, lon } });
     } else {
-       // Fallback (shouldn't happen in search context)
-       this.router.transitionTo('place.new', { queryParams: { lat: 0, lon: 0 } });
+      // Fallback (shouldn't happen in search context)
+      this.router.transitionTo('place.new', {
+        queryParams: { lat: 0, lon: 0 },
+      });
     }
   }
 
@@ -142,6 +145,11 @@ export default class PlacesSidebar extends Component {
     }
   }
 
+  get isNearbySearch() {
+    const qp = this.router.currentRoute.queryParams;
+    return !qp.q && qp.lat && qp.lon;
+  }
+
   <template>
     <div class="sidebar">
       <div class="sidebar-header">
@@ -152,7 +160,11 @@ export default class PlacesSidebar extends Component {
             {{on "click" this.clearSelection}}
           ><Icon @name="arrow-left" @size={{20}} @color="#333" /></button>
         {{else}}
-        <h2><Icon @name="target" @size={{20}} @color="#ea4335" /> Nearby</h2>
+          {{#if this.isNearbySearch}}
+            <h2><Icon @name="target" @size={{20}} @color="#ea4335" /> Nearby</h2>
+          {{else}}
+            <h2><Icon @name="search" @size={{20}} @color="#333" /> Results</h2>
+          {{/if}}
         {{/if}}
         <button type="button" class="close-btn" {{on "click" @onClose}}><Icon
             @name="x"
@@ -184,20 +196,29 @@ export default class PlacesSidebar extends Component {
                         place.osmTags.name:en
                         "Unnamed Place"
                       }}</div>
-                    <div class="place-type">{{humanizeOsmTag (or
-                        place.osmTags.amenity
-                        place.osmTags.shop
-                        place.osmTags.tourism
-                        place.osmTags.leisure
-                        place.osmTags.historic
-                        "Point of Interest"
-                      )}}</div>
+                    <div class="place-type">
+                      {{#if (eq place.source "osm")}}
+                        {{humanizeOsmTag place.type}}
+                      {{else if (eq place.source "photon")}}
+                        {{place.description}}
+                      {{else}}
+                        {{#if place.osmTags}}
+                          {{humanizeOsmTag (getPlaceType place.osmTags)}}
+                        {{else if place.description}}
+                          {{place.description}}
+                        {{/if}}
+                      {{/if}}
+                    </div>
                   </button>
                 </li>
               {{/each}}
             </ul>
           {{else}}
-            <p class="empty-state">No places found nearby.</p>
+            {{#if this.isNearbySearch}}
+              <p class="empty-state">No places found nearby.</p>
+            {{else}}
+              <p class="empty-state">No results found.</p>
+            {{/if}}
           {{/if}}
 
           <button

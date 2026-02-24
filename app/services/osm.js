@@ -1,5 +1,5 @@
 import Service, { service } from '@ember/service';
-import { getLocalizedName } from '../utils/osm';
+import { getLocalizedName, getPlaceType } from '../utils/osm';
 
 export default class OsmService extends Service {
   @service settings;
@@ -24,14 +24,31 @@ export default class OsmService extends Service {
     this.controller = new AbortController();
     const signal = this.controller.signal;
 
+    const typeKeys = [
+      'amenity',
+      'shop',
+      'tourism',
+      'historic',
+      'leisure',
+      'office',
+      'craft',
+      'building',
+      'landuse',
+      'public_transport',
+      'highway',
+      'aeroway',
+    ];
+    const typeKeysQuery = [`~"^(${typeKeys.join('|')})$"~".*"`];
+
     const query = `
 [out:json][timeout:25];
 (
-  nw["amenity"](around:${radius},${lat},${lon});
-  nw["shop"](around:${radius},${lat},${lon});
-  nw["tourism"](around:${radius},${lat},${lon});
-  nw["leisure"](around:${radius},${lat},${lon});
-  nw["historic"](around:${radius},${lat},${lon});
+  node(around:${radius},${lat},${lon})
+    [${typeKeysQuery}][~"^name"~"."];
+  way(around:${radius},${lat},${lon})
+    [${typeKeysQuery}][~"^name"~"."];
+  relation(around:${radius},${lat},${lon})
+    [${typeKeysQuery}][~"^name"~"."];
 );
 out center;
     `.trim();
@@ -61,15 +78,20 @@ out center;
   }
 
   normalizePoi(poi) {
+    const tags = poi.tags || {};
+    const type = getPlaceType(tags) || 'Point of Interest';
+
     return {
-      title: getLocalizedName(poi.tags),
+      title: getLocalizedName(tags),
       lat: poi.lat || poi.center?.lat,
       lon: poi.lon || poi.center?.lon,
-      url: poi.tags?.website,
+      url: tags.website,
       osmId: String(poi.id),
       osmType: poi.type,
-      osmTags: poi.tags || {},
-      description: poi.tags?.description,
+      osmTags: tags,
+      description: tags.description,
+      source: 'osm',
+      type: type,
     };
   }
 
@@ -123,5 +145,212 @@ out center;
     const data = await res.json();
     if (!data.elements[0]) return null;
     return this.normalizePoi(data.elements[0]);
+  }
+
+  async fetchOsmObject(osmId, osmType) {
+    if (!osmId || !osmType) return null;
+
+    let url;
+    if (osmType === 'node') {
+      url = `https://www.openstreetmap.org/api/0.6/node/${osmId}.json`;
+    } else if (osmType === 'way') {
+      url = `https://www.openstreetmap.org/api/0.6/way/${osmId}/full.json`;
+    } else if (osmType === 'relation') {
+      url = `https://www.openstreetmap.org/api/0.6/relation/${osmId}/full.json`;
+    } else {
+      console.error('Unknown OSM type:', osmType);
+      return null;
+    }
+
+    try {
+      const res = await this.fetchWithRetry(url);
+      if (!res.ok) {
+        if (res.status === 410) {
+          console.warn('OSM object has been deleted');
+          return null;
+        }
+        throw new Error(`OSM API request failed: ${res.status}`);
+      }
+      const data = await res.json();
+      return this.normalizeOsmApiData(data.elements, osmId, osmType);
+    } catch (e) {
+      console.error('Failed to fetch OSM object:', e);
+      return null;
+    }
+  }
+
+  normalizeOsmApiData(elements, targetId, targetType) {
+    if (!elements || elements.length === 0) return null;
+
+    let mainElement = elements.find(
+      (el) => String(el.id) === String(targetId) && el.type === targetType
+    );
+
+    if (!mainElement) return null;
+
+    // Use a separate variable for the element we want to display (tags, id, specific coords)
+    // vs the element we use for geometry calculation (bbox).
+    let displayElement = mainElement;
+
+    // If it's a boundary relation, try to find the label or admin_centre node
+    // and use that as the display element (better coordinates and tags).
+    if (targetType === 'relation' && mainElement.members) {
+      const labelMember = mainElement.members.find(
+        (m) => m.role === 'label' && m.type === 'node'
+      );
+      const adminCentreMember = mainElement.members.find(
+        (m) => m.role === 'admin_centre' && m.type === 'node'
+      );
+
+      const targetMember = labelMember || adminCentreMember;
+
+      if (targetMember) {
+        const targetNode = elements.find(
+          (el) =>
+            String(el.id) === String(targetMember.ref) && el.type === 'node'
+        );
+        if (targetNode) {
+          displayElement = targetNode;
+        }
+      }
+    }
+
+    let lat = displayElement.lat;
+    let lon = displayElement.lon;
+    let bbox = null;
+    let geojson = null;
+
+    // If it's a way, calculate center from nodes
+    if (targetType === 'way' && mainElement.nodes) {
+      const nodeMap = new Map();
+      elements.forEach((el) => {
+        if (el.type === 'node') {
+          nodeMap.set(el.id, [el.lon, el.lat]);
+        }
+      });
+
+      const coords = mainElement.nodes
+        .map((id) => nodeMap.get(id))
+        .filter(Boolean);
+
+      if (coords.length > 0) {
+        // Only override lat/lon if we haven't switched to a specific display node
+        if (displayElement === mainElement) {
+          const sumLat = coords.reduce((sum, c) => sum + c[1], 0);
+          const sumLon = coords.reduce((sum, c) => sum + c[0], 0);
+          lat = sumLat / coords.length;
+          lon = sumLon / coords.length;
+        }
+
+        // Calculate BBox
+        const lats = coords.map((c) => c[1]);
+        const lons = coords.map((c) => c[0]);
+        bbox = {
+          minLat: Math.min(...lats),
+          maxLat: Math.max(...lats),
+          minLon: Math.min(...lons),
+          maxLon: Math.max(...lons),
+        };
+
+        // Construct GeoJSON
+        if (coords.length > 1) {
+          const first = coords[0];
+          const last = coords[coords.length - 1];
+          const isClosed = first[0] === last[0] && first[1] === last[1];
+
+          if (isClosed) {
+            geojson = {
+              type: 'Polygon',
+              coordinates: [coords],
+            };
+          } else {
+            geojson = {
+              type: 'LineString',
+              coordinates: coords,
+            };
+          }
+        }
+      }
+    } else if (targetType === 'relation' && mainElement.members) {
+      // Find all nodes that are part of this relation (directly or via ways)
+      const allNodes = [];
+      const nodeMap = new Map();
+      elements.forEach((el) => {
+        if (el.type === 'node') {
+          nodeMap.set(el.id, el);
+        }
+      });
+
+      const segments = [];
+
+      mainElement.members.forEach((member) => {
+        if (member.type === 'node') {
+          const node = nodeMap.get(member.ref);
+          if (node) allNodes.push(node);
+        } else if (member.type === 'way') {
+          const way = elements.find(
+            (el) => el.type === 'way' && el.id === member.ref
+          );
+          if (way && way.nodes) {
+            const wayCoords = [];
+            way.nodes.forEach((nodeId) => {
+              const node = nodeMap.get(nodeId);
+              if (node) {
+                allNodes.push(node);
+                wayCoords.push([node.lon, node.lat]);
+              }
+            });
+            if (wayCoords.length > 1) {
+              segments.push(wayCoords);
+            }
+          }
+        }
+      });
+
+      if (allNodes.length > 0) {
+        // Only override lat/lon if we haven't switched to a specific display node
+        if (displayElement === mainElement) {
+          const sumLat = allNodes.reduce((sum, n) => sum + n.lat, 0);
+          const sumLon = allNodes.reduce((sum, n) => sum + n.lon, 0);
+          lat = sumLat / allNodes.length;
+          lon = sumLon / allNodes.length;
+        }
+
+        // Calculate BBox
+        const lats = allNodes.map((n) => n.lat);
+        const lons = allNodes.map((n) => n.lon);
+        bbox = {
+          minLat: Math.min(...lats),
+          maxLat: Math.max(...lats),
+          minLon: Math.min(...lons),
+          maxLon: Math.max(...lons),
+        };
+      }
+
+      if (segments.length > 0) {
+        geojson = {
+          type: 'MultiLineString',
+          coordinates: segments,
+        };
+      }
+    }
+
+    const tags = displayElement.tags || {};
+    const type = getPlaceType(tags) || 'Point of Interest';
+
+    return {
+      title: getLocalizedName(tags),
+      lat,
+      lon,
+      bbox,
+      geojson,
+      url: tags.website,
+      osmId: String(displayElement.id),
+      osmType: displayElement.type,
+      osmTags: tags,
+      description: tags.description,
+      source: 'osm',
+      type: type,
+    };
   }
 }

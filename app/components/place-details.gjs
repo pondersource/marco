@@ -1,8 +1,9 @@
 import Component from '@glimmer/component';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
+import { htmlSafe } from '@ember/template';
 import { humanizeOsmTag } from '../utils/format-text';
-import { getLocalizedName } from '../utils/osm';
+import { getLocalizedName, getPlaceType } from '../utils/osm';
 import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
 
@@ -21,11 +22,7 @@ export default class PlaceDetails extends Component {
   }
 
   get name() {
-    return (
-      this.place.title ||
-      getLocalizedName(this.tags) ||
-      'Unnamed Place'
-    );
+    return this.place.title || getLocalizedName(this.tags) || 'Unnamed Place';
   }
 
   @action
@@ -51,58 +48,103 @@ export default class PlaceDetails extends Component {
   }
 
   get type() {
-    const rawType =
-      this.tags.amenity ||
-      this.tags.shop ||
-      this.tags.tourism ||
-      this.tags.leisure ||
-      this.tags.historic ||
-      'Point of Interest';
-
-    return humanizeOsmTag(rawType);
+    return getPlaceType(this.tags);
   }
 
   get address() {
     const t = this.tags;
     const parts = [];
 
+    // Helper to get value from multiple keys
+    const get = (...keys) => {
+      for (const k of keys) {
+        if (t[k]) return t[k];
+      }
+      return null;
+    };
+
     // Street + Number
-    if (t['addr:street']) {
-      let street = t['addr:street'];
-      if (t['addr:housenumber']) {
-        street += ` ${t['addr:housenumber']}`;
+    let street = get('addr:street', 'street');
+    const number = get('addr:housenumber', 'housenumber');
+
+    if (street) {
+      if (number) {
+        street = `${street} ${number}`;
       }
       parts.push(street);
     }
 
     // Postcode + City
-    if (t['addr:city']) {
-      let city = t['addr:city'];
-      if (t['addr:postcode']) {
-        city = `${t['addr:postcode']} ${city}`;
+    let city = get('addr:city', 'city');
+    const postcode = get('addr:postcode', 'postcode');
+
+    if (city) {
+      if (postcode) {
+        city = `${postcode} ${city}`;
       }
       parts.push(city);
     }
+
+    // State + Country (if not already covered)
+    const state = get('addr:state', 'state');
+    const country = get('addr:country', 'country');
+
+    if (state && state !== city) parts.push(state);
+    if (country) parts.push(country);
 
     if (parts.length === 0) return null;
     return parts.join(', ');
   }
 
+  formatMultiLine(val, type) {
+    if (!val) return null;
+    const parts = val.split(';').map((s) => s.trim()).filter(Boolean);
+    if (parts.length === 0) return null;
+
+    if (type === 'phone') {
+      return htmlSafe(
+        parts.map((p) => `<a href="tel:${p}">${p}</a>`).join('<br>')
+      );
+    }
+
+    if (type === 'url') {
+      return htmlSafe(
+        parts
+          .map(
+            (url) =>
+              `<a href="${url}" target="_blank" rel="noopener noreferrer">${this.getDomain(
+                url
+              )}</a>`
+          )
+          .join('<br>')
+      );
+    }
+
+    return htmlSafe(parts.join('<br>'));
+  }
+
   get phone() {
-    return this.tags.phone || this.tags['contact:phone'];
+    const val = this.tags.phone || this.tags['contact:phone'];
+    return this.formatMultiLine(val, 'phone');
   }
 
   get website() {
-    return this.place.url || this.tags.website || this.tags['contact:website'];
+    const val = this.place.url || this.tags.website || this.tags['contact:website'];
+    return this.formatMultiLine(val, 'url');
   }
 
-  get websiteDomain() {
-    const url = new URL(this.website);
-    return url.hostname;
+  getDomain(urlStr) {
+    try {
+      const url = new URL(urlStr);
+      return url.hostname;
+    } catch {
+      return urlStr;
+    }
   }
 
   get openingHours() {
-    return this.tags.opening_hours;
+    const val = this.tags.opening_hours;
+    return this.formatMultiLine(val);
   }
 
   get cuisine() {
@@ -114,7 +156,9 @@ export default class PlaceDetails extends Component {
   }
 
   get wikipedia() {
-    return this.tags.wikipedia;
+    const val = this.tags.wikipedia;
+    if (!val) return null;
+    return val.split(';').map((s) => s.trim()).filter(Boolean)[0];
   }
 
   get geoLink() {
@@ -129,7 +173,7 @@ export default class PlaceDetails extends Component {
     const lat = this.place.lat;
     const lon = this.place.lon;
     if (!lat || !lon) return '';
-    return `${lat}, ${lon}`;
+    return `${Number(lat).toFixed(6)}, ${Number(lon).toFixed(6)}`;
   }
 
   get osmUrl() {
@@ -145,6 +189,16 @@ export default class PlaceDetails extends Component {
     return `https://www.google.com/maps/search/?api=1&query=${this.name}&query=${this.place.lat},${this.place.lon}`;
   }
 
+  get showDescription() {
+    // If it's a Photon result, the description IS the address.
+    // Since we are showing the address in the meta section (bottom),
+    // we should hide the description to avoid duplication.
+    if (this.place.source === 'photon') return false;
+
+    // Otherwise (e.g. saved place with custom description), show it.
+    return !!this.place.description;
+  }
+
   <template>
     <div class="place-details">
       {{#if this.isEditing}}
@@ -158,7 +212,7 @@ export default class PlaceDetails extends Component {
         <p class="place-type">
           {{this.type}}
         </p>
-        {{#if this.place.description}}
+        {{#if this.showDescription}}
           <p class="place-description">
             {{this.place.description}}
           </p>
@@ -198,7 +252,7 @@ export default class PlaceDetails extends Component {
       <div class="meta-info">
 
         {{#if this.cuisine}}
-          <p>
+          <p class="cuisine-info">
             <strong>Cuisine:</strong>
             {{this.cuisine}}
           </p>
@@ -207,36 +261,42 @@ export default class PlaceDetails extends Component {
         {{#if this.openingHours}}
           <p class="content-with-icon">
             <Icon @name="clock" @title="Opening hours" />
-            <span>{{this.openingHours}}</span>
+            <span>
+              {{this.openingHours}}
+            </span>
           </p>
         {{/if}}
 
         {{#if this.phone}}
           <p class="content-with-icon">
             <Icon @name="phone" @title="Phone" />
-            <span><a href="tel:{{this.phone}}">{{this.phone}}</a></span>
+            <span>
+              {{this.phone}}
+            </span>
           </p>
         {{/if}}
 
         {{#if this.website}}
           <p class="content-with-icon">
             <Icon @name="globe" @title="Website" />
-            <span><a
-                href={{this.website}}
-                target="_blank"
-                rel="noopener noreferrer"
-              >{{this.websiteDomain}}</a></span>
+            <span>
+              {{this.website}}
+            </span>
           </p>
         {{/if}}
 
         {{#if this.wikipedia}}
-          <p>
-            <strong>Wikipedia:</strong>
-            <a
-              href="https://wikipedia.org/wiki/{{this.wikipedia}}"
-              target="_blank"
-              rel="noopener noreferrer"
-            >Article</a>
+          <p class="content-with-icon">
+            <Icon @name="wikipedia" @title="Wikipedia" @filled={{true}} />
+            <span>
+              <a
+                href="https://wikipedia.org/wiki/{{this.wikipedia}}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Wikipedia
+              </a>
+            </span>
           </p>
         {{/if}}
 
@@ -274,7 +334,11 @@ export default class PlaceDetails extends Component {
           <p class="content-with-icon">
             <Icon @name="map" />
             <span>
-              <a href={{this.gmapsUrl}} target="_blank" rel="noopener noreferrer">
+              <a
+                href={{this.gmapsUrl}}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Google Maps
               </a>
             </span>

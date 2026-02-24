@@ -101,6 +101,7 @@
     "edition": "octane"
   },
   "dependencies": {
+    "ember-concurrency": "^5.2.0",
     "ember-lifeline": "^7.0.0"
   }
 }

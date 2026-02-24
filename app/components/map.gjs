@@ -13,6 +13,7 @@ import LayerGroup from 'ol/layer/Group.js';
 import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector.js';
 import Feature from 'ol/Feature.js';
+import GeoJSON from 'ol/format/GeoJSON.js';
 import Point from 'ol/geom/Point.js';
 import Geolocation from 'ol/Geolocation.js';
 import { Style, Circle, Fill, Stroke } from 'ol/style.js';
@@ -27,17 +28,35 @@ export default class MapComponent extends Component {
 
   mapInstance;
   bookmarkSource;
+  selectedShapeSource;
   searchOverlay;
   searchOverlayElement;
   selectedPinOverlay;
   selectedPinElement;
   crosshairElement;
   crosshairOverlay;
+  ignoreNextMapClick = false;
 
   setupMap = modifier((element) => {
     if (this.mapInstance) return;
 
     const openfreemap = new LayerGroup();
+
+    // Create a vector source and layer for the selected shape (outline)
+    this.selectedShapeSource = new VectorSource();
+    const selectedShapeLayer = new VectorLayer({
+      source: this.selectedShapeSource,
+      style: new Style({
+        stroke: new Stroke({
+          color: '#3388ff',
+          width: 4,
+        }),
+        fill: new Fill({
+          color: 'rgba(51, 136, 255, 0.1)',
+        }),
+      }),
+      zIndex: 5, // Below bookmarks (10) but above tiles
+    });
 
     // Create a vector source and layer for bookmarks
     this.bookmarkSource = new VectorSource();
@@ -98,7 +117,7 @@ export default class MapComponent extends Component {
 
     this.mapInstance = new Map({
       target: element,
-      layers: [openfreemap, bookmarkLayer],
+      layers: [openfreemap, selectedShapeLayer, bookmarkLayer],
       view: view,
       controls: defaultControls({
         zoom: true,
@@ -109,6 +128,10 @@ export default class MapComponent extends Component {
         dragPan: false, // Disable default DragPan to add a custom one
       }),
     });
+
+    // Initialize the UI service with the map center
+    const initialCenter = toLonLat(view.getCenter());
+    this.mapUi.updateCenter(initialCenter[1], initialCenter[0]);
 
     apply(this.mapInstance, 'https://tiles.openfreemap.org/styles/liberty');
 
@@ -155,9 +178,6 @@ export default class MapComponent extends Component {
     `;
     element.appendChild(this.crosshairElement);
 
-
-
-
     // Geolocation Pulse Overlay
     this.locationOverlayElement = document.createElement('div');
     this.locationOverlayElement.className = 'search-pulse blue';
@@ -167,6 +187,18 @@ export default class MapComponent extends Component {
       stopEvent: false,
     });
     this.mapInstance.addOverlay(this.locationOverlay);
+
+    // Track search box focus state on pointer down to handle race conditions
+    // The blur event fires before click, so we need to capture state here
+    element.addEventListener(
+      'pointerdown',
+      () => {
+        if (this.mapUi.searchBoxHasFocus) {
+          this.ignoreNextMapClick = true;
+        }
+      },
+      true
+    );
 
     // Geolocation Setup
     const geolocation = new Geolocation({
@@ -311,7 +343,7 @@ export default class MapComponent extends Component {
     };
 
     const startLocating = () => {
-      console.debug('Getting current geolocation...')
+      console.debug('Getting current geolocation...');
       // 1. Clear any previous session
       stopLocating();
 
@@ -374,11 +406,15 @@ export default class MapComponent extends Component {
     if (!this.mapInstance) return;
 
     // Remove existing DragPan interactions
-    this.mapInstance.getInteractions().getArray().slice().forEach((interaction) => {
-      if (interaction instanceof DragPan) {
-        this.mapInstance.removeInteraction(interaction);
-      }
-    });
+    this.mapInstance
+      .getInteractions()
+      .getArray()
+      .slice()
+      .forEach((interaction) => {
+        if (interaction instanceof DragPan) {
+          this.mapInstance.removeInteraction(interaction);
+        }
+      });
 
     // Add new DragPan with current setting
     const kinetic = this.settings.mapKinetic
@@ -408,6 +444,11 @@ export default class MapComponent extends Component {
 
     if (!this.selectedPinOverlay || !this.selectedPinElement) return;
 
+    // Clear any previous shape
+    if (this.selectedShapeSource) {
+      this.selectedShapeSource.clear();
+    }
+
     if (selected && selected.lat && selected.lon) {
       const coords = fromLonLat([selected.lon, selected.lat]);
       this.selectedPinOverlay.setPosition(coords);
@@ -418,13 +459,78 @@ export default class MapComponent extends Component {
       void this.selectedPinElement.offsetWidth;
       this.selectedPinElement.classList.add('active');
 
-      this.handlePinVisibility(coords);
+      // Draw GeoJSON shape if available
+      if (selected.geojson && this.selectedShapeSource) {
+        try {
+          const feature = new GeoJSON().readFeature(selected.geojson, {
+            featureProjection: 'EPSG:3857',
+          });
+          this.selectedShapeSource.addFeature(feature);
+        } catch (e) {
+          console.warn('Failed to render selected place shape:', e);
+        }
+      }
+
+      if (selected.bbox) {
+        this.zoomToBbox(selected.bbox);
+      } else {
+        this.handlePinVisibility(coords);
+      }
     } else {
       this.selectedPinElement.classList.remove('active');
       // Hide it effectively by moving it away or just relying on display:none in CSS
       this.selectedPinOverlay.setPosition(undefined);
     }
   });
+
+  zoomToBbox(bbox) {
+    if (!this.mapInstance || !bbox) return;
+
+    const view = this.mapInstance.getView();
+    const size = this.mapInstance.getSize();
+
+    // Convert bbox to extent: [minx, miny, maxx, maxy]
+    const min = fromLonLat([bbox.minLon, bbox.minLat]);
+    const max = fromLonLat([bbox.maxLon, bbox.maxLat]);
+    const extent = [...min, ...max];
+
+    // Default padding for full screen: 15% on all sides (70% visible)
+    let padding = [
+      size[1] * 0.15, // Top
+      size[0] * 0.15, // Right
+      size[1] * 0.15, // Bottom
+      size[0] * 0.15, // Left
+    ];
+
+    // Mobile: Bottom sheet covers 50% of the screen height
+    if (size[0] <= 768) {
+      // We want the geometry to be centered in the top 50% of the screen.
+      // Top padding: 15% of the VISIBLE height (size[1] * 0.5)
+      const visibleHeight = size[1] * 0.5;
+      const topPadding = visibleHeight * 0.15;
+      const bottomPadding = (size[1] * 0.5) + (visibleHeight * 0.15); // Sheet + padding
+
+      padding[0] = topPadding;
+      padding[2] = bottomPadding;
+    }
+    // Desktop: Sidebar covers left side (approx 400px)
+    else if (this.args.isSidebarOpen) {
+      const sidebarWidth = 400; 
+      const visibleWidth = size[0] - sidebarWidth;
+
+      // Left padding: Sidebar + 15% of visible width
+      padding[3] = sidebarWidth + (visibleWidth * 0.15);
+      // Right padding: 15% of visible width
+      padding[1] = visibleWidth * 0.15;
+    }
+
+    view.fit(extent, {
+      padding: padding,
+      duration: 1000,
+      easing: (t) => t * (2 - t),
+      maxZoom: 19,
+    });
+  }
 
   handlePinVisibility(coords) {
     if (!this.mapInstance) return;
@@ -644,18 +750,29 @@ export default class MapComponent extends Component {
   handleMapMove = async () => {
     if (!this.mapInstance) return;
 
+    const view = this.mapInstance.getView();
+    const center = toLonLat(view.getCenter());
+    this.mapUi.updateCenter(center[1], center[0]);
+
     // If in creation mode, update the coordinates in the service AND the URL
     if (this.mapUi.isCreating) {
       // Calculate coordinates under the crosshair element
       // We need the pixel position of the crosshair relative to the map viewport
       // The crosshair is positioned via CSS, so we can use getBoundingClientRect
-      const mapRect = this.mapInstance.getTargetElement().getBoundingClientRect();
+      const mapRect = this.mapInstance
+        .getTargetElement()
+        .getBoundingClientRect();
       const crosshairRect = this.crosshairElement.getBoundingClientRect();
 
-      const centerX = crosshairRect.left + crosshairRect.width / 2 - mapRect.left;
-      const centerY = crosshairRect.top + crosshairRect.height / 2 - mapRect.top;
+      const centerX =
+        crosshairRect.left + crosshairRect.width / 2 - mapRect.left;
+      const centerY =
+        crosshairRect.top + crosshairRect.height / 2 - mapRect.top;
 
-      const coordinate = this.mapInstance.getCoordinateFromPixel([centerX, centerY]);
+      const coordinate = this.mapInstance.getCoordinateFromPixel([
+        centerX,
+        centerY,
+      ]);
       const center = toLonLat(coordinate);
 
       const lat = parseFloat(center[1].toFixed(6));
@@ -695,6 +812,11 @@ export default class MapComponent extends Component {
   };
 
   handleMapClick = async (event) => {
+    if (this.ignoreNextMapClick) {
+      this.ignoreNextMapClick = false;
+      return;
+    }
+
     // Check if user clicked on a rendered feature (POI or Bookmark) FIRST
     const features = this.mapInstance.getFeaturesAtPixel(event.pixel, {
       hitTolerance: 10,
@@ -780,10 +902,9 @@ export default class MapComponent extends Component {
     const queryParams = {
       lat: lat.toFixed(6),
       lon: lon.toFixed(6),
+      q: null, // Clear q to force spatial search
+      selected: selectedFeatureName || null,
     };
-    if (selectedFeatureName) {
-      queryParams.q = selectedFeatureName;
-    }
 
     this.router.transitionTo('search', { queryParams });
   };

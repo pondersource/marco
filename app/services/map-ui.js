@@ -7,6 +7,8 @@ export default class MapUiService extends Service {
   @tracked isCreating = false;
   @tracked creationCoordinates = null;
   @tracked returnToSearch = false;
+  @tracked currentCenter = null;
+  @tracked searchBoxHasFocus = false;
 
   selectPlace(place) {
     this.selectedPlace = place;
@@ -37,5 +39,13 @@ export default class MapUiService extends Service {
 
   updateCreationCoordinates(lat, lon) {
     this.creationCoordinates = { lat, lon };
+  }
+
+  setSearchBoxFocus(isFocused) {
+    this.searchBoxHasFocus = isFocused;
+  }
+
+  updateCenter(lat, lon) {
+    this.currentCenter = { lat, lon };
   }
 }
