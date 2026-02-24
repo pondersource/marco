@@ -2,16 +2,26 @@ import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
 export default class SettingsService extends Service {
-  @tracked overpassApi = 'https://overpass.bke.ro/api/interpreter';
+  @tracked overpassApi = 'https://overpass-api.de/api/interpreter';
   @tracked mapKinetic = true;
 
   overpassApis = [
-    { name: 'bke.ro', url: 'https://overpass.bke.ro/api/interpreter' },
-    { name: 'overpass-api.de', url: 'https://overpass-api.de/api/interpreter' },
     {
-      name: 'private.coffee',
+      name: 'overpass-api.de (DE)',
+      url: 'https://overpass-api.de/api/interpreter'
+    },
+    {
+      name: 'private.coffee (AT)',
       url: 'https://overpass.private.coffee/api/interpreter',
     },
+    // {
+    //   name: 'overpass.openstreetmap.us (US)',
+    //   url: 'https://overpass.openstreetmap.us/api/interpreter'
+    // },
+    // {
+    //   name: 'bke.ro (US)',
+    //   url: 'https://overpass.bke.ro/api/interpreter'
+    // },
   ];
 
   constructor() {
