@@ -769,6 +769,12 @@ button.create-place {
   z-index: 3002; /* Higher than menu button to be safe */
 }
 
+@media (width <= 768px) {
+  .search-box {
+    max-width: calc(100vw - 65px);
+  }
+}
+
 .search-form {
   display: flex;
   align-items: center;
