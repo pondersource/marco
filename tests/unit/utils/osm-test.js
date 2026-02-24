@@ -16,6 +16,67 @@ module('Unit | Utility | osm', function (hooks) {
     assert.strictEqual(result, 'Foo');
   });
 
+  test('getLocalizedName falls back to name:en if name is missing', function (assert) {
+    const tags = { 'name:en': 'English Name' };
+    const result = getLocalizedName(tags);
+    assert.strictEqual(result, 'English Name');
+  });
+
+  test('getLocalizedName returns local name (name tag) if no preferred language match found', function (assert) {
+    // Assuming the test environment doesn't have 'fr' as a preferred language
+    const tags = { name: 'Local Name', 'name:fr': 'French Name' };
+    // Temporarily mock navigator to ensure no match
+    const originalLanguages = navigator.languages;
+    const originalLanguage = navigator.language;
+    Object.defineProperty(navigator, 'languages', {
+      value: ['es'],
+      configurable: true,
+    });
+    Object.defineProperty(navigator, 'language', {
+      value: 'es',
+      configurable: true,
+    });
+
+    try {
+      const result = getLocalizedName(tags);
+      assert.strictEqual(result, 'Local Name');
+    } finally {
+      // Restore
+      Object.defineProperty(navigator, 'languages', {
+        value: originalLanguages,
+        configurable: true,
+      });
+      Object.defineProperty(navigator, 'language', {
+        value: originalLanguage,
+        configurable: true,
+      });
+    }
+  });
+
+  test('getLocalizedName matches user preferred language', function (assert) {
+    const tags = {
+      name: 'Standard Name',
+      'name:de': 'Deutscher Name',
+      'name:fr': 'Nom Français',
+    };
+
+    const originalLanguages = navigator.languages;
+    Object.defineProperty(navigator, 'languages', {
+      value: ['de', 'en'],
+      configurable: true,
+    });
+
+    try {
+      const result = getLocalizedName(tags);
+      assert.strictEqual(result, 'Deutscher Name');
+    } finally {
+      Object.defineProperty(navigator, 'languages', {
+        value: originalLanguages,
+        configurable: true,
+      });
+    }
+  });
+
   test('getPlaceType returns value for normal tags', function (assert) {
     const tags = { amenity: 'restaurant' };
     const result = getPlaceType(tags);
