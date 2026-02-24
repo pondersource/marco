@@ -218,6 +218,7 @@ out center;
     let lat = displayElement.lat;
     let lon = displayElement.lon;
     let bbox = null;
+    let geojson = null;
 
     // If it's a way, calculate center from nodes
     if (targetType === 'way' && mainElement.nodes) {
@@ -250,6 +251,25 @@ out center;
           minLon: Math.min(...lons),
           maxLon: Math.max(...lons),
         };
+
+        // Construct GeoJSON
+        if (coords.length > 1) {
+          const first = coords[0];
+          const last = coords[coords.length - 1];
+          const isClosed = first[0] === last[0] && first[1] === last[1];
+
+          if (isClosed) {
+            geojson = {
+              type: 'Polygon',
+              coordinates: [coords],
+            };
+          } else {
+            geojson = {
+              type: 'LineString',
+              coordinates: coords,
+            };
+          }
+        }
       }
     } else if (targetType === 'relation' && mainElement.members) {
       // Find all nodes that are part of this relation (directly or via ways)
@@ -261,6 +281,8 @@ out center;
         }
       });
 
+      const segments = [];
+
       mainElement.members.forEach((member) => {
         if (member.type === 'node') {
           const node = nodeMap.get(member.ref);
@@ -270,10 +292,17 @@ out center;
             (el) => el.type === 'way' && el.id === member.ref
           );
           if (way && way.nodes) {
+            const wayCoords = [];
             way.nodes.forEach((nodeId) => {
               const node = nodeMap.get(nodeId);
-              if (node) allNodes.push(node);
+              if (node) {
+                allNodes.push(node);
+                wayCoords.push([node.lon, node.lat]);
+              }
             });
+            if (wayCoords.length > 1) {
+              segments.push(wayCoords);
+            }
           }
         }
       });
@@ -297,6 +326,13 @@ out center;
           maxLon: Math.max(...lons),
         };
       }
+
+      if (segments.length > 0) {
+        geojson = {
+          type: 'MultiLineString',
+          coordinates: segments,
+        };
+      }
     }
 
     const tags = displayElement.tags || {};
@@ -307,6 +343,7 @@ out center;
       lat,
       lon,
       bbox,
+      geojson,
       url: tags.website,
       osmId: String(displayElement.id),
       osmType: displayElement.type,

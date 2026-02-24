@@ -13,6 +13,7 @@ import LayerGroup from 'ol/layer/Group.js';
 import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector.js';
 import Feature from 'ol/Feature.js';
+import GeoJSON from 'ol/format/GeoJSON.js';
 import Point from 'ol/geom/Point.js';
 import Geolocation from 'ol/Geolocation.js';
 import { Style, Circle, Fill, Stroke } from 'ol/style.js';
@@ -27,6 +28,7 @@ export default class MapComponent extends Component {
 
   mapInstance;
   bookmarkSource;
+  selectedShapeSource;
   searchOverlay;
   searchOverlayElement;
   selectedPinOverlay;
@@ -39,6 +41,22 @@ export default class MapComponent extends Component {
     if (this.mapInstance) return;
 
     const openfreemap = new LayerGroup();
+
+    // Create a vector source and layer for the selected shape (outline)
+    this.selectedShapeSource = new VectorSource();
+    const selectedShapeLayer = new VectorLayer({
+      source: this.selectedShapeSource,
+      style: new Style({
+        stroke: new Stroke({
+          color: '#3388ff',
+          width: 4,
+        }),
+        fill: new Fill({
+          color: 'rgba(51, 136, 255, 0.1)',
+        }),
+      }),
+      zIndex: 5, // Below bookmarks (10) but above tiles
+    });
 
     // Create a vector source and layer for bookmarks
     this.bookmarkSource = new VectorSource();
@@ -99,7 +117,7 @@ export default class MapComponent extends Component {
 
     this.mapInstance = new Map({
       target: element,
-      layers: [openfreemap, bookmarkLayer],
+      layers: [openfreemap, selectedShapeLayer, bookmarkLayer],
       view: view,
       controls: defaultControls({
         zoom: true,
@@ -426,6 +444,11 @@ export default class MapComponent extends Component {
 
     if (!this.selectedPinOverlay || !this.selectedPinElement) return;
 
+    // Clear any previous shape
+    if (this.selectedShapeSource) {
+      this.selectedShapeSource.clear();
+    }
+
     if (selected && selected.lat && selected.lon) {
       const coords = fromLonLat([selected.lon, selected.lat]);
       this.selectedPinOverlay.setPosition(coords);
@@ -435,6 +458,18 @@ export default class MapComponent extends Component {
       // Force reflow
       void this.selectedPinElement.offsetWidth;
       this.selectedPinElement.classList.add('active');
+
+      // Draw GeoJSON shape if available
+      if (selected.geojson && this.selectedShapeSource) {
+        try {
+          const feature = new GeoJSON().readFeature(selected.geojson, {
+            featureProjection: 'EPSG:3857',
+          });
+          this.selectedShapeSource.addFeature(feature);
+        } catch (e) {
+          console.warn('Failed to render selected place shape:', e);
+        }
+      }
 
       if (selected.bbox) {
         this.zoomToBbox(selected.bbox);

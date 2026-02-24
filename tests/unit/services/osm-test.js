@@ -166,4 +166,89 @@ module('Unit | Service | osm', function (hooks) {
     assert.strictEqual(result.osmId, '999');
     assert.strictEqual(result.osmType, 'relation');
   });
+
+  test('normalizeOsmApiData creates GeoJSON for ways', function (assert) {
+    let service = this.owner.lookup('service:osm');
+    const elements = [
+      {
+        id: 456,
+        type: 'way',
+        nodes: [1, 2, 3],
+        tags: { name: 'Test Way' },
+      },
+      { id: 1, type: 'node', lat: 0, lon: 0 },
+      { id: 2, type: 'node', lat: 10, lon: 10 },
+      { id: 3, type: 'node', lat: 0, lon: 0 }, // Closed loop
+    ];
+
+    const result = service.normalizeOsmApiData(elements, 456, 'way');
+
+    assert.ok(result.geojson, 'GeoJSON should be present');
+    assert.strictEqual(
+      result.geojson.type,
+      'Polygon',
+      'Closed way should be a Polygon'
+    );
+    assert.strictEqual(
+      result.geojson.coordinates[0].length,
+      3,
+      'Should have 3 coordinates'
+    );
+    assert.deepEqual(result.geojson.coordinates[0][0], [0, 0]);
+    assert.deepEqual(result.geojson.coordinates[0][1], [10, 10]);
+  });
+
+  test('normalizeOsmApiData creates GeoJSON MultiLineString for relations', function (assert) {
+    let service = this.owner.lookup('service:osm');
+    /*
+      Relation 999
+        -> Way 888 (0,0 -> 10,10)
+        -> Way 777 (20,20 -> 30,30)
+    */
+    const elements = [
+      {
+        id: 999,
+        type: 'relation',
+        members: [
+          { type: 'way', ref: 888, role: 'outer' },
+          { type: 'way', ref: 777, role: 'inner' },
+        ],
+        tags: { name: 'Complex Relation' },
+      },
+      {
+        id: 888,
+        type: 'way',
+        nodes: [1, 2],
+      },
+      {
+        id: 777,
+        type: 'way',
+        nodes: [3, 4],
+      },
+      { id: 1, type: 'node', lat: 0, lon: 0 },
+      { id: 2, type: 'node', lat: 10, lon: 10 },
+      { id: 3, type: 'node', lat: 20, lon: 20 },
+      { id: 4, type: 'node', lat: 30, lon: 30 },
+    ];
+
+    const result = service.normalizeOsmApiData(elements, 999, 'relation');
+
+    assert.ok(result.geojson, 'GeoJSON should be present');
+    assert.strictEqual(result.geojson.type, 'MultiLineString');
+    assert.strictEqual(
+      result.geojson.coordinates.length,
+      2,
+      'Should have 2 segments'
+    );
+    // Check first segment (Way 888)
+    assert.deepEqual(result.geojson.coordinates[0], [
+      [0, 0],
+      [10, 10],
+    ]);
+    // Check second segment (Way 777)
+    assert.deepEqual(result.geojson.coordinates[1], [
+      [20, 20],
+      [30, 30],
+    ]);
+  });
 });

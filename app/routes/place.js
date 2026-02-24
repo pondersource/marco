@@ -48,7 +48,28 @@ export default class PlaceRoute extends Route {
     }
   }
 
-  afterModel(model) {
+  async afterModel(model) {
+    // If the model comes from a search result (e.g. Photon), it might lack detailed geometry.
+    // We want to ensure we have the full OSM object (with polygon/linestring) for display.
+    if (
+      model &&
+      model.osmId &&
+      model.osmType &&
+      model.osmType !== 'node' &&
+      !model.geojson
+    ) {
+      // Only fetch if it's NOT a node (nodes don't have interesting geometry anyway, just a point)
+      // Although fetching nodes again ensures we have the latest tags too.
+      console.debug('Model missing geometry, fetching full OSM details...');
+      const fullDetails = await this.loadOsmPlace(model.osmId, model.osmType);
+
+      if (fullDetails) {
+        // Update the model in-place with the fuller details
+        Object.assign(model, fullDetails);
+        console.debug('Enriched model with full OSM details', model);
+      }
+    }
+
     // Notify the Map UI to show the pin
     if (model) {
       this.mapUi.selectPlace(model);
