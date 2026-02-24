@@ -33,27 +33,38 @@ export function getLocalizedName(tags, defaultName = 'Untitled Place') {
   return defaultName;
 }
 
+const PLACE_TYPE_KEYS = [
+  'amenity',
+  'shop',
+  'tourism',
+  'historic',
+  'leisure',
+  'office',
+  'craft',
+  'building',
+  'landuse',
+  'public_transport',
+  'highway',
+  'aeroway',
+  'waterway',
+  'natural',
+  'place',
+  'border_type',
+  'admin_title',
+];
+
 export function getPlaceType(tags) {
   if (!tags) return null;
 
-  const rawType =
-    tags.amenity ||
-    tags.shop ||
-    tags.tourism ||
-    tags.historic ||
-    tags.leisure ||
-    tags.office ||
-    tags.craft ||
-    tags.building ||
-    tags.landuse ||
-    tags.place ||
-    tags.natural ||
-    tags.public_transport ||
-    tags.highway ||
-    tags.aeroway ||
-    tags.waterway ||
-    tags.border_type ||
-    tags.admin_title;
+  for (const key of PLACE_TYPE_KEYS) {
+    const value = tags[key];
+    if (value) {
+      if (value === 'yes') {
+        return humanizeOsmTag(key);
+      }
+      return humanizeOsmTag(value);
+    }
+  }
 
-  return humanizeOsmTag(rawType);
+  return null;
 }
