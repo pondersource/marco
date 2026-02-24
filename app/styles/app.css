@@ -374,10 +374,7 @@ body {
 .places-list {
   list-style: none;
   padding: 0;
-  margin: -1rem -1rem 0 -1rem;
-}
-
-.places-list li {
+  margin: -1rem -1rem 0;
 }
 
 .place-item {
@@ -511,6 +508,7 @@ body {
   border: 2px solid rgb(255 204 51 / 80%); /* Gold/Yellow to match markers */
   background: rgb(255 204 51 / 20%);
   position: absolute;
+
   /* Use translate3d for GPU acceleration on iOS */
   transform: translate3d(-50%, -50%, 0);
   pointer-events: none;
@@ -548,6 +546,7 @@ body {
 .ol-control.ol-attribution {
   bottom: 1rem;
 }
+
 .ol-touch .ol-control.ol-attribution {
   bottom: 0.5rem;
 }
@@ -555,6 +554,7 @@ body {
 .ol-control.ol-zoom {
   bottom: 3rem;
 }
+
 .ol-touch .ol-control.ol-zoom {
   bottom: 3.5rem;
 }
@@ -562,6 +562,7 @@ body {
 .ol-control.ol-locate {
   bottom: 6.5rem;
 }
+
 .ol-touch .ol-control.ol-locate {
   bottom: 8.5rem;
 }
@@ -569,6 +570,7 @@ body {
 .ol-control.ol-rotate {
   bottom: 9rem;
 }
+
 .ol-touch .ol-control.ol-rotate {
   bottom: 11.5rem;
 }
@@ -695,6 +697,7 @@ span.icon {
 /* Map Crosshair for "Create Place" mode */
 .map-crosshair {
   position: absolute;
+
   /* Default Center */
   top: 50%;
   left: 50%;
@@ -715,8 +718,11 @@ span.icon {
 }
 
 /* Sidebar is open (Desktop: Left 300px) */
+
 /* We want to center in the remaining space (width - 300px) */
+
 /* Center X = 300 + (width - 300) / 2 = 300 + width/2 - 150 = width/2 + 150 */
+
 /* So shift left by 150px from center */
 .map-container.sidebar-open .map-crosshair {
   left: calc(50% + 150px);
@@ -724,6 +730,7 @@ span.icon {
 
 @media (width <= 768px) {
   /* Sidebar/Bottom Sheet is open (Mobile: Bottom 50%) */
+
   /* Center Y = (height/2) / 2 = height/4 = 25% */
   .map-container.sidebar-open .map-crosshair {
     left: 50%; /* Reset desktop shift */
@@ -788,14 +795,14 @@ button.create-place {
   align-items: center;
   background: white;
   border-radius: 24px; /* Pill shape */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 5px rgb(0 0 0 / 15%);
   padding: 0 0.5rem;
   height: 48px; /* Slightly taller for touch targets */
   transition: box-shadow 0.2s;
 }
 
 .search-form:focus-within {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
 }
 
 /* Integrated Menu Button */
@@ -813,7 +820,7 @@ button.create-place {
 }
 
 .menu-btn-integrated:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgb(0 0 0 / 5%);
 }
 
 /* Fallback Search Icon (Left) */
@@ -837,6 +844,7 @@ button.create-place {
   outline: none;
   width: 100%;
   padding: 0 4px;
+
   /* Remove native search cancel button in WebKit */
   -webkit-appearance: none;
 }
@@ -858,25 +866,11 @@ button.create-place {
   color: #5f6368;
   border-radius: 50%;
   margin-left: 4px;
-  border-left: 1px solid #ddd; /* Separator like Google Maps */
-  padding-left: 12px;
-  border-radius: 0; /* Reset for separator look */
-}
-
-.search-submit-btn:hover {
-  /* No background on hover if we use separator style, or maybe just change icon color */
-  color: #1a73e8; /* Blue on hover */
-}
-
-/* If we want the separator style, we need to adjust border-radius carefully or use a pseudo element */
-/* Let's stick to a simple button for now, maybe without the separator if it looks cleaner */
-.search-submit-btn {
-  border-left: none; /* Remove separator for cleaner look */
   padding-left: 8px;
-  border-radius: 50%;
 }
+
 .search-submit-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgb(0 0 0 / 5%);
   color: #333;
 }
 
@@ -894,7 +888,7 @@ button.create-place {
 }
 
 .search-clear-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgb(0 0 0 / 5%);
   color: #333;
 }
 
@@ -907,7 +901,7 @@ button.create-place {
   margin-top: 8px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
   overflow: hidden;
   max-height: 400px;
   overflow-y: auto;

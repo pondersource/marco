@@ -4,7 +4,6 @@ import { service } from '@ember/service';
 import { action } from '@ember/object';
 import Icon from '#components/icon';
 import eq from 'ember-truth-helpers/helpers/eq';
-import not from 'ember-truth-helpers/helpers/not';
 
 export default class SettingsPane extends Component {
   @service settings;

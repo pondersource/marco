@@ -98,7 +98,10 @@ export default class PlaceDetails extends Component {
 
   formatMultiLine(val, type) {
     if (!val) return null;
-    const parts = val.split(';').map((s) => s.trim()).filter(Boolean);
+    const parts = val
+      .split(';')
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (parts.length === 0) return null;
 
     if (type === 'phone') {
@@ -129,7 +132,8 @@ export default class PlaceDetails extends Component {
   }
 
   get website() {
-    const val = this.place.url || this.tags.website || this.tags['contact:website'];
+    const val =
+      this.place.url || this.tags.website || this.tags['contact:website'];
     return this.formatMultiLine(val, 'url');
   }
 
@@ -158,7 +162,10 @@ export default class PlaceDetails extends Component {
   get wikipedia() {
     const val = this.tags.wikipedia;
     if (!val) return null;
-    return val.split(';').map((s) => s.trim()).filter(Boolean)[0];
+    return val
+      .split(';')
+      .map((s) => s.trim())
+      .filter(Boolean)[0];
   }
 
   get geoLink() {

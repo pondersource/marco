@@ -45,6 +45,7 @@ export default class PlaceEditForm extends Component {
     <form class="edit-form" {{on "submit" this.handleSubmit}}>
       <div class="form-group">
         <label for="edit-title">Title</label>
+        {{! template-lint-disable no-autofocus-attribute }}
         <input
           id="edit-title"
           type="text"

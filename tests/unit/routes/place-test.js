@@ -32,7 +32,7 @@ module('Unit | Route | place', function (hooks) {
     }
 
     class MapUiStub extends Service {
-      selectPlace(place) {
+      selectPlace() {
         selectPlaceCalled = true;
       }
       stopSearch() {}

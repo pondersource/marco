@@ -181,9 +181,11 @@ export default class SearchBoxComponent extends Component {
                   <div class="result-info">
                     <span class="result-title">{{result.title}}</span>
                     {{#if (eq result.source "osm")}}
-                      <span class="result-desc">{{humanizeOsmTag result.type}}</span>
+                      <span class="result-desc">{{humanizeOsmTag
+                          result.type
+                        }}</span>
                     {{else}}
-                       {{#if result.description}}
+                      {{#if result.description}}
                         <span class="result-desc">{{result.description}}</span>
                       {{/if}}
                     {{/if}}

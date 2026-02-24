@@ -37,7 +37,9 @@ module('Integration | Component | search-box', function (hooks) {
     this.owner.register('service:router', MockRouterService);
 
     this.noop = () => {};
-    await render(<template><SearchBox @onToggleMenu={{this.noop}} /></template>);
+    await render(
+      <template><SearchBox @onToggleMenu={{this.noop}} /></template>
+    );
 
     assert.dom('.search-input').exists();
     assert.dom('.search-results-popover').doesNotExist();
@@ -86,7 +88,9 @@ module('Integration | Component | search-box', function (hooks) {
     this.owner.register('service:router', MockRouterService);
 
     this.noop = () => {};
-    await render(<template><SearchBox @onToggleMenu={{this.noop}} /></template>);
+    await render(
+      <template><SearchBox @onToggleMenu={{this.noop}} /></template>
+    );
 
     await fillIn('.search-input', 'berlin');
     await click('.search-input'); // Focus
@@ -118,7 +122,9 @@ module('Integration | Component | search-box', function (hooks) {
     this.owner.register('service:photon', MockPhotonService);
 
     this.noop = () => {};
-    await render(<template><SearchBox @onToggleMenu={{this.noop}} /></template>);
+    await render(
+      <template><SearchBox @onToggleMenu={{this.noop}} /></template>
+    );
 
     await fillIn('.search-input', 'cafe');
 

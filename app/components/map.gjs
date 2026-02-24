@@ -508,18 +508,18 @@ export default class MapComponent extends Component {
       // Top padding: 15% of the VISIBLE height (size[1] * 0.5)
       const visibleHeight = size[1] * 0.5;
       const topPadding = visibleHeight * 0.15;
-      const bottomPadding = (size[1] * 0.5) + (visibleHeight * 0.15); // Sheet + padding
+      const bottomPadding = size[1] * 0.5 + visibleHeight * 0.15; // Sheet + padding
 
       padding[0] = topPadding;
       padding[2] = bottomPadding;
     }
     // Desktop: Sidebar covers left side (approx 400px)
     else if (this.args.isSidebarOpen) {
-      const sidebarWidth = 400; 
+      const sidebarWidth = 400;
       const visibleWidth = size[0] - sidebarWidth;
 
       // Left padding: Sidebar + 15% of visible width
-      padding[3] = sidebarWidth + (visibleWidth * 0.15);
+      padding[3] = sidebarWidth + visibleWidth * 0.15;
       // Right padding: 15% of visible width
       padding[1] = visibleWidth * 0.15;
     }

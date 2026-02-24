@@ -161,7 +161,8 @@ export default class PlacesSidebar extends Component {
           ><Icon @name="arrow-left" @size={{20}} @color="#333" /></button>
         {{else}}
           {{#if this.isNearbySearch}}
-            <h2><Icon @name="target" @size={{20}} @color="#ea4335" /> Nearby</h2>
+            <h2><Icon @name="target" @size={{20}} @color="#ea4335" />
+              Nearby</h2>
           {{else}}
             <h2><Icon @name="search" @size={{20}} @color="#333" /> Results</h2>
           {{/if}}
