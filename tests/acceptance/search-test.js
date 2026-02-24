@@ -56,6 +56,7 @@ module('Acceptance | search', function (hooks) {
     await visit('/search?q=Berlin');
 
     assert.strictEqual(currentURL(), '/search?q=Berlin');
+    assert.dom('.sidebar-header h2').includesText('Results');
     assert.dom('.places-list li').exists({ count: 2 });
     assert.dom('.places-list li:first-child .place-name').hasText('Berlin');
   });
@@ -99,6 +100,7 @@ module('Acceptance | search', function (hooks) {
     await visit('/search?lat=52.52&lon=13.405');
 
     assert.strictEqual(currentURL(), '/search?lat=52.52&lon=13.405');
+    assert.dom('.sidebar-header h2').includesText('Nearby');
     assert.dom('.places-list li').exists({ count: 1 });
     assert.dom('.places-list li .place-name').hasText('Nearby Cafe');
   });

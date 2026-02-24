@@ -145,6 +145,11 @@ export default class PlacesSidebar extends Component {
     }
   }
 
+  get isNearbySearch() {
+    const qp = this.router.currentRoute.queryParams;
+    return !qp.q && qp.lat && qp.lon;
+  }
+
   <template>
     <div class="sidebar">
       <div class="sidebar-header">
@@ -155,7 +160,11 @@ export default class PlacesSidebar extends Component {
             {{on "click" this.clearSelection}}
           ><Icon @name="arrow-left" @size={{20}} @color="#333" /></button>
         {{else}}
-          <h2><Icon @name="target" @size={{20}} @color="#ea4335" /> Nearby</h2>
+          {{#if this.isNearbySearch}}
+            <h2><Icon @name="target" @size={{20}} @color="#ea4335" /> Nearby</h2>
+          {{else}}
+            <h2><Icon @name="search" @size={{20}} @color="#333" /> Results</h2>
+          {{/if}}
         {{/if}}
         <button type="button" class="close-btn" {{on "click" @onClose}}><Icon
             @name="x"
@@ -205,7 +214,11 @@ export default class PlacesSidebar extends Component {
               {{/each}}
             </ul>
           {{else}}
-            <p class="empty-state">No places found nearby.</p>
+            {{#if this.isNearbySearch}}
+              <p class="empty-state">No places found nearby.</p>
+            {{else}}
+              <p class="empty-state">No results found.</p>
+            {{/if}}
           {{/if}}
 
           <button
