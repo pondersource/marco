@@ -24,14 +24,31 @@ export default class OsmService extends Service {
     this.controller = new AbortController();
     const signal = this.controller.signal;
 
+    const typeKeys = [
+      'amenity',
+      'amenity',
+      'shop',
+      'tourism',
+      'historic',
+      'leisure',
+      'office',
+      'craft',
+      'building',
+      'landuse',
+      'public_transport',
+      'aeroway'
+    ]
+    const typeKeysQuery = [`~"^(${typeKeys.join("|")})$"~".*"`];
+
     const query = `
 [out:json][timeout:25];
 (
-  nw["amenity"](around:${radius},${lat},${lon});
-  nw["shop"](around:${radius},${lat},${lon});
-  nw["tourism"](around:${radius},${lat},${lon});
-  nw["leisure"](around:${radius},${lat},${lon});
-  nw["historic"](around:${radius},${lat},${lon});
+  node(around:${radius},${lat},${lon})
+    [${typeKeysQuery}][name~"."];
+  way(around:${radius},${lat},${lon})
+    [${typeKeysQuery}][name~"."];
+  relation(around:${radius},${lat},${lon})
+    [${typeKeysQuery}][name~"."];
 );
 out center;
     `.trim();

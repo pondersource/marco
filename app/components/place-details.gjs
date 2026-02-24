@@ -83,7 +83,7 @@ export default class PlaceDetails extends Component {
       }
       parts.push(city);
     }
-    
+
     // State + Country (if not already covered)
     const state = get('addr:state', 'state');
     const country = get('addr:country', 'country');
@@ -151,7 +151,7 @@ export default class PlaceDetails extends Component {
     if (!id) return null;
     return `https://www.google.com/maps/search/?api=1&query=${this.name}&query=${this.place.lat},${this.place.lon}`;
   }
-  
+
   get showDescription() {
     // If it's a Photon result, the description IS the address.
     // Since we are showing the address in the meta section (bottom),
