@@ -247,13 +247,17 @@ export default class PlaceDetails extends Component {
         {{/if}}
 
         {{#if this.wikipedia}}
-          <p>
-            <strong>Wikipedia:</strong>
-            <a
-              href="https://wikipedia.org/wiki/{{this.wikipedia}}"
-              target="_blank"
-              rel="noopener noreferrer"
-            >Article</a>
+          <p class="content-with-icon">
+            <Icon @name="wikipedia" @title="Wikipedia" />
+            <span>
+              <a
+                href="https://wikipedia.org/wiki/{{this.wikipedia}}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Wikipedia Article
+              </a>
+            </span>
           </p>
         {{/if}}
 

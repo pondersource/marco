@@ -23,6 +23,7 @@ import target from 'feather-icons/dist/icons/target.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
+import wikipedia from '../icons/wikipedia.svg?raw';
 
 const ICONS = {
   'arrow-left': arrowLeft,
@@ -45,6 +46,7 @@ const ICONS = {
   settings,
   target,
   user,
+  wikipedia,
   x,
   zap,
 };
