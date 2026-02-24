@@ -36,19 +36,19 @@ export default class OsmService extends Service {
       'building',
       'landuse',
       'public_transport',
-      'aeroway'
-    ]
-    const typeKeysQuery = [`~"^(${typeKeys.join("|")})$"~".*"`];
+      'aeroway',
+    ];
+    const typeKeysQuery = [`~"^(${typeKeys.join('|')})$"~".*"`];
 
     const query = `
 [out:json][timeout:25];
 (
   node(around:${radius},${lat},${lon})
-    [${typeKeysQuery}][name~"."];
+    [${typeKeysQuery}][~"^name"~"."];
   way(around:${radius},${lat},${lon})
-    [${typeKeysQuery}][name~"."];
+    [${typeKeysQuery}][~"^name"~"."];
   relation(around:${radius},${lat},${lon})
-    [${typeKeysQuery}][name~"."];
+    [${typeKeysQuery}][~"^name"~"."];
 );
 out center;
     `.trim();
