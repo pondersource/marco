@@ -74,7 +74,11 @@ export default class IconComponent extends Component {
 
   <template>
     {{#if this.svg}}
-      <span class="icon" style={{this.style}} title={{this.title}}>
+      <span
+        class="icon {{if @filled 'icon-filled'}}"
+        style={{this.style}}
+        title={{this.title}}
+      >
         {{htmlSafe this.svg}}
       </span>
     {{/if}}

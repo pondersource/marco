@@ -610,6 +610,11 @@ span.icon {
   stroke-linejoin: round;
 }
 
+.icon-filled svg {
+  stroke: none;
+  fill: currentcolor;
+}
+
 .content-with-icon {
   display: flex;
   flex-direction: row;
