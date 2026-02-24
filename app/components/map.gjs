@@ -524,11 +524,13 @@ export default class MapComponent extends Component {
       padding[1] = visibleWidth * 0.15;
     }
 
+    const currentZoom = view.getZoom();
+
     view.fit(extent, {
       padding: padding,
       duration: 1000,
       easing: (t) => t * (2 - t),
-      maxZoom: 19,
+      maxZoom: currentZoom,
     });
   }
 
