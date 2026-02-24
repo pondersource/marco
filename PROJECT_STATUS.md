@@ -1,6 +1,6 @@
 # Project Status: Marco
 
-**Last Updated:** Tue Jan 27 2026
+**Last Updated:** Tue Feb 24 2026
 
 ## Project Context
 
@@ -39,6 +39,9 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 - **Smart Zoom:** Implemented `zoomToBbox` to automatically fit complex geometries (ways/relations) within the visible viewport.
   - **Dynamic Padding:** Calculates padding based on active UI elements (Sidebar on Desktop, Bottom Sheet on Mobile) to ensure the geometry is perfectly centered in the _visible_ map area.
   - **Data Processing:** `OsmService` now calculates bounding boxes for ways and relations by aggregating member node coordinates.
+- **Geometry Rendering:**
+  - **Outlines:** Implemented distinct blue outlines for selected OSM `ways` (Polygons) and `relations` (MultiLineStrings/Polygons) to clearly visualize boundaries.
+  - **Data Fetching:** Enhanced routing to fetch full geometry data on-demand if the initial search result (e.g., from Photon) lacks it, ensuring outlines are always available.
 
 ### 2. RemoteStorage Module (`@remotestorage/module-places`)
 
@@ -78,6 +81,8 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
   - `app/utils/geohash-coverage.js`: Logic to calculate required 4-char geohash prefixes for a given bounding box.
 - **Format Utils:**
   - `app/utils/format-text.js` & `humanize-osm-tag` helper: Standardized logic (Title Case, space replacement) for displaying OSM tags like `guest_house` -> "Guest House".
+  - **Tag refinement:** Improved logic for handling generic tags (e.g., `building=yes`). The UI now intelligently displays the key ("Building") instead of the value ("Yes") for better readability.
+  - **Localization:** Added basic `navigator.languages` support to `getLocalizedName` for preferring local names when available.
 - **Build & DevOps:**
   - **Icon Generation:** Added `build:icons` script using `magick` and `rsvg-convert` to automate PNG generation from SVG.
   - **Dependencies:** Documented system requirements (ImageMagick, librsvg) in `README.md`.
@@ -133,9 +138,10 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 
 ## Files Currently in Focus
 
+- `app/services/osm.js`
 - `app/components/map.gjs`
-- `app/components/place-edit-form.gjs`
-- `app/templates/place/new.gjs`
+- `app/routes/place.js`
+- `app/utils/osm.js`
 
 ## Next Steps & Pending Tasks
 
