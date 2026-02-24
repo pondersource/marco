@@ -1,6 +1,7 @@
 import Component from '@glimmer/component';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
+import { htmlSafe } from '@ember/template';
 import { humanizeOsmTag } from '../utils/format-text';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
 import Icon from '../components/icon';
@@ -95,21 +96,55 @@ export default class PlaceDetails extends Component {
     return parts.join(', ');
   }
 
+  formatMultiLine(val, type) {
+    if (!val) return null;
+    const parts = val.split(';').map((s) => s.trim()).filter(Boolean);
+    if (parts.length === 0) return null;
+
+    if (type === 'phone') {
+      return htmlSafe(
+        parts.map((p) => `<a href="tel:${p}">${p}</a>`).join('<br>')
+      );
+    }
+
+    if (type === 'url') {
+      return htmlSafe(
+        parts
+          .map(
+            (url) =>
+              `<a href="${url}" target="_blank" rel="noopener noreferrer">${this.getDomain(
+                url
+              )}</a>`
+          )
+          .join('<br>')
+      );
+    }
+
+    return htmlSafe(parts.join('<br>'));
+  }
+
   get phone() {
-    return this.tags.phone || this.tags['contact:phone'];
+    const val = this.tags.phone || this.tags['contact:phone'];
+    return this.formatMultiLine(val, 'phone');
   }
 
   get website() {
-    return this.place.url || this.tags.website || this.tags['contact:website'];
+    const val = this.place.url || this.tags.website || this.tags['contact:website'];
+    return this.formatMultiLine(val, 'url');
   }
 
-  get websiteDomain() {
-    const url = new URL(this.website);
-    return url.hostname;
+  getDomain(urlStr) {
+    try {
+      const url = new URL(urlStr);
+      return url.hostname;
+    } catch {
+      return urlStr;
+    }
   }
 
   get openingHours() {
-    return this.tags.opening_hours;
+    const val = this.tags.opening_hours;
+    return this.formatMultiLine(val);
   }
 
   get cuisine() {
@@ -121,7 +156,9 @@ export default class PlaceDetails extends Component {
   }
 
   get wikipedia() {
-    return this.tags.wikipedia;
+    const val = this.tags.wikipedia;
+    if (!val) return null;
+    return val.split(';').map((s) => s.trim()).filter(Boolean)[0];
   }
 
   get geoLink() {
@@ -215,7 +252,7 @@ export default class PlaceDetails extends Component {
       <div class="meta-info">
 
         {{#if this.cuisine}}
-          <p>
+          <p class="cuisine-info">
             <strong>Cuisine:</strong>
             {{this.cuisine}}
           </p>
@@ -224,25 +261,27 @@ export default class PlaceDetails extends Component {
         {{#if this.openingHours}}
           <p class="content-with-icon">
             <Icon @name="clock" @title="Opening hours" />
-            <span>{{this.openingHours}}</span>
+            <span>
+              {{this.openingHours}}
+            </span>
           </p>
         {{/if}}
 
         {{#if this.phone}}
           <p class="content-with-icon">
             <Icon @name="phone" @title="Phone" />
-            <span><a href="tel:{{this.phone}}">{{this.phone}}</a></span>
+            <span>
+              {{this.phone}}
+            </span>
           </p>
         {{/if}}
 
         {{#if this.website}}
           <p class="content-with-icon">
             <Icon @name="globe" @title="Website" />
-            <span><a
-                href={{this.website}}
-                target="_blank"
-                rel="noopener noreferrer"
-              >{{this.websiteDomain}}</a></span>
+            <span>
+              {{this.website}}
+            </span>
           </p>
         {{/if}}
 
