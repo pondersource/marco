@@ -65,7 +65,9 @@ export default class IconComponent extends Component {
   }
 
   get style() {
-    return `width:${this.size}px;height:${this.size}px;color:${this.color}`;
+    return htmlSafe(
+      `width:${this.size}px;height:${this.size}px;color:${this.color}`,
+    );
   }
 
   get title() {
