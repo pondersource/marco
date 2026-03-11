@@ -239,6 +239,7 @@ body {
 .sidebar-content {
   padding: 1rem;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   flex: 1; /* Take up remaining vertical space */
 }
 
@@ -772,7 +773,6 @@ button.create-place {
 
   .sidebar-content {
     overflow-y: auto;
-    overscroll-behavior: contain; /* Prevent scroll chaining */
 
     /* Ensure content doesn't get hidden behind bottom safe areas on mobile */
     padding-bottom: env(safe-area-inset-bottom, 20px);
