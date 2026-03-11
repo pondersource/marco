@@ -12,6 +12,7 @@ import home from 'feather-icons/dist/icons/home.svg?raw';
 import instagram from 'feather-icons/dist/icons/instagram.svg?raw';
 import logIn from 'feather-icons/dist/icons/log-in.svg?raw';
 import logOut from 'feather-icons/dist/icons/log-out.svg?raw';
+import mail from 'feather-icons/dist/icons/mail.svg?raw';
 import map from 'feather-icons/dist/icons/map.svg?raw';
 import mapPin from 'feather-icons/dist/icons/map-pin.svg?raw';
 import menu from 'feather-icons/dist/icons/menu.svg?raw';
@@ -39,6 +40,7 @@ const ICONS = {
   instagram,
   'log-in': logIn,
   'log-out': logOut,
+  mail,
   map,
   'map-pin': mapPin,
   menu,

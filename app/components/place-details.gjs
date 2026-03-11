@@ -111,6 +111,12 @@ export default class PlaceDetails extends Component {
       );
     }
 
+    if (type === 'email') {
+      return htmlSafe(
+        parts.map((p) => `<a href="mailto:${p}">${p}</a>`).join('<br>')
+      );
+    }
+
     if (type === 'url') {
       return htmlSafe(
         parts
@@ -130,6 +136,11 @@ export default class PlaceDetails extends Component {
   get phone() {
     const val = this.tags.phone || this.tags['contact:phone'];
     return this.formatMultiLine(val, 'phone');
+  }
+
+  get email() {
+    const val = this.tags.email || this.tags['contact:email'];
+    return this.formatMultiLine(val, 'email');
   }
 
   get website() {
@@ -297,6 +308,15 @@ export default class PlaceDetails extends Component {
             <Icon @name="globe" @title="Website" />
             <span>
               {{this.website}}
+            </span>
+          </p>
+        {{/if}}
+
+        {{#if this.email}}
+          <p class="content-with-icon">
+            <Icon @name="mail" @title="Email" />
+            <span>
+              {{this.email}}
             </span>
           </p>
         {{/if}}
