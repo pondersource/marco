@@ -203,6 +203,7 @@ body {
   box-shadow: 2px 0 5px rgb(0 0 0 / 10%);
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* Ensure flex children are contained */
 }
 
 .settings-pane.sidebar {
@@ -240,7 +241,10 @@ body {
   padding: 1rem;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  flex: 1; /* Take up remaining vertical space */
+  flex: 1;
+  min-height: 0;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .edit-form {
