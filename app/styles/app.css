@@ -427,6 +427,10 @@ body {
   justify-content: center;
 }
 
+.place-details {
+  padding-bottom: 2rem;
+}
+
 .place-details h3 {
   font-size: 1.2rem;
   margin-top: 0;
