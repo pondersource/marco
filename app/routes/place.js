@@ -72,7 +72,9 @@ export default class PlaceRoute extends Route {
 
     // Notify the Map UI to show the pin
     if (model) {
-      this.mapUi.selectPlace(model);
+      const options = { preventZoom: this.mapUi.preventNextZoom };
+      this.mapUi.selectPlace(model, options);
+      this.mapUi.preventNextZoom = false;
     }
     // Stop the pulse animation if it was running (e.g. redirected from search)
     this.mapUi.stopSearch();

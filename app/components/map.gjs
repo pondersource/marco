@@ -441,6 +441,7 @@ export default class MapComponent extends Component {
   // Track the selected place from the UI Service (Router -> Map)
   updateSelectedPin = modifier(() => {
     const selected = this.mapUi.selectedPlace;
+    const options = this.mapUi.selectionOptions || {};
 
     if (!this.selectedPinOverlay || !this.selectedPinElement) return;
 
@@ -471,7 +472,12 @@ export default class MapComponent extends Component {
         }
       }
 
-      if (selected.bbox) {
+      if (options.preventZoom) {
+        // If we are preventing zoom (e.g. user clicked a bookmark), we still need to center
+        // but without changing the zoom level.
+        // We use animateToSmartCenter without a second argument (zoom=null).
+        this.animateToSmartCenter(coords);
+      } else if (selected.bbox) {
         this.zoomToBbox(selected.bbox);
       } else {
         this.handlePinVisibility(coords);
@@ -870,6 +876,7 @@ export default class MapComponent extends Component {
           'Clicked bookmark while sidebar open (switching):',
           clickedBookmark
         );
+        this.mapUi.preventNextZoom = true;
         this.router.transitionTo('place', clickedBookmark);
         return;
       }
@@ -884,6 +891,7 @@ export default class MapComponent extends Component {
     // Normal behavior (sidebar is closed)
     if (clickedBookmark) {
       console.debug('Clicked bookmark:', clickedBookmark);
+      this.mapUi.preventNextZoom = true;
       this.router.transitionTo('place', clickedBookmark);
       return;
     }

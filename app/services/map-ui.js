@@ -9,18 +9,24 @@ export default class MapUiService extends Service {
   @tracked returnToSearch = false;
   @tracked currentCenter = null;
   @tracked searchBoxHasFocus = false;
+  @tracked selectionOptions = {};
+  @tracked preventNextZoom = false;
 
-  selectPlace(place) {
+  selectPlace(place, options = {}) {
     this.selectedPlace = place;
+    this.selectionOptions = options;
   }
 
   clearSelection() {
     this.selectedPlace = null;
+    this.selectionOptions = {};
+    this.preventNextZoom = false;
   }
 
   startSearch() {
     this.isSearching = true;
     this.isCreating = false;
+    this.preventNextZoom = false;
   }
 
   stopSearch() {
