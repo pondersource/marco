@@ -3,9 +3,9 @@ import { extensions, ember } from '@embroider/vite';
 import { babel } from '@rollup/plugin-babel';
 
 export default defineConfig({
-  server: {
-    host: '0.0.0.0'
-  },
+  // server: {
+  //   host: '0.0.0.0',
+  // },
   plugins: [
     ember(),
     // extra plugins here
