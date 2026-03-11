@@ -4,6 +4,7 @@ import { on } from '@ember/modifier';
 import { htmlSafe } from '@ember/template';
 import { humanizeOsmTag } from '../utils/format-text';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import { getSocialInfo } from '../utils/social-links';
 import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
 
@@ -159,6 +160,14 @@ export default class PlaceDetails extends Component {
       .join(', ');
   }
 
+  get facebook() {
+    return getSocialInfo(this.tags, 'facebook');
+  }
+
+  get instagram() {
+    return getSocialInfo(this.tags, 'instagram');
+  }
+
   get wikipedia() {
     const val = this.tags.wikipedia;
     if (!val) return null;
@@ -288,6 +297,36 @@ export default class PlaceDetails extends Component {
             <Icon @name="globe" @title="Website" />
             <span>
               {{this.website}}
+            </span>
+          </p>
+        {{/if}}
+
+        {{#if this.facebook}}
+          <p class="content-with-icon">
+            <Icon @name="facebook" @title="Facebook" />
+            <span>
+              <a
+                href={{this.facebook.url}}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{this.facebook.username}}
+              </a>
+            </span>
+          </p>
+        {{/if}}
+
+        {{#if this.instagram}}
+          <p class="content-with-icon">
+            <Icon @name="instagram" @title="Instagram" />
+            <span>
+              <a
+                href={{this.instagram.url}}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{this.instagram.username}}
+              </a>
             </span>
           </p>
         {{/if}}

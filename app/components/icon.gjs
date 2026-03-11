@@ -6,8 +6,10 @@ import activity from 'feather-icons/dist/icons/activity.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
 import edit from 'feather-icons/dist/icons/edit.svg?raw';
+import facebook from 'feather-icons/dist/icons/facebook.svg?raw';
 import globe from 'feather-icons/dist/icons/globe.svg?raw';
 import home from 'feather-icons/dist/icons/home.svg?raw';
+import instagram from 'feather-icons/dist/icons/instagram.svg?raw';
 import logIn from 'feather-icons/dist/icons/log-in.svg?raw';
 import logOut from 'feather-icons/dist/icons/log-out.svg?raw';
 import map from 'feather-icons/dist/icons/map.svg?raw';
@@ -31,8 +33,10 @@ const ICONS = {
   bookmark,
   clock,
   edit,
+  facebook,
   globe,
   home,
+  instagram,
   'log-in': logIn,
   'log-out': logOut,
   map,
