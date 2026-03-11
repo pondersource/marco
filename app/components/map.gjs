@@ -530,12 +530,21 @@ export default class MapComponent extends Component {
       padding: padding,
       duration: 1000,
       easing: (t) => t * (2 - t),
-      maxZoom: currentZoom,
+      maxZoom: Math.max(currentZoom, 18),
     });
   }
 
   handlePinVisibility(coords) {
     if (!this.mapInstance) return;
+
+    const view = this.mapInstance.getView();
+    const currentZoom = view.getZoom();
+
+    // If too far out (e.g. world view), zoom in to neighborhood level (16)
+    if (currentZoom < 16) {
+      this.animateToSmartCenter(coords, 16);
+      return;
+    }
 
     const pixel = this.mapInstance.getPixelFromCoordinate(coords);
     const size = this.mapInstance.getSize();
@@ -555,12 +564,17 @@ export default class MapComponent extends Component {
     }
   }
 
-  animateToSmartCenter(coords) {
+  animateToSmartCenter(coords, zoom = null) {
     if (!this.mapInstance) return;
 
     const size = this.mapInstance.getSize();
     const view = this.mapInstance.getView();
-    const resolution = view.getResolution();
+    let resolution = view.getResolution();
+
+    if (zoom !== null) {
+      resolution = view.getResolutionForZoom(zoom);
+    }
+
     let targetCenter = coords;
 
     // Check if mobile (width <= 768px matches CSS)
@@ -582,11 +596,17 @@ export default class MapComponent extends Component {
       targetCenter = [coords[0], coords[1] - offsetMapUnits];
     }
 
-    view.animate({
+    const animationOptions = {
       center: targetCenter,
       duration: 1000,
       easing: (t) => t * (2 - t), // Ease-out
-    });
+    };
+
+    if (zoom !== null) {
+      animationOptions.zoom = zoom;
+    }
+
+    view.animate(animationOptions);
   }
 
   panIfObscured(coords) {
