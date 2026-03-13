@@ -4,18 +4,29 @@ import { on } from '@ember/modifier';
 import { htmlSafe } from '@ember/template';
 import { humanizeOsmTag } from '../utils/format-text';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import { mapToStorageSchema } from '../utils/place-mapping';
 import { getSocialInfo } from '../utils/social-links';
 import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
+import PlaceListsManager from './place-lists-manager';
 
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 
 export default class PlaceDetails extends Component {
   @tracked isEditing = false;
+  @tracked showLists = false;
 
   get place() {
     return this.args.place || {};
+  }
+
+  get saveablePlace() {
+    if (this.place.createdAt) {
+      return this.place;
+    }
+
+    return mapToStorageSchema(this.place);
   }
 
   get tags() {
@@ -35,6 +46,16 @@ export default class PlaceDetails extends Component {
   @action
   cancelEditing() {
     this.isEditing = false;
+  }
+
+  @action
+  toggleLists() {
+    this.showLists = !this.showLists;
+  }
+
+  @action
+  closeLists() {
+    this.showLists = false;
   }
 
   @action
@@ -247,21 +268,30 @@ export default class PlaceDetails extends Component {
       {{/if}}
 
       <div class="actions">
-        <button
-          type="button"
-          class={{if
-            this.place.createdAt
-            "btn btn-secondary"
-            "btn btn-outline"
-          }}
-          {{on "click" (fn @onToggleSave this.place)}}
-        >
-          <Icon
-            @name="bookmark"
-            @color={{if this.place.createdAt "currentColor" "#007bff"}}
-          />
-          {{if this.place.createdAt "Saved" "Save"}}
-        </button>
+        <div class="save-button-wrapper">
+          <button
+            type="button"
+            class={{if
+              this.place.createdAt
+              "btn btn-secondary"
+              "btn btn-outline"
+            }}
+            {{on "click" this.toggleLists}}
+          >
+            <Icon
+              @name="bookmark"
+              @color={{if this.place.createdAt "currentColor" "#007bff"}}
+            />
+            {{if this.place.createdAt "Saved" "Save"}}
+          </button>
+
+          {{#if this.showLists}}
+            <PlaceListsManager
+              @place={{this.saveablePlace}}
+              @onClose={{this.closeLists}}
+            />
+          {{/if}}
+        </div>
 
         {{#if this.place.createdAt}}
           <button

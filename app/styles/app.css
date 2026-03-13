@@ -981,3 +981,63 @@ button.create-place {
   text-overflow: ellipsis;
   margin-top: 2px;
 }
+
+/* Place Lists Manager */
+.save-button-wrapper {
+  position: relative;
+}
+
+.place-lists-manager {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+  width: 220px;
+  z-index: 10;
+  padding: 0.5rem 0;
+}
+
+.place-lists-manager .list-item {
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.place-lists-manager .list-item:hover {
+  background: #f8f9fa;
+}
+
+.place-lists-manager label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  cursor: pointer;
+  margin: 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.place-lists-manager input[type="checkbox"] {
+  accent-color: #007bff;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.place-lists-manager .list-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.place-lists-manager .divider {
+  height: 1px;
+  background: #eee;
+  margin: 0.5rem 0;
+}

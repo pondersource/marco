@@ -15,6 +15,7 @@ export default class StorageService extends Service {
   @tracked savedPlaces = [];
   @tracked loadedPrefixes = [];
   @tracked currentBbox = null;
+  @tracked lists = [];
   @tracked version = 0; // Shared version tracker for bookmarks
   @tracked initialSyncDone = false;
   @tracked connected = false;
@@ -46,6 +47,7 @@ export default class StorageService extends Service {
     this.rs.on('connected', () => {
       this.connected = true;
       this.userAddress = this.rs.remote.userAddress;
+      this.loadLists();
     });
 
     this.rs.on('disconnected', () => {
@@ -54,6 +56,7 @@ export default class StorageService extends Service {
       this.placesInView = [];
       this.savedPlaces = [];
       this.loadedPrefixes = [];
+      this.lists = [];
       this.initialSyncDone = false;
     });
 
@@ -61,13 +64,18 @@ export default class StorageService extends Service {
       // console.debug('[rs] sync done:', result);
       if (!this.initialSyncDone) {
         this.initialSyncDone = true;
+        this.loadLists();
       }
     });
 
     this.rs.scope('/places/').on('change', (event) => {
       // console.debug(event);
-      this.handlePlaceChange(event);
-      debounceTask(this, 'reloadCurrentView', 200);
+      if (event.relativePath.startsWith('_lists/')) {
+        this.loadLists();
+      } else {
+        this.handlePlaceChange(event);
+        debounceTask(this, 'reloadCurrentView', 200);
+      }
     });
   }
 
@@ -118,6 +126,88 @@ export default class StorageService extends Service {
 
     // Force load these prefixes (bypassing the 'already loaded' check in loadPlacesInBounds)
     this.loadAllPlaces(required);
+  }
+
+  async loadLists() {
+    try {
+      if (!this.places.lists) return; // Wait for module init
+
+      // Ensure defaults exist first
+      await this.places.lists.initDefaults();
+
+      const lists = await this.places.lists.getAll();
+      this.lists = lists || [];
+      this.refreshPlaceListAssociations();
+    } catch (e) {
+      console.error('Failed to load lists:', e);
+    }
+  }
+
+  refreshPlaceListAssociations() {
+    // 1. Build an index of PlaceID -> ListID[]
+    const placeToListMap = new Map();
+
+    this.lists.forEach((list) => {
+      if (list.placeRefs && Array.isArray(list.placeRefs)) {
+        list.placeRefs.forEach((ref) => {
+          if (!ref.id) return;
+          if (!placeToListMap.has(ref.id)) {
+            placeToListMap.set(ref.id, []);
+          }
+          placeToListMap.get(ref.id).push(list.id);
+        });
+      }
+    });
+
+    // 2. Helper to attach lists to a place object
+    const attachLists = (place) => {
+      const listIds = placeToListMap.get(place.id) || [];
+      // Assign directly to object property (non-tracked mutation is fine as we trigger updates below)
+      place._listIds = listIds;
+      return place;
+    };
+
+    // 3. Update savedPlaces
+    this.savedPlaces = this.savedPlaces.map((p) => attachLists({ ...p }));
+
+    // 4. Update placesInView
+    this.placesInView = this.placesInView.map((p) => attachLists({ ...p }));
+  }
+
+  async togglePlaceList(place, listId, shouldBeInList) {
+    if (!place) return;
+
+    // Ensure place is saved first if it's new
+    let savedPlace = place;
+    if (!place.id || !place.geohash) {
+      if (shouldBeInList) {
+        // If adding to a list, we must save the place first
+        savedPlace = await this.storePlace(place);
+      } else {
+        return; // Can't remove an unsaved place from a list
+      }
+    }
+
+    try {
+      if (shouldBeInList) {
+        await this.places.lists.addPlace(
+          listId,
+          savedPlace.id,
+          savedPlace.geohash
+        );
+      } else {
+        await this.places.lists.removePlace(listId, savedPlace.id);
+      }
+
+      // Reload lists to reflect changes
+      await this.loadLists();
+
+      // Return the updated place
+      return this.findPlaceById(savedPlace.id);
+    } catch (e) {
+      console.error('Failed to toggle place in list:', e);
+      throw e;
+    }
   }
 
   async loadPlacesInBounds(bbox) {
@@ -173,6 +263,8 @@ export default class StorageService extends Service {
           // Full reload
           this.placesInView = places;
         }
+        // Refresh list associations
+        this.refreshPlaceListAssociations();
       } else {
         if (!prefixes) this.placesInView = [];
       }
