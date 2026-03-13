@@ -71,7 +71,8 @@ export default class PlaceListsManager extends Component {
             checked={{this.isSaved}}
             {{on "change" this.toggleSaved}}
           />
-          <span class="list-name">Saved</span>
+          <span class="list-color"></span>
+          <span class="list-name">Saved places</span>
         </label>
       </div>
 

@@ -63,7 +63,10 @@ export default class MapComponent extends Component {
 
     const bookmarkStyleFunction = (feature) => {
       const originalPlace = feature.get('originalPlace');
-      let color = '#ffcc33'; // Default Yellow
+      let color =
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--default-list-color')
+          .trim() || '#000000'; // Fallback to black if variable is missing to make error obvious
 
       if (
         originalPlace &&
