@@ -41,6 +41,9 @@ module('Acceptance | search', function (hooks) {
       findPlaceById() {
         return null;
       }
+      isPlaceSaved() {
+        return false;
+      }
       rs = {
         on: () => {},
       };
@@ -84,6 +87,9 @@ module('Acceptance | search', function (hooks) {
       savedPlaces = [];
       findPlaceById() {
         return null;
+      }
+      isPlaceSaved() {
+        return false;
       }
       rs = {
         on: () => {},
@@ -129,6 +135,9 @@ module('Acceptance | search', function (hooks) {
       findPlaceById(id) {
         if (id === '999') return this.savedPlaces[0];
         return null;
+      }
+      isPlaceSaved(id) {
+        return !!this.findPlaceById(id);
       }
       rs = {
         on: () => {},

@@ -1,6 +1,7 @@
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { action } from '@ember/object';
+import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
@@ -8,12 +9,15 @@ import onClickOutside from '../modifiers/on-click-outside';
 
 export default class PlaceListsManager extends Component {
   @service storage;
+  @service router;
+  @tracked _forceClear = false;
 
   get isSaved() {
-    return !!this.args.place.createdAt;
+    return this.args.isSaved;
   }
 
   get placeListIds() {
+    if (this._forceClear) return [];
     return this.args.place._listIds || [];
   }
 
@@ -30,7 +34,35 @@ export default class PlaceListsManager extends Component {
   @action
   async toggleSaved() {
     if (this.isSaved) {
+      const { osmId, osmType } = this.args.place;
+
       await this.storage.removePlace(this.args.place);
+
+      // Clean up the local object reference immediately to prevent UI flicker
+      // or stale state if the transition is delayed/cancelled.
+      if (this.args.place) {
+        this.args.place.id = null;
+        this.args.place.createdAt = null;
+        this.args.place._listIds = [];
+        this._forceClear = true;
+      }
+
+      // Transition immediately to the canonical state
+      if (osmId && osmType) {
+        // Create a transient copy that looks like a fresh OSM result
+        const rawPlace = { ...this.args.place };
+        delete rawPlace.id;
+        delete rawPlace.createdAt;
+        delete rawPlace._listIds;
+
+        // Transition to the place route using the raw object
+        // This updates the URL to 'osm:...' and renders immediately
+        this.router.transitionTo('place', rawPlace);
+      } else {
+        // Custom place deleted -> go home
+        this.router.transitionTo('index');
+      }
+
       if (this.args.onClose) this.args.onClose();
     } else {
       await this.storage.storePlace(this.args.place);

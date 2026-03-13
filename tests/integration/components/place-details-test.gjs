@@ -13,6 +13,14 @@ module('Integration | Component | place-details', function (hooks) {
       { id: 'to-do', title: 'To do', color: '#008000' },
     ];
 
+    isPlaceSaved(id) {
+      return false;
+    }
+
+    findPlaceById(id) {
+      return null;
+    }
+
     async storePlace(place) {
       return { ...place, id: '123', createdAt: new Date().toISOString() };
     }
@@ -28,6 +36,12 @@ module('Integration | Component | place-details', function (hooks) {
 
   hooks.beforeEach(function () {
     this.owner.register('service:storage', StorageService);
+
+    // Mock Router for all tests
+    class MockRouter extends Service {
+      transitionTo() {}
+    }
+    this.owner.register('service:router', MockRouter);
   });
 
   test('it formats coordinates correctly', async function (assert) {
@@ -95,6 +109,12 @@ module('Integration | Component | place-details', function (hooks) {
         storedPlace = place;
         return { ...place, id: 'new-id', createdAt: new Date().toISOString() };
       }
+      isPlaceSaved() {
+        return false;
+      }
+      findPlaceById() {
+        return null;
+      }
     }
     this.owner.register('service:storage', MockStorage);
 
@@ -126,12 +146,15 @@ module('Integration | Component | place-details', function (hooks) {
   });
 
   test('it handles removing a saved place via master toggle', async function (assert) {
-    let removedPlace = null;
+    let removedPlaceId = null;
 
     class MockStorage extends Service {
       lists = [];
       async removePlace(place) {
-        removedPlace = place;
+        removedPlaceId = place.id;
+      }
+      isPlaceSaved() {
+        return true;
       }
     }
     this.owner.register('service:storage', MockStorage);
@@ -160,7 +183,9 @@ module('Integration | Component | place-details', function (hooks) {
     // Click it to remove
     await click(masterToggle);
 
-    assert.strictEqual(removedPlace.id, 'saved-id', 'removePlace was called');
+    assert.strictEqual(removedPlaceId, 'saved-id', 'removePlace was called');
+
+    assert.deepEqual(place._listIds, [], '_listIds was cleared on the object');
   });
 
   test('it adds place to a list', async function (assert) {
@@ -174,6 +199,9 @@ module('Integration | Component | place-details', function (hooks) {
         placeArg = place;
         listId = id;
         shouldAdd = add;
+      }
+      isPlaceSaved() {
+        return true;
       }
     }
     this.owner.register('service:storage', MockStorage);
@@ -201,5 +229,30 @@ module('Integration | Component | place-details', function (hooks) {
     assert.strictEqual(listId, 'favs');
     assert.strictEqual(placeArg.id, 'p1');
     assert.true(shouldAdd);
+  });
+
+  test('it respects storage service state over stale place object', async function (assert) {
+    class MockStorage extends Service {
+      lists = [];
+      isPlaceSaved() {
+        return false;
+      }
+      findPlaceById() {
+        return null;
+      }
+    }
+    this.owner.register('service:storage', MockStorage);
+
+    const place = {
+      id: 'stale-id',
+      title: 'Stale Place',
+      createdAt: '2023-01-01', // Looks saved
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    // Button should say "Save", not "Saved" because isPlaceSaved returns false
+    assert.dom('.actions button').hasText('Save');
+    assert.dom('.actions button').doesNotHaveClass('btn-secondary');
   });
 });

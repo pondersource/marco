@@ -1,4 +1,5 @@
 import Component from '@glimmer/component';
+import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { htmlSafe } from '@ember/template';
 import { humanizeOsmTag } from '../utils/format-text';
@@ -13,8 +14,13 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 
 export default class PlaceDetails extends Component {
+  @service storage;
   @tracked isEditing = false;
   @tracked showLists = false;
+
+  get isSaved() {
+    return this.storage.isPlaceSaved(this.place.id || this.place.osmId);
+  }
 
   get place() {
     return this.args.place || {};
@@ -38,7 +44,7 @@ export default class PlaceDetails extends Component {
 
   @action
   startEditing() {
-    if (!this.place.createdAt) return; // Only allow editing saved places
+    if (!this.isSaved) return; // Only allow editing saved places
     this.isEditing = true;
   }
 
@@ -276,7 +282,7 @@ export default class PlaceDetails extends Component {
           <button
             type="button"
             class={{if
-              this.place.createdAt
+              this.isSaved
               "btn btn-secondary"
               "btn btn-outline"
             }}
@@ -284,20 +290,21 @@ export default class PlaceDetails extends Component {
           >
             <Icon
               @name="bookmark"
-              @color={{if this.place.createdAt "currentColor" "#007bff"}}
+              @color={{if this.isSaved "currentColor" "#007bff"}}
             />
-            {{if this.place.createdAt "Saved" "Save"}}
+            {{if this.isSaved "Saved" "Save"}}
           </button>
 
           {{#if this.showLists}}
             <PlaceListsManager
               @place={{this.saveablePlace}}
               @onClose={{this.closeLists}}
+              @isSaved={{this.isSaved}}
             />
           {{/if}}
         </div>
 
-        {{#if this.place.createdAt}}
+        {{#if this.isSaved}}
           <button
             type="button"
             class="btn btn-outline"

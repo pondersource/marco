@@ -282,9 +282,20 @@ export default class StorageService extends Service {
     let place = this.savedPlaces.find((p) => p.id && String(p.id) === strId);
     if (place) return place;
 
+    // Check placesInView as fallback
+    place = this.placesInView.find((p) => p.id && String(p.id) === strId);
+    if (place) return place;
+
     // Then search by OSM ID
     place = this.savedPlaces.find((p) => p.osmId && String(p.osmId) === strId);
+    if (place) return place;
+
+    place = this.placesInView.find((p) => p.osmId && String(p.osmId) === strId);
     return place;
+  }
+
+  isPlaceSaved(id) {
+    return !!this.findPlaceById(id);
   }
 
   async storePlace(placeData) {
