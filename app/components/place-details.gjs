@@ -1,5 +1,4 @@
 import Component from '@glimmer/component';
-import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { htmlSafe } from '@ember/template';
 import { humanizeOsmTag } from '../utils/format-text';

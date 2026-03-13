@@ -1021,7 +1021,7 @@ button.create-place {
   color: #333;
 }
 
-.place-lists-manager input[type="checkbox"] {
+.place-lists-manager input[type='checkbox'] {
   accent-color: #007bff;
   width: 16px;
   height: 16px;
@@ -1033,7 +1033,7 @@ button.create-place {
   height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgb(0 0 0 / 10%);
 }
 
 .place-lists-manager .divider {

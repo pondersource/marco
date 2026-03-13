@@ -3,7 +3,7 @@ import { service } from '@ember/service';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import Icon from './icon';
+import { htmlSafe } from '@ember/template';
 import onClickOutside from '../modifiers/on-click-outside';
 
 export default class PlaceListsManager extends Component {
@@ -15,6 +15,10 @@ export default class PlaceListsManager extends Component {
 
   get placeListIds() {
     return this.args.place._listIds || [];
+  }
+
+  styleFor(color) {
+    return htmlSafe(`background-color: ${color}`);
   }
 
   @action
@@ -59,10 +63,7 @@ export default class PlaceListsManager extends Component {
   }
 
   <template>
-    <div
-      class="place-lists-manager"
-      {{onClickOutside @onClose}}
-    >
+    <div class="place-lists-manager" {{onClickOutside @onClose}}>
       <div class="list-item master-toggle">
         <label>
           <input
@@ -86,7 +87,11 @@ export default class PlaceListsManager extends Component {
                 {{on "change" (fn this.toggleList list)}}
                 disabled={{unless this.isSaved true}}
               />
-              <span class="list-color" style="background-color: {{list.color}}"></span>
+              {{! template-lint-disable no-inline-styles }}
+              <span
+                class="list-color"
+                style={{this.styleFor list.color}}
+              ></span>
               <span class="list-name">{{list.title}}</span>
             </label>
           </div>

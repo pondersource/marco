@@ -60,7 +60,7 @@ export default class MapComponent extends Component {
 
     // Create a vector source and layer for bookmarks
     this.bookmarkSource = new VectorSource();
-    
+
     const bookmarkStyleFunction = (feature) => {
       const originalPlace = feature.get('originalPlace');
       let color = '#ffcc33'; // Default Yellow
@@ -71,7 +71,7 @@ export default class MapComponent extends Component {
         originalPlace._listIds.length > 0
       ) {
         // Find the first list color
-        // We need access to storage.lists. 
+        // We need access to storage.lists.
         // Since this is inside setupMap, 'this' refers to the component instance.
         const firstListId = originalPlace._listIds[0];
         const list = this.storage.lists.find((l) => l.id === firstListId);
