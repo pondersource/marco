@@ -127,14 +127,6 @@ module('Integration | Component | place-details', function (hooks) {
 
   test('it handles removing a saved place via master toggle', async function (assert) {
     let removedPlace = null;
-    let confirmCalled = false;
-
-    // Mock confirm
-    const originalConfirm = window.confirm;
-    window.confirm = () => {
-      confirmCalled = true;
-      return true;
-    };
 
     class MockStorage extends Service {
       lists = [];
@@ -168,11 +160,7 @@ module('Integration | Component | place-details', function (hooks) {
     // Click it to remove
     await click(masterToggle);
 
-    assert.ok(confirmCalled, 'confirm dialog was shown');
     assert.strictEqual(removedPlace.id, 'saved-id', 'removePlace was called');
-
-    // Restore confirm
-    window.confirm = originalConfirm;
   });
 
   test('it adds place to a list', async function (assert) {

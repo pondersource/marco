@@ -25,10 +25,8 @@ export default class PlaceListsManager extends Component {
   @action
   async toggleSaved() {
     if (this.isSaved) {
-      if (confirm(`Remove "${this.args.place.title}" from saved places?`)) {
-        await this.storage.removePlace(this.args.place);
-        if (this.args.onClose) this.args.onClose();
-      }
+      await this.storage.removePlace(this.args.place);
+      if (this.args.onClose) this.args.onClose();
     } else {
       await this.storage.storePlace(this.args.place);
     }

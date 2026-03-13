@@ -51,40 +51,39 @@ export default class PlacesSidebar extends Component {
     if (!place) return;
 
     if (place.createdAt) {
-      if (confirm(`Delete "${place.title}"?`)) {
-        try {
-          await this.storage.removePlace(place);
-          console.debug('Place deleted:', place.title);
+      // Direct delete without confirmation
+      try {
+        await this.storage.removePlace(place);
+        console.debug('Place deleted:', place.title);
 
-          // Notify parent to refresh map bookmarks
-          if (this.args.onBookmarkChange) {
-            this.args.onBookmarkChange();
-          }
-
-          if (this.args.onUpdate) {
-            // Reconstruct the "original" place without ID/Geohash/CreatedAt
-            const freshPlace = {
-              ...place,
-              id: undefined,
-              geohash: undefined,
-              createdAt: undefined,
-            };
-            this.args.onUpdate(freshPlace);
-          }
-
-          // Also fire onSelect if it exists (for list view)
-          if (this.args.onSelect) {
-            this.args.onSelect(null);
-          }
-
-          // Close sidebar after delete
-          if (this.args.onClose) {
-            this.args.onClose();
-          }
-        } catch (e) {
-          console.error('Failed to delete:', e);
-          alert('Failed to delete: ' + e.message);
+        // Notify parent to refresh map bookmarks
+        if (this.args.onBookmarkChange) {
+          this.args.onBookmarkChange();
         }
+
+        if (this.args.onUpdate) {
+          // Reconstruct the "original" place without ID/Geohash/CreatedAt
+          const freshPlace = {
+            ...place,
+            id: undefined,
+            geohash: undefined,
+            createdAt: undefined,
+          };
+          this.args.onUpdate(freshPlace);
+        }
+
+        // Also fire onSelect if it exists (for list view)
+        if (this.args.onSelect) {
+          this.args.onSelect(null);
+        }
+
+        // Close sidebar after delete
+        if (this.args.onClose) {
+          this.args.onClose();
+        }
+      } catch (e) {
+        console.error('Failed to delete:', e);
+        alert('Failed to delete: ' + e.message);
       }
     } else {
       // It's a fresh POI -> Save it
