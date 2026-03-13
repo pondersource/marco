@@ -4,6 +4,7 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import Icon from './icon';
+import onClickOutside from '../modifiers/on-click-outside';
 
 export default class PlaceListsManager extends Component {
   @service storage;
@@ -58,7 +59,10 @@ export default class PlaceListsManager extends Component {
   }
 
   <template>
-    <div class="place-lists-manager">
+    <div
+      class="place-lists-manager"
+      {{onClickOutside @onClose}}
+    >
       <div class="list-item master-toggle">
         <label>
           <input

@@ -49,7 +49,12 @@ export default class PlaceDetails extends Component {
   }
 
   @action
-  toggleLists() {
+  toggleLists(event) {
+    // Prevent this click from propagating to the document listener
+    // which handles the "click outside" logic.
+    if (event) {
+      event.stopPropagation();
+    }
     this.showLists = !this.showLists;
   }
 
