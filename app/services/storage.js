@@ -50,6 +50,10 @@ export default class StorageService extends Service {
       this.loadLists();
     });
 
+    this.rs.on('not-connected', () => {
+      this.loadLists();
+    });
+
     this.rs.on('disconnected', () => {
       this.connected = false;
       this.userAddress = null;
