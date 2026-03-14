@@ -7,6 +7,7 @@ import edit from 'feather-icons/dist/icons/edit.svg?raw';
 import facebook from 'feather-icons/dist/icons/facebook.svg?raw';
 import globe from 'feather-icons/dist/icons/globe.svg?raw';
 import home from 'feather-icons/dist/icons/home.svg?raw';
+import info from 'feather-icons/dist/icons/info.svg?raw';
 import instagram from 'feather-icons/dist/icons/instagram.svg?raw';
 import logIn from 'feather-icons/dist/icons/log-in.svg?raw';
 import logOut from 'feather-icons/dist/icons/log-out.svg?raw';
@@ -36,6 +37,7 @@ const ICONS = {
   facebook,
   globe,
   home,
+  info,
   instagram,
   'log-in': logIn,
   'log-out': logOut,
