@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { pageTitle } from 'ember-page-title';
 import Map from '#components/map';
 import AppHeader from '#components/app-header';
-import SettingsPane from '#components/settings-pane';
+import AppMenu from '#components/app-menu/index';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
@@ -14,7 +14,7 @@ export default class ApplicationComponent extends Component {
   @service mapUi;
   @service router;
 
-  @tracked isSettingsOpen = false;
+  @tracked isAppMenuOpen = false;
 
   get isSidebarOpen() {
     // We consider the sidebar "open" if we are in search or place routes.
@@ -34,19 +34,19 @@ export default class ApplicationComponent extends Component {
   }
 
   @action
-  toggleSettings() {
-    this.isSettingsOpen = !this.isSettingsOpen;
+  toggleAppMenu() {
+    this.isAppMenuOpen = !this.isAppMenuOpen;
   }
 
   @action
-  closeSettings() {
-    this.isSettingsOpen = false;
+  closeAppMenu() {
+    this.isAppMenuOpen = false;
   }
 
   @action
   handleOutsideClick() {
-    if (this.isSettingsOpen) {
-      this.closeSettings();
+    if (this.isAppMenuOpen) {
+      this.closeAppMenu();
     } else if (this.router.currentRouteName === 'search') {
       this.router.transitionTo('index');
     } else if (this.router.currentRouteName === 'place') {
@@ -65,7 +65,7 @@ export default class ApplicationComponent extends Component {
   <template>
     {{pageTitle "Marco"}}
 
-    <AppHeader @onToggleMenu={{this.toggleSettings}} />
+    <AppHeader @onToggleMenu={{this.toggleAppMenu}} />
 
     <div
       id="rs-widget-container"
@@ -81,12 +81,12 @@ export default class ApplicationComponent extends Component {
     {{/if}}
 
     <Map
-      @isSidebarOpen={{or this.isSidebarOpen this.isSettingsOpen}}
+      @isSidebarOpen={{or this.isSidebarOpen this.isAppMenuOpen}}
       @onOutsideClick={{this.handleOutsideClick}}
     />
 
-    {{#if this.isSettingsOpen}}
-      <SettingsPane @onClose={{this.closeSettings}} />
+    {{#if this.isAppMenuOpen}}
+      <AppMenu @onClose={{this.closeAppMenu}} />
     {{/if}}
 
     {{outlet}}
