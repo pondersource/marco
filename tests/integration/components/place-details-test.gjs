@@ -9,15 +9,15 @@ module('Integration | Component | place-details', function (hooks) {
 
   class StorageService extends Service {
     lists = [
-      { id: 'to-go', title: 'Want to go', color: '#ff00ff' },
-      { id: 'to-do', title: 'To do', color: '#008000' },
+      { id: 'to-go', title: 'Want to go', color: '#2e9e4f' },
+      { id: 'to-do', title: 'To do', color: '#2a7fff' },
     ];
 
-    isPlaceSaved(id) {
+    isPlaceSaved() {
       return false;
     }
 
-    findPlaceById(id) {
+    findPlaceById() {
       return null;
     }
 

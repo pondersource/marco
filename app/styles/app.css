@@ -1,7 +1,7 @@
 /* Ember supports plain CSS out of the box. More info: https://cli.emberjs.com/release/advanced-use/stylesheets/ */
 
 :root {
-  --default-list-color: #ffcc33;
+  --default-list-color: #fc3;
 }
 
 html,

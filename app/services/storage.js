@@ -141,6 +141,16 @@ export default class StorageService extends Service {
 
       const lists = await this.places.lists.getAll();
       this.lists = lists || [];
+
+      // Decorate with hardcoded icons for default lists (in-memory only)
+      this.lists.forEach((list) => {
+        if (list.id === 'to-go') {
+          list.icon = 'bookmark';
+        } else if (list.id === 'to-do') {
+          list.icon = 'check-square';
+        }
+      });
+
       this.refreshPlaceListAssociations();
     } catch (e) {
       console.error('Failed to load lists:', e);

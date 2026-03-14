@@ -281,11 +281,7 @@ export default class PlaceDetails extends Component {
         <div class="save-button-wrapper">
           <button
             type="button"
-            class={{if
-              this.isSaved
-              "btn btn-secondary"
-              "btn btn-outline"
-            }}
+            class={{if this.isSaved "btn btn-secondary" "btn btn-outline"}}
             {{on "click" this.toggleLists}}
           >
             <Icon
