@@ -42,6 +42,9 @@ class MockStorageService extends Service {
   findPlaceById() {
     return null;
   }
+  isPlaceSaved() {
+    return false;
+  }
   loadPlacesInBounds() {
     return [];
   }

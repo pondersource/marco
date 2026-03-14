@@ -1,21 +1,37 @@
 import Component from '@glimmer/component';
-import { fn } from '@ember/helper';
+import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { htmlSafe } from '@ember/template';
 import { humanizeOsmTag } from '../utils/format-text';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import { mapToStorageSchema } from '../utils/place-mapping';
 import { getSocialInfo } from '../utils/social-links';
 import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
+import PlaceListsManager from './place-lists-manager';
 
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 
 export default class PlaceDetails extends Component {
+  @service storage;
   @tracked isEditing = false;
+  @tracked showLists = false;
+
+  get isSaved() {
+    return this.storage.isPlaceSaved(this.place.id || this.place.osmId);
+  }
 
   get place() {
     return this.args.place || {};
+  }
+
+  get saveablePlace() {
+    if (this.place.createdAt) {
+      return this.place;
+    }
+
+    return mapToStorageSchema(this.place);
   }
 
   get tags() {
@@ -28,13 +44,28 @@ export default class PlaceDetails extends Component {
 
   @action
   startEditing() {
-    if (!this.place.createdAt) return; // Only allow editing saved places
+    if (!this.isSaved) return; // Only allow editing saved places
     this.isEditing = true;
   }
 
   @action
   cancelEditing() {
     this.isEditing = false;
+  }
+
+  @action
+  toggleLists(event) {
+    // Prevent this click from propagating to the document listener
+    // which handles the "click outside" logic.
+    if (event) {
+      event.stopPropagation();
+    }
+    this.showLists = !this.showLists;
+  }
+
+  @action
+  closeLists() {
+    this.showLists = false;
   }
 
   @action
@@ -247,23 +278,29 @@ export default class PlaceDetails extends Component {
       {{/if}}
 
       <div class="actions">
-        <button
-          type="button"
-          class={{if
-            this.place.createdAt
-            "btn btn-secondary"
-            "btn btn-outline"
-          }}
-          {{on "click" (fn @onToggleSave this.place)}}
-        >
-          <Icon
-            @name="bookmark"
-            @color={{if this.place.createdAt "currentColor" "#007bff"}}
-          />
-          {{if this.place.createdAt "Saved" "Save"}}
-        </button>
+        <div class="save-button-wrapper">
+          <button
+            type="button"
+            class={{if this.isSaved "btn btn-secondary" "btn btn-outline"}}
+            {{on "click" this.toggleLists}}
+          >
+            <Icon
+              @name="bookmark"
+              @color={{if this.isSaved "currentColor" "#007bff"}}
+            />
+            {{if this.isSaved "Saved" "Save"}}
+          </button>
 
-        {{#if this.place.createdAt}}
+          {{#if this.showLists}}
+            <PlaceListsManager
+              @place={{this.saveablePlace}}
+              @onClose={{this.closeLists}}
+              @isSaved={{this.isSaved}}
+            />
+          {{/if}}
+        </div>
+
+        {{#if this.isSaved}}
           <button
             type="button"
             class="btn btn-outline"

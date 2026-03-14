@@ -60,9 +60,30 @@ export default class MapComponent extends Component {
 
     // Create a vector source and layer for bookmarks
     this.bookmarkSource = new VectorSource();
-    const bookmarkLayer = new VectorLayer({
-      source: this.bookmarkSource,
-      style: [
+
+    const bookmarkStyleFunction = (feature) => {
+      const originalPlace = feature.get('originalPlace');
+      let color =
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--default-list-color')
+          .trim() || '#000000'; // Fallback to black if variable is missing to make error obvious
+
+      if (
+        originalPlace &&
+        originalPlace._listIds &&
+        originalPlace._listIds.length > 0
+      ) {
+        // Find the first list color
+        // We need access to storage.lists.
+        // Since this is inside setupMap, 'this' refers to the component instance.
+        const firstListId = originalPlace._listIds[0];
+        const list = this.storage.lists.find((l) => l.id === firstListId);
+        if (list && list.color) {
+          color = list.color;
+        }
+      }
+
+      return [
         new Style({
           image: new Circle({
             radius: 10,
@@ -73,14 +94,19 @@ export default class MapComponent extends Component {
         new Style({
           image: new Circle({
             radius: 9,
-            fill: new Fill({ color: '#ffcc33' }), // Gold/Yellow
+            fill: new Fill({ color: color }),
             stroke: new Stroke({
               color: '#fff',
               width: 2,
             }),
           }),
         }),
-      ],
+      ];
+    };
+
+    const bookmarkLayer = new VectorLayer({
+      source: this.bookmarkSource,
+      style: bookmarkStyleFunction,
       zIndex: 10, // Ensure it sits above the map tiles
     });
 

@@ -1,10 +1,48 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'marco/tests/helpers';
-import { render } from '@ember/test-helpers';
+import { render, click } from '@ember/test-helpers';
+import Service from '@ember/service';
 import PlaceDetails from 'marco/components/place-details';
 
 module('Integration | Component | place-details', function (hooks) {
   setupRenderingTest(hooks);
+
+  class StorageService extends Service {
+    lists = [
+      { id: 'to-go', title: 'Want to go', color: '#2e9e4f' },
+      { id: 'to-do', title: 'To do', color: '#2a7fff' },
+    ];
+
+    isPlaceSaved() {
+      return false;
+    }
+
+    findPlaceById() {
+      return null;
+    }
+
+    async storePlace(place) {
+      return { ...place, id: '123', createdAt: new Date().toISOString() };
+    }
+
+    async removePlace() {
+      return true;
+    }
+
+    async togglePlaceList() {
+      return true;
+    }
+  }
+
+  hooks.beforeEach(function () {
+    this.owner.register('service:storage', StorageService);
+
+    // Mock Router for all tests
+    class MockRouter extends Service {
+      transitionTo() {}
+    }
+    this.owner.register('service:router', MockRouter);
+  });
 
   test('it formats coordinates correctly', async function (assert) {
     const place = {
@@ -33,5 +71,188 @@ module('Integration | Component | place-details', function (hooks) {
 
     assert.dom('.place-details h3').hasText('Place without Coords');
     assert.dom('.meta-info a[href*="geo:"]').doesNotExist();
+  });
+
+  test('it reveals the list manager when save is clicked', async function (assert) {
+    const place = {
+      title: 'Cool Cafe',
+      lat: 10,
+      lon: 10,
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    // Manager is initially hidden
+    assert.dom('.place-lists-manager').doesNotExist();
+
+    // Find the Save button
+    // It's the first button in .actions
+    const saveBtn = this.element.querySelector('.actions button');
+    await click(saveBtn);
+
+    // Manager should be visible now
+    assert.dom('.place-lists-manager').exists();
+
+    // Check for default lists from mock service
+    assert.dom('.place-lists-manager').includesText('Want to go');
+    assert.dom('.place-lists-manager').includesText('To do');
+    assert.dom('.place-lists-manager').includesText('Saved');
+  });
+
+  test('it handles saving a new place via master toggle', async function (assert) {
+    let storedPlace = null;
+
+    // Override mock service specifically for this test to spy on storePlace
+    class MockStorage extends Service {
+      lists = [];
+      async storePlace(place) {
+        storedPlace = place;
+        return { ...place, id: 'new-id', createdAt: new Date().toISOString() };
+      }
+      isPlaceSaved() {
+        return false;
+      }
+      findPlaceById() {
+        return null;
+      }
+    }
+    this.owner.register('service:storage', MockStorage);
+
+    const place = {
+      title: 'New Spot',
+      lat: 20,
+      lon: 20,
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    // Open manager
+    await click('.actions button');
+
+    // Find master "Saved" toggle
+    const masterToggle = this.element.querySelector(
+      '.place-lists-manager .master-toggle input'
+    );
+
+    // It should be unchecked initially for a new place
+    assert.dom(masterToggle).isNotChecked();
+
+    // Click it to save
+    await click(masterToggle);
+
+    // Verify storePlace was called
+    assert.ok(storedPlace, 'storePlace was called');
+    assert.strictEqual(storedPlace.title, 'New Spot');
+  });
+
+  test('it handles removing a saved place via master toggle', async function (assert) {
+    let removedPlaceId = null;
+
+    class MockStorage extends Service {
+      lists = [];
+      async removePlace(place) {
+        removedPlaceId = place.id;
+      }
+      isPlaceSaved() {
+        return true;
+      }
+    }
+    this.owner.register('service:storage', MockStorage);
+
+    const place = {
+      id: 'saved-id',
+      title: 'Saved Spot',
+      lat: 30,
+      lon: 30,
+      createdAt: '2023-01-01', // Marks it as saved
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    // Open manager
+    await click('.actions button');
+
+    // Find master "Saved" toggle
+    const masterToggle = this.element.querySelector(
+      '.place-lists-manager .master-toggle input'
+    );
+
+    // It should be checked initially for a saved place
+    assert.dom(masterToggle).isChecked();
+
+    // Click it to remove
+    await click(masterToggle);
+
+    assert.strictEqual(removedPlaceId, 'saved-id', 'removePlace was called');
+
+    assert.deepEqual(place._listIds, [], '_listIds was cleared on the object');
+  });
+
+  test('it adds place to a list', async function (assert) {
+    let listId = null;
+    let placeArg = null;
+    let shouldAdd = null;
+
+    class MockStorage extends Service {
+      lists = [{ id: 'favs', title: 'Favorites', color: 'red' }];
+      async togglePlaceList(place, id, add) {
+        placeArg = place;
+        listId = id;
+        shouldAdd = add;
+      }
+      isPlaceSaved() {
+        return true;
+      }
+    }
+    this.owner.register('service:storage', MockStorage);
+
+    // Provide a place that is already saved
+    const place = {
+      id: 'p1',
+      title: 'My Spot',
+      createdAt: '2023-01-01',
+      _listIds: [], // Not in any list yet
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    // Open manager
+    await click('.actions button');
+
+    // Find the checkbox for "Favorites"
+    const checkbox = this.element.querySelectorAll(
+      '.place-lists-manager input[type="checkbox"]'
+    )[1]; // Index 1 because 0 is master toggle
+
+    await click(checkbox);
+
+    assert.strictEqual(listId, 'favs');
+    assert.strictEqual(placeArg.id, 'p1');
+    assert.true(shouldAdd);
+  });
+
+  test('it respects storage service state over stale place object', async function (assert) {
+    class MockStorage extends Service {
+      lists = [];
+      isPlaceSaved() {
+        return false;
+      }
+      findPlaceById() {
+        return null;
+      }
+    }
+    this.owner.register('service:storage', MockStorage);
+
+    const place = {
+      id: 'stale-id',
+      title: 'Stale Place',
+      createdAt: '2023-01-01', // Looks saved
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    // Button should say "Save", not "Saved" because isPlaceSaved returns false
+    assert.dom('.actions button').hasText('Save');
+    assert.dom('.actions button').doesNotHaveClass('btn-secondary');
   });
 });
