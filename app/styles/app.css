@@ -312,12 +312,25 @@ body {
   font-family: inherit;
   font-size: 0.95rem;
   box-sizing: border-box; /* Ensure padding doesn't overflow width */
+  color: #333;
+  background-color: #fff;
 }
 
 .form-control:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgb(0 123 255 / 10%);
+}
+
+select.form-control {
+  appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 16px;
+  padding-right: 2.5rem;
+  cursor: pointer;
 }
 
 .edit-actions {
