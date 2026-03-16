@@ -1,11 +1,15 @@
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { htmlSafe } from '@ember/template';
 import Icon from '#components/icon';
+import iconRounded from '../../icons/icon-rounded.svg?raw';
 
 <template>
   <div class="sidebar-header">
     <h2>
-      <img src="/icons/icon-rounded.svg" alt="" width="32" height="32" />
+      <span class="app-logo-icon">
+        {{htmlSafe iconRounded}}
+      </span>
       Marco
     </h2>
     <button type="button" class="close-btn" {{on "click" @onClose}}>

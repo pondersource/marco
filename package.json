@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "vite build --outDir release/",
-    "build:icons": "for size in 32 48 144 180 192 512; do if [ \"$size\" -le 64 ]; then magick public/icons/icon.svg -define svg:remove-groups=map-grid -resize ${size}x${size} public/icons/icon-${size}.png; else rsvg-convert -w $size -h $size public/icons/icon.svg -o public/icons/icon-${size}.png; fi; done && rsvg-convert -w 512 -h 512 public/icons/icon.svg -o public/icons/icon-maskable.png",
+    "build:icons": "cp public/icons/icon-rounded.svg app/icons/icon-rounded.svg && for size in 32 48 144 180 192 512; do if [ \"$size\" -le 64 ]; then magick public/icons/icon.svg -define svg:remove-groups=map-grid -resize ${size}x${size} public/icons/icon-${size}.png; else rsvg-convert -w $size -h $size public/icons/icon.svg -o public/icons/icon-${size}.png; fi; done && rsvg-convert -w 512 -h 512 public/icons/icon.svg -o public/icons/icon-maskable.png",
     "format": "prettier . --cache --write",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",
     "lint:css": "stylelint \"**/*.css\"",

@@ -632,6 +632,17 @@ body {
 
 /* Icons */
 
+.app-logo-icon {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+}
+
+.app-logo-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
 span.icon {
   display: inline-block;
 }
