@@ -1,9 +1,13 @@
-import Service from '@ember/service';
+import Service, { service } from '@ember/service';
 import { getPlaceType } from '../utils/osm';
 import { humanizeOsmTag } from '../utils/format-text';
 
 export default class PhotonService extends Service {
-  baseUrl = 'https://photon.komoot.io/api/';
+  @service settings;
+
+  get baseUrl() {
+    return this.settings.photonApi;
+  }
 
   async search(query, lat, lon, limit = 10) {
     if (!query || query.length < 2) return [];
