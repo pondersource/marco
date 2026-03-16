@@ -5,7 +5,9 @@ import checkSquare from 'feather-icons/dist/icons/check-square.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
 import edit from 'feather-icons/dist/icons/edit.svg?raw';
 import facebook from 'feather-icons/dist/icons/facebook.svg?raw';
+import gift from 'feather-icons/dist/icons/gift.svg?raw';
 import globe from 'feather-icons/dist/icons/globe.svg?raw';
+import heart from 'feather-icons/dist/icons/heart.svg?raw';
 import home from 'feather-icons/dist/icons/home.svg?raw';
 import info from 'feather-icons/dist/icons/info.svg?raw';
 import instagram from 'feather-icons/dist/icons/instagram.svg?raw';
@@ -35,7 +37,9 @@ const ICONS = {
   clock,
   edit,
   facebook,
+  gift,
   globe,
+  heart,
   home,
   info,
   instagram,

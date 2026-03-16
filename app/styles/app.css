@@ -285,6 +285,82 @@ body {
   height: 20px;
 }
 
+.sidebar-content details {
+  margin: 0 -1rem; /* Top margin, negative side margins to span full width */
+}
+
+.sidebar-content details summary {
+  list-style: none; /* Hide default triangle */
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  padding-left: 1.4rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.sidebar-content details summary::-webkit-details-marker {
+  display: none; /* Hide default triangle in WebKit */
+}
+
+.sidebar-content details summary:hover {
+  background-color: var(--hover-bg);
+}
+
+.sidebar-content details summary .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-content details summary::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-content details[open] summary::after {
+  transform: rotate(90deg);
+}
+
+.sidebar-content details .details-content {
+  padding: 1rem 1.4rem;
+  animation: details-slide-down 0.2s ease-out;
+}
+
+.sidebar-content details .link-list {
+  padding: 0;
+  margin: 0;
+}
+
+@keyframes details-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sidebar-content details .link-list li {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-content details .link-list li:last-child {
+  margin-bottom: 0;
+}
+
 .edit-form {
   margin: -1rem;
   margin-bottom: 1rem;
