@@ -647,10 +647,10 @@ export default class MapComponent extends Component {
       // = sidebarWidth/2 + totalWidth/2
       // Map Center is totalWidth/2
       // Offset = sidebarWidth/2 (to the right)
-      
+
       const offsetPixels = sidebarWidth / 2;
       const offsetMapUnits = offsetPixels * resolution;
-      
+
       // We want pin at center + offset.
       // So map center must be pin - offset.
       // X increases to the right.
