@@ -226,7 +226,7 @@ export default class PlacesSidebar extends Component {
             class="btn btn-outline create-place"
             {{on "click" this.createNewPlace}}
           >
-            <Icon @name="plus" @size={{18}} @color="#007bff" />
+            <Icon @name="plus" @size={{18}} @color="var(--link-color)" />
             Create new place
           </button>
         {{/if}}

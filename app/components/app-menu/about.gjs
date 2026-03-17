@@ -14,7 +14,7 @@ import Icon from '#components/icon';
   </div>
 
   <div class="sidebar-content">
-    <section class="settings-section">
+    <section class="about-section">
       <p>
         <strong>Marco</strong>
         (as in
@@ -41,31 +41,78 @@ import Icon from '#components/icon';
           <span>Open Source</span>
         </summary>
         <div class="details-content">
-          <ul class="link-list">
-            <li>
-              <a
-                href="https://gitea.kosmos.org/raucao/marco"
-                target="_blank"
-                rel="noopener"
-              >
-                Source Code
-              </a>
-              (<a
-                href="https://en.wikipedia.org/wiki/GNU_Affero_General_Public_License"
-                target="_blank"
-                rel="noopener"
-              >AGPL</a>)
-            </li>
-            <li>
-              <a
-                href="https://openstreetmap.org/copyright"
-                target="_blank"
-                rel="noopener"
-              >
-                Map Data © OpenStreetMap
-              </a>
-            </li>
-          </ul>
+          <table>
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>License</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a
+                    href="https://gitea.kosmos.org/raucao/marco"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Marco App
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://en.wikipedia.org/wiki/GNU_Affero_General_Public_License"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <abbr title="GNU Affero General Public License">AGPL</abbr>
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    href="https://openstreetmap.org/copyright"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Map Data
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://opendatacommons.org/licenses/odbl/"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <abbr
+                      title="Open Data Commons Open Database License"
+                    >ODbL</abbr>
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    href="https://github.com/feathericons/feather"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Feather Icons
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://en.wikipedia.org/wiki/MIT_License"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <abbr title="MIT License">MIT</abbr>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </details>
       <details>

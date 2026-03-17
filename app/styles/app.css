@@ -4,6 +4,8 @@
   --default-list-color: #fc3;
   --hover-bg: #f8f9fa;
   --sidebar-width: 360px;
+  --link-color: #2a7fff;
+  --link-color-visited: #6a4fbf;
 }
 
 html,
@@ -186,7 +188,7 @@ body {
 }
 
 .text-primary {
-  color: #007bff;
+  color: var(--link-color);
 }
 
 .text-danger {
@@ -333,7 +335,7 @@ body {
 }
 
 .sidebar-content details .details-content {
-  padding: 1rem 1.4rem;
+  padding: 0 1.4rem 1rem;
   animation: details-slide-down 0.2s ease-out;
 }
 
@@ -395,8 +397,8 @@ body {
 
 .form-control:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgb(0 123 255 / 10%);
+  border-color: var(--link-color);
+  box-shadow: 0 0 0 2px rgb(42 127 255 / 10%);
 }
 
 select.form-control {
@@ -425,12 +427,21 @@ select.form-control {
   margin-top: 1rem;
 }
 
-.settings-section p a {
-  color: #007bff;
+.about-section {
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.about-section a {
+  color: var(--link-color);
   text-decoration: none;
 }
 
-.settings-section p a:hover {
+.about-section a:visited {
+  color: var(--link-color-visited);
+}
+
+.about-section a:hover {
   text-decoration: underline;
 }
 
@@ -439,7 +450,7 @@ select.form-control {
 }
 
 .btn-primary {
-  background: #007bff;
+  background: var(--link-color);
   color: white;
   border: none;
   padding: 0.75rem;
@@ -468,12 +479,43 @@ select.form-control {
 }
 
 .meta-info a {
-  color: #007bff;
+  color: var(--link-color);
   text-decoration: none;
 }
 
 .meta-info a:hover {
   text-decoration: underline;
+}
+
+.sidebar-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.sidebar-content table th,
+.sidebar-content table td {
+  padding: 0.5rem 0;
+  text-align: left;
+}
+
+.sidebar-content table th {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #898989;
+}
+
+.sidebar-content table td {
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.sidebar-content table tr:last-child td {
+  border-bottom: none;
+}
+
+abbr[title] {
+  text-decoration: underline dotted;
 }
 
 .link-list {
@@ -487,7 +529,7 @@ select.form-control {
 }
 
 .link-list a {
-  color: #007bff;
+  color: var(--link-color);
   text-decoration: none;
   font-size: 0.95rem;
 }
@@ -612,7 +654,7 @@ select.form-control {
 }
 
 .btn-blue {
-  background: #007bff;
+  background: var(--link-color);
   color: white;
   border: none;
 }
@@ -1152,7 +1194,7 @@ button.create-place {
 }
 
 .place-lists-manager input[type='checkbox'] {
-  accent-color: #007bff;
+  accent-color: var(--link-color);
   width: 16px;
   height: 16px;
   cursor: pointer;
