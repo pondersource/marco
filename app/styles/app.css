@@ -337,6 +337,7 @@ body {
 .sidebar-content details .details-content {
   padding: 0 1.4rem 1rem;
   animation: details-slide-down 0.2s ease-out;
+  font-size: 0.9rem;
 }
 
 .sidebar-content details .link-list {
@@ -429,7 +430,6 @@ select.form-control {
 
 .about-section {
   margin-bottom: 2rem;
-  font-size: 0.95rem;
 }
 
 .about-section a {
@@ -490,7 +490,6 @@ select.form-control {
 .sidebar-content table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
 }
 
 .sidebar-content table th,
