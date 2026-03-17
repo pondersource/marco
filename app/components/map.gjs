@@ -499,10 +499,9 @@ export default class MapComponent extends Component {
       }
 
       if (options.preventZoom) {
-        // If we are preventing zoom (e.g. user clicked a bookmark), we still need to center
-        // but without changing the zoom level.
-        // We use animateToSmartCenter without a second argument (zoom=null).
-        this.animateToSmartCenter(coords);
+        // If we are preventing zoom (e.g. user clicked a bookmark), we rely on visibility check.
+        // This avoids unnecessary panning if the place is already visible.
+        this.handlePinVisibility(coords, { maintainZoom: true });
       } else if (selected.bbox) {
         this.zoomToBbox(selected.bbox);
       } else {
@@ -547,7 +546,10 @@ export default class MapComponent extends Component {
     }
     // Desktop: Sidebar covers left side (approx 400px)
     else if (this.args.isSidebarOpen) {
-      const sidebarWidth = 400;
+      const sidebarWidthVar = getComputedStyle(document.documentElement)
+        .getPropertyValue('--sidebar-width')
+        .trim();
+      const sidebarWidth = parseInt(sidebarWidthVar, 10) || 360;
       const visibleWidth = size[0] - sidebarWidth;
 
       // Left padding: Sidebar + 15% of visible width
@@ -566,14 +568,15 @@ export default class MapComponent extends Component {
     });
   }
 
-  handlePinVisibility(coords) {
+  handlePinVisibility(coords, options = {}) {
     if (!this.mapInstance) return;
 
     const view = this.mapInstance.getView();
     const currentZoom = view.getZoom();
 
     // If too far out (e.g. world view), zoom in to neighborhood level (16)
-    if (currentZoom < 16) {
+    // UNLESS we want to maintain the current zoom
+    if (!options.maintainZoom && currentZoom < 16) {
       this.animateToSmartCenter(coords, 16);
       return;
     }
@@ -590,8 +593,12 @@ export default class MapComponent extends Component {
       pixel[1] > size[1];
 
     if (isOffScreen) {
-      this.animateToSmartCenter(coords);
+      // If off-screen, center it smartly (considering sidebar/bottom sheet)
+      // Pass maintainZoom to prevent zoom reset if desired
+      const zoom = options.maintainZoom ? null : 16;
+      this.animateToSmartCenter(coords, zoom);
     } else {
+      // If on-screen, only pan if obscured by UI
       this.panIfObscured(coords);
     }
   }
@@ -627,6 +634,28 @@ export default class MapComponent extends Component {
       // To move the camera South (Lower Y), we subtract.
       targetCenter = [coords[0], coords[1] - offsetMapUnits];
     }
+    // Desktop: Check if sidebar is open
+    else if (this.args.isSidebarOpen) {
+      const sidebarWidthVar = getComputedStyle(document.documentElement)
+        .getPropertyValue('--sidebar-width')
+        .trim();
+      const sidebarWidth = parseInt(sidebarWidthVar, 10) || 360;
+
+      // We want the pin to be in the center of the remaining space.
+      // Remaining space starts at x = sidebarWidth.
+      // Center of remaining space = sidebarWidth + (totalWidth - sidebarWidth) / 2
+      // = sidebarWidth/2 + totalWidth/2
+      // Map Center is totalWidth/2
+      // Offset = sidebarWidth/2 (to the right)
+
+      const offsetPixels = sidebarWidth / 2;
+      const offsetMapUnits = offsetPixels * resolution;
+
+      // We want pin at center + offset.
+      // So map center must be pin - offset.
+      // X increases to the right.
+      targetCenter = [coords[0] - offsetMapUnits, coords[1]];
+    }
 
     const animationOptions = {
       center: targetCenter,
@@ -645,33 +674,73 @@ export default class MapComponent extends Component {
     if (!this.mapInstance) return;
 
     const size = this.mapInstance.getSize();
-    // Check if mobile (width <= 768px matches CSS)
-    if (size[0] > 768) return;
-
     const pixel = this.mapInstance.getPixelFromCoordinate(coords);
     if (!pixel) return;
 
-    const height = size[1];
+    const view = this.mapInstance.getView();
+    const center = view.getCenter();
+    const resolution = view.getResolution();
 
-    // Sidebar covers the bottom 50%
-    const splitPoint = height / 2;
+    // Default targets (current position)
+    let targetPixelX = pixel[0];
+    let targetPixelY = pixel[1];
+    let needsPan = false;
 
-    // If the pin is in the bottom half (y > splitPoint), it is obscured
-    if (pixel[1] > splitPoint) {
-      // Target position: Center of top half = height * 0.25
-      const targetY = height * 0.25;
-      const deltaY = pixel[1] - targetY;
+    // 1. Mobile Bottom Sheet Logic (Screen <= 768px)
+    if (size[0] <= 768) {
+      const height = size[1];
+      const splitPoint = height / 2;
 
-      const view = this.mapInstance.getView();
-      const center = view.getCenter();
-      const resolution = view.getResolution();
+      // If in bottom half
+      if (pixel[1] > splitPoint) {
+        targetPixelY = height * 0.25; // Target: Center of top half
+        needsPan = true;
+      }
+    }
+    // 2. Desktop Sidebar Logic (Screen > 768px + Sidebar Open)
+    else if (this.args.isSidebarOpen) {
+      const sidebarWidthVar = getComputedStyle(document.documentElement)
+        .getPropertyValue('--sidebar-width')
+        .trim();
+      const sidebarWidth = parseInt(sidebarWidthVar, 10) || 360;
 
-      // Move the map center SOUTH (decrease Y) to move the pin UP (decrease pixel Y)
-      const deltaMapUnits = deltaY * resolution;
-      const newCenter = [center[0], center[1] - deltaMapUnits];
+      // If under sidebar
+      if (pixel[0] < sidebarWidth) {
+        const visibleWidth = size[0] - sidebarWidth;
+        targetPixelX = sidebarWidth + visibleWidth / 2; // Target: Center of visible area
+        needsPan = true;
+      }
+    }
+
+    // 3. Header Logic (Any screen size)
+    // Check if the (potentially new) target Y is under the header
+    const headerHeight = 60;
+    const minTopDistance = headerHeight + 20; // 80px
+
+    if (targetPixelY < minTopDistance) {
+      targetPixelY = minTopDistance + 30; // Move it to ~110px, clear of header
+      needsPan = true;
+    }
+
+    if (needsPan) {
+      const deltaPixelX = pixel[0] - targetPixelX;
+      const deltaPixelY = pixel[1] - targetPixelY;
+
+      // X: Camera moves same direction as we want the world to move? No.
+      // If we want pin to move RIGHT (pixel increases), Camera must move LEFT (X decreases).
+      // deltaPixelX = current - target. If current < target (want move right), delta is negative.
+      // center + negative = decrease. Correct.
+      const newCenterX = center[0] + deltaPixelX * resolution;
+
+      // Y: Camera moves opposite direction to world relative to pixel coords.
+      // Pixel Y increases DOWN. Map Y increases UP.
+      // If we want pin to move DOWN (pixel increases), Camera must move UP (Y increases).
+      // deltaPixelY = current - target. If current < target (want move down), delta is negative.
+      // center - negative = increase. Correct.
+      const newCenterY = center[1] - deltaPixelY * resolution;
 
       view.animate({
-        center: newCenter,
+        center: [newCenterX, newCenterY],
         duration: 500,
         easing: (t) => t * (2 - t), // Ease-out
       });

@@ -4,6 +4,7 @@ import { tracked } from '@glimmer/tracking';
 export default class SettingsService extends Service {
   @tracked overpassApi = 'https://overpass-api.de/api/interpreter';
   @tracked mapKinetic = true;
+  @tracked photonApi = 'https://photon.komoot.io/api/';
 
   overpassApis = [
     {
@@ -22,6 +23,13 @@ export default class SettingsService extends Service {
     //   name: 'bke.ro (US)',
     //   url: 'https://overpass.bke.ro/api/interpreter'
     // },
+  ];
+
+  photonApis = [
+    {
+      name: 'photon.komoot.io',
+      url: 'https://photon.komoot.io/api/',
+    },
   ];
 
   constructor() {
@@ -58,5 +66,9 @@ export default class SettingsService extends Service {
   updateMapKinetic(enabled) {
     this.mapKinetic = enabled;
     localStorage.setItem('marco:map-kinetic', String(enabled));
+  }
+
+  updatePhotonApi(url) {
+    this.photonApi = url;
   }
 }

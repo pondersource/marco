@@ -286,7 +286,7 @@ export default class PlaceDetails extends Component {
           >
             <Icon
               @name="bookmark"
-              @color={{if this.isSaved "currentColor" "#007bff"}}
+              @color={{if this.isSaved "currentColor" "var(--link-color)"}}
             />
             {{if this.isSaved "Saved" "Save"}}
           </button>
@@ -307,7 +307,7 @@ export default class PlaceDetails extends Component {
             title="Edit"
             {{on "click" this.startEditing}}
           >
-            <Icon @name="edit" @color="#007bff" />
+            <Icon @name="edit" @color="var(--link-color)" />
             Edit
           </button>
         {{/if}}

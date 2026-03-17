@@ -18,6 +18,11 @@ export default class AppMenuSettings extends Component {
     this.settings.updateMapKinetic(event.target.value === 'true');
   }
 
+  @action
+  updatePhotonApi(event) {
+    this.settings.updatePhotonApi(event.target.value);
+  }
+
   <template>
     <div class="sidebar-header">
       <button type="button" class="back-btn" {{on "click" @onBack}}>
@@ -66,6 +71,23 @@ export default class AppMenuSettings extends Component {
                   (eq api.url this.settings.overpassApi)
                   "selected"
                 }}
+              >
+                {{api.name}}
+              </option>
+            {{/each}}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="photon-api">Photon API Provider</label>
+          <select
+            id="photon-api"
+            class="form-control"
+            {{on "change" this.updatePhotonApi}}
+          >
+            {{#each this.settings.photonApis as |api|}}
+              <option
+                value={{api.url}}
+                selected={{if (eq api.url this.settings.photonApi) "selected"}}
               >
                 {{api.name}}
               </option>

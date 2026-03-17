@@ -2,6 +2,7 @@ import { on } from '@ember/modifier';
 import Icon from '#components/icon';
 
 <template>
+  {{! template-lint-disable no-nested-interactive }}
   <div class="sidebar-header">
     <button type="button" class="back-btn" {{on "click" @onBack}}>
       <Icon @name="arrow-left" @size={{20}} @color="#333" />
@@ -13,7 +14,7 @@ import Icon from '#components/icon';
   </div>
 
   <div class="sidebar-content">
-    <section class="settings-section">
+    <section class="about-section">
       <p>
         <strong>Marco</strong>
         (as in
@@ -33,31 +34,119 @@ import Icon from '#components/icon';
         >remote storage</a>
         to sync place bookmarks across apps and devices.
       </p>
-      <ul class="link-list">
-        <li>
-          <a
-            href="https://gitea.kosmos.org/raucao/marco"
-            target="_blank"
-            rel="noopener"
-          >
-            Source Code
-          </a>
-          (<a
-            href="https://en.wikipedia.org/wiki/GNU_Affero_General_Public_License"
-            target="_blank"
-            rel="noopener"
-          >AGPL</a>)
-        </li>
-        <li>
-          <a
-            href="https://openstreetmap.org/copyright"
-            target="_blank"
-            rel="noopener"
-          >
-            Map Data © OpenStreetMap
-          </a>
-        </li>
-      </ul>
+
+      <details>
+        <summary>
+          <Icon @name="gift" @size={{20}} />
+          <span>Open Source</span>
+        </summary>
+        <div class="details-content">
+          <table>
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>License</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a
+                    href="https://gitea.kosmos.org/raucao/marco"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Marco App
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://en.wikipedia.org/wiki/GNU_Affero_General_Public_License"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <abbr title="GNU Affero General Public License">AGPL</abbr>
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    href="https://openstreetmap.org/copyright"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Map Data
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://opendatacommons.org/licenses/odbl/"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <abbr
+                      title="Open Data Commons Open Database License"
+                    >ODbL</abbr>
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
+                    href="https://github.com/feathericons/feather"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Feather Icons
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://en.wikipedia.org/wiki/MIT_License"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <abbr title="MIT License">MIT</abbr>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <details>
+        <summary>
+          <Icon @name="heart" @size={{20}} @color="#e5533d" />
+          <span>Contribute</span>
+        </summary>
+        <div class="details-content">
+          <p>
+            <strong>Most impactful:</strong>
+            Add and improve data for points of interest in
+            <a
+              href="https://www.openstreetmap.org"
+              target="_blank"
+              rel="noopener"
+            >OpenStreetMap</a>.
+          </p>
+          <p>
+            <strong>Most appreciated:</strong>
+            Use this app as much as you can and
+            <a
+              href="https://community.remotestorage.io/t/marco-an-unhosted-maps-app/941"
+              target="_blank"
+              rel="noopener"
+            >submit feedback</a>
+            about your experience, problems, feature wishes, etc.
+          </p>
+          <p>
+            <strong>Most supportive:</strong>
+            Tell others about this app, on social media, in blog posts,
+            educational videos, etc.
+          </p>
+        </div>
+      </details>
     </section>
   </div>
 </template>

@@ -3,6 +3,9 @@
 :root {
   --default-list-color: #fc3;
   --hover-bg: #f8f9fa;
+  --sidebar-width: 360px;
+  --link-color: #2a7fff;
+  --link-color-visited: #6a4fbf;
 }
 
 html,
@@ -185,7 +188,7 @@ body {
 }
 
 .text-primary {
-  color: #007bff;
+  color: var(--link-color);
 }
 
 .text-danger {
@@ -202,7 +205,7 @@ body {
   top: 0;
   left: 0;
   bottom: 0;
-  width: 300px;
+  width: var(--sidebar-width);
   background: white;
   z-index: 3100; /* Higher than Header (3000) */
   box-shadow: 2px 0 5px rgb(0 0 0 / 10%);
@@ -285,6 +288,82 @@ body {
   height: 20px;
 }
 
+.sidebar-content details {
+  margin: 0 -1rem; /* Top margin, negative side margins to span full width */
+}
+
+.sidebar-content details summary {
+  list-style: none; /* Hide default triangle */
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  padding-left: 1.4rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.sidebar-content details summary::-webkit-details-marker {
+  display: none; /* Hide default triangle in WebKit */
+}
+
+.sidebar-content details summary:hover {
+  background-color: var(--hover-bg);
+}
+
+.sidebar-content details summary .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-content details summary::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-content details[open] summary::after {
+  transform: rotate(90deg);
+}
+
+.sidebar-content details .details-content {
+  padding: 0 1.4rem 1rem;
+  animation: details-slide-down 0.2s ease-out;
+}
+
+.sidebar-content details .link-list {
+  padding: 0;
+  margin: 0;
+}
+
+@keyframes details-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sidebar-content details .link-list li {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-content details .link-list li:last-child {
+  margin-bottom: 0;
+}
+
 .edit-form {
   margin: -1rem;
   margin-bottom: 1rem;
@@ -312,12 +391,25 @@ body {
   font-family: inherit;
   font-size: 0.95rem;
   box-sizing: border-box; /* Ensure padding doesn't overflow width */
+  color: #333;
+  background-color: #fff;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgb(0 123 255 / 10%);
+  border-color: var(--link-color);
+  box-shadow: 0 0 0 2px rgb(42 127 255 / 10%);
+}
+
+select.form-control {
+  appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 16px;
+  padding-right: 2.5rem;
+  cursor: pointer;
 }
 
 .edit-actions {
@@ -335,12 +427,21 @@ body {
   margin-top: 1rem;
 }
 
-.settings-section p a {
-  color: #007bff;
+.about-section {
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.about-section a {
+  color: var(--link-color);
   text-decoration: none;
 }
 
-.settings-section p a:hover {
+.about-section a:visited {
+  color: var(--link-color-visited);
+}
+
+.about-section a:hover {
   text-decoration: underline;
 }
 
@@ -349,7 +450,7 @@ body {
 }
 
 .btn-primary {
-  background: #007bff;
+  background: var(--link-color);
   color: white;
   border: none;
   padding: 0.75rem;
@@ -378,12 +479,43 @@ body {
 }
 
 .meta-info a {
-  color: #007bff;
+  color: var(--link-color);
   text-decoration: none;
 }
 
 .meta-info a:hover {
   text-decoration: underline;
+}
+
+.sidebar-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.sidebar-content table th,
+.sidebar-content table td {
+  padding: 0.5rem 0;
+  text-align: left;
+}
+
+.sidebar-content table th {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #898989;
+}
+
+.sidebar-content table td {
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.sidebar-content table tr:last-child td {
+  border-bottom: none;
+}
+
+abbr[title] {
+  text-decoration: underline dotted;
 }
 
 .link-list {
@@ -397,7 +529,7 @@ body {
 }
 
 .link-list a {
-  color: #007bff;
+  color: var(--link-color);
   text-decoration: none;
   font-size: 0.95rem;
 }
@@ -522,7 +654,7 @@ body {
 }
 
 .btn-blue {
-  background: #007bff;
+  background: var(--link-color);
   color: white;
   border: none;
 }
@@ -767,15 +899,14 @@ span.icon {
   display: block;
 }
 
-/* Sidebar is open (Desktop: Left 300px) */
+/* Sidebar is open (Desktop: Left var(--sidebar-width)) */
 
-/* We want to center in the remaining space (width - 300px) */
+/* We want to center in the remaining space (width - var(--sidebar-width)) */
 
-/* Center X = 300 + (width - 300) / 2 = 300 + width/2 - 150 = width/2 + 150 */
+/* Center X = var(--sidebar-width) + (width - var(--sidebar-width)) / 2 = var(--sidebar-width)/2 + 50% */
 
-/* So shift left by 150px from center */
 .map-container.sidebar-open .map-crosshair {
-  left: calc(50% + 150px);
+  left: calc(50% + var(--sidebar-width) / 2);
 }
 
 @media (width <= 768px) {
@@ -1063,7 +1194,7 @@ button.create-place {
 }
 
 .place-lists-manager input[type='checkbox'] {
-  accent-color: #007bff;
+  accent-color: var(--link-color);
   width: 16px;
   height: 16px;
   cursor: pointer;
