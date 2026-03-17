@@ -214,12 +214,12 @@ body {
   overflow: hidden; /* Ensure flex children are contained */
 }
 
-.settings-pane.sidebar {
+.sidebar.app-menu-pane {
   z-index: 3200; /* Higher than Places Sidebar (3100) */
 }
 
 @media (width <= 768px) {
-  .settings-pane.sidebar {
+  .sidebar.app-menu-pane {
     width: 100%;
     right: 0;
     border-radius: 16px 16px 0 0;
@@ -246,13 +246,17 @@ body {
 }
 
 .sidebar-content {
-  padding: 0.5rem 1rem 1rem;
+  padding: 1rem;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 1;
   min-height: 0;
   touch-action: pan-y;
   overscroll-behavior: contain;
+}
+
+.app-menu-pane .sidebar-content {
+  padding-top: 0.5rem;
 }
 
 .app-menu {

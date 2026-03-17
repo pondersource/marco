@@ -17,7 +17,7 @@ export default class AppMenu extends Component {
   }
 
   <template>
-    <div class="sidebar settings-pane">
+    <div class="sidebar app-menu-pane">
       {{#if (eq this.currentView "menu")}}
         <AppMenuHome @onNavigate={{this.setView}} @onClose={{@onClose}} />
 
