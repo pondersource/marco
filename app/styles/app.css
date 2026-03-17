@@ -3,6 +3,7 @@
 :root {
   --default-list-color: #fc3;
   --hover-bg: #f8f9fa;
+  --sidebar-width: 360px;
 }
 
 html,
@@ -202,7 +203,7 @@ body {
   top: 0;
   left: 0;
   bottom: 0;
-  width: 300px;
+  width: var(--sidebar-width);
   background: white;
   z-index: 3100; /* Higher than Header (3000) */
   box-shadow: 2px 0 5px rgb(0 0 0 / 10%);
@@ -856,15 +857,14 @@ span.icon {
   display: block;
 }
 
-/* Sidebar is open (Desktop: Left 300px) */
+/* Sidebar is open (Desktop: Left var(--sidebar-width)) */
 
-/* We want to center in the remaining space (width - 300px) */
+/* We want to center in the remaining space (width - var(--sidebar-width)) */
 
-/* Center X = 300 + (width - 300) / 2 = 300 + width/2 - 150 = width/2 + 150 */
+/* Center X = var(--sidebar-width) + (width - var(--sidebar-width)) / 2 = var(--sidebar-width)/2 + 50% */
 
-/* So shift left by 150px from center */
 .map-container.sidebar-open .map-crosshair {
-  left: calc(50% + 150px);
+  left: calc(50% + var(--sidebar-width) / 2);
 }
 
 @media (width <= 768px) {
