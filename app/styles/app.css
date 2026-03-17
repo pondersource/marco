@@ -344,11 +344,6 @@ body {
   font-size: 0.9rem;
 }
 
-.sidebar-content details .link-list {
-  padding: 0;
-  margin: 0;
-}
-
 @keyframes details-slide-down {
   from {
     opacity: 0;
@@ -359,14 +354,6 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.sidebar-content details .link-list li {
-  margin-bottom: 0.5rem;
-}
-
-.sidebar-content details .link-list li:last-child {
-  margin-bottom: 0;
 }
 
 .edit-form {
@@ -519,26 +506,6 @@ select.form-control {
 
 abbr[title] {
   text-decoration: underline dotted;
-}
-
-.link-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.link-list li {
-  margin-bottom: 0.5rem;
-}
-
-.link-list a {
-  color: var(--link-color);
-  text-decoration: none;
-  font-size: 0.95rem;
-}
-
-.link-list a:hover {
-  text-decoration: underline;
 }
 
 .places-list {
