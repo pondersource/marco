@@ -35,7 +35,7 @@
     "lint:js:fix": "eslint . --fix",
     "start": "vite",
     "test": "vite build --mode development && testem ci --port 0",
-    "preversion": "pnpm test",
+    "preversion": "pnpm lint && pnpm test",
     "version": "pnpm build && git add release/"
   },
   "devDependencies": {
