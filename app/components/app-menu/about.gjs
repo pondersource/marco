@@ -121,6 +121,30 @@ import Icon from '#components/icon';
           <span>Contribute</span>
         </summary>
         <div class="details-content">
+          <p>
+            <strong>Most impactful:</strong>
+            Add and improve data for points of interest in
+            <a
+              href="https://www.openstreetmap.org"
+              target="_blank"
+              rel="noopener"
+            >OpenStreetMap</a>.
+          </p>
+          <p>
+            <strong>Most appreciated:</strong>
+            Use this app as much as you can and
+            <a
+              href="https://community.remotestorage.io/t/marco-an-unhosted-maps-app/941"
+              target="_blank"
+              rel="noopener"
+            >submit feedback</a>
+            about your experience, problems, feature wishes, etc.
+          </p>
+          <p>
+            <strong>Most supportive:</strong>
+            Tell others about this app, on social media, in blog posts,
+            educational videos, etc.
+          </p>
         </div>
       </details>
     </section>
