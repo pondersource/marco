@@ -305,6 +305,7 @@ export default class PlaceDetails extends Component {
             type="button"
             class="btn btn-outline"
             title="Edit"
+            disabled={{this.isEditing}}
             {{on "click" this.startEditing}}
           >
             <Icon @name="edit" @color="var(--link-color)" />
