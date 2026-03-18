@@ -28,6 +28,7 @@ import user from 'feather-icons/dist/icons/user.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
 import wikipedia from '../icons/wikipedia.svg?raw';
+import forkAndKnife from '@waysidemapping/pinhead/dist/icons/fork_and_knife.svg?raw';
 
 const ICONS = {
   'arrow-left': arrowLeft,
@@ -43,6 +44,7 @@ const ICONS = {
   home,
   info,
   instagram,
+  'fork-and-knife': forkAndKnife,
   'log-in': logIn,
   'log-out': logOut,
   mail,
