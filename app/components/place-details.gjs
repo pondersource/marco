@@ -316,9 +316,11 @@ export default class PlaceDetails extends Component {
       <div class="meta-info">
 
         {{#if this.cuisine}}
-          <p class="cuisine-info">
-            <strong>Cuisine:</strong>
-            {{this.cuisine}}
+          <p class="content-with-icon">
+            <Icon @name="fork-and-knife" @title="Cuisine" @filled={{true}} />
+            <span>
+              {{this.cuisine}}
+            </span>
           </p>
         {{/if}}
 

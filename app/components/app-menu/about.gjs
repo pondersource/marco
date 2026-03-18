@@ -111,6 +111,22 @@ import Icon from '#components/icon';
                   </a>
                 </td>
               </tr>
+              <tr>
+                <td>
+                  <a href="https://pinhead.ink/" target="_blank" rel="noopener">
+                    Pinhead Icons
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://github.com/waysidemapping/pinhead?tab=readme-ov-file#where-the-icons-are-from"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Various
+                  </a>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
