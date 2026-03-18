@@ -101,6 +101,23 @@ export default class PlaceRoute extends Route {
     return null;
   }
 
+  setupController(controller, model) {
+    super.setupController(controller, model);
+    this.checkUpdates(model);
+  }
+
+  async checkUpdates(place) {
+    // Only check for updates if it's a saved place (has ID) and is an OSM object
+    if (place && place.id && place.osmId && place.osmType) {
+      const updatedPlace = await this.storage.refreshPlace(place);
+      if (updatedPlace) {
+        // If an update occurred, refresh the map UI selection without moving the camera
+        // This ensures the sidebar shows the new data
+        this.mapUi.selectPlace(updatedPlace, { preventZoom: true });
+      }
+    }
+  }
+
   serialize(model) {
     // If the model is a saved bookmark, use its ID
     if (model.id) {
