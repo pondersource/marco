@@ -125,4 +125,60 @@ module('Unit | Route | place', function (hooks) {
 
     assert.notOk(fetchCalled, 'fetchOsmObject should NOT be called for nodes');
   });
+
+  test('setupController triggers checkUpdates', async function (assert) {
+    let route = this.owner.lookup('route:place');
+
+    // Stub Storage Service
+    let refreshPlaceCalled = false;
+    class StorageStub extends Service {
+      async refreshPlace(place) {
+        refreshPlaceCalled = true;
+        assert.strictEqual(place.id, '123', 'Passed correct place to storage');
+        return {
+          ...place,
+          title: 'Updated Title',
+        };
+      }
+    }
+
+    // Stub MapUi Service
+    let selectPlaceCalled = false;
+    class MapUiStub extends Service {
+      selectPlace(place, options) {
+        selectPlaceCalled = true;
+        assert.strictEqual(
+          place.title,
+          'Updated Title',
+          'Selected updated place'
+        );
+        assert.ok(options.preventZoom, 'Prevented zoom on update');
+      }
+      stopSearch() {}
+    }
+
+    this.owner.register('service:storage', StorageStub);
+    this.owner.register('service:map-ui', MapUiStub);
+
+    let model = {
+      id: '123',
+      osmId: '456',
+      osmType: 'node',
+      title: 'Original Title',
+    };
+
+    let controller = {};
+
+    // Trigger setupController
+    route.setupController(controller, model);
+
+    // checkUpdates is async and not awaited in setupController, so we need to wait a tick
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    assert.ok(refreshPlaceCalled, 'refreshPlace should be called');
+    assert.ok(
+      selectPlaceCalled,
+      'mapUi.selectPlace should be called with update'
+    );
+  });
 });

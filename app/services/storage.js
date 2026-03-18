@@ -1,4 +1,4 @@
-import Service from '@ember/service';
+import Service, { service } from '@ember/service';
 import RemoteStorage from 'remotestoragejs';
 import Places from '@remotestorage/module-places';
 import Widget from 'remotestorage-widget';
@@ -7,8 +7,10 @@ import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
 import { action } from '@ember/object';
 import { debounceTask } from 'ember-lifeline';
 import Geohash from 'latlon-geohash';
+import { getLocalizedName } from '../utils/osm';
 
 export default class StorageService extends Service {
+  @service osm;
   rs;
   widget;
   @tracked placesInView = [];
@@ -363,6 +365,82 @@ export default class StorageService extends Service {
     this.savedPlaces = this.savedPlaces.filter((p) => p.id !== place.id);
     if (this.placesInView.length > 0) {
       this.placesInView = this.placesInView.filter((p) => p.id !== place.id);
+    }
+  }
+
+  async refreshPlace(place) {
+    if (!place || !place.id || !place.osmId || !place.osmType) {
+      return null;
+    }
+
+    try {
+      console.debug(`Checking for updates for ${place.title} (${place.osmId})`);
+      const freshData = await this.osm.fetchOsmObject(
+        place.osmId,
+        place.osmType
+      );
+
+      if (!freshData) {
+        console.warn('Could not fetch fresh data for', place.osmId);
+        return null;
+      }
+
+      // Check for changes
+      let hasChanges = false;
+      const changes = {};
+
+      // 1. Check Coordinates (allow tiny drift < ~1m)
+      const latDiff = Math.abs(place.lat - freshData.lat);
+      const lonDiff = Math.abs(place.lon - freshData.lon);
+      if (latDiff > 0.00001 || lonDiff > 0.00001) {
+        hasChanges = true;
+        changes.lat = freshData.lat;
+        changes.lon = freshData.lon;
+      }
+
+      // 2. Check Tags
+      const oldTags = place.osmTags || {};
+      const newTags = freshData.osmTags || {};
+      const allKeys = new Set([
+        ...Object.keys(oldTags),
+        ...Object.keys(newTags),
+      ]);
+
+      for (const key of allKeys) {
+        if (oldTags[key] !== newTags[key]) {
+          hasChanges = true;
+          changes.osmTags = newTags;
+          break;
+        }
+      }
+
+      if (!hasChanges) {
+        console.debug('No changes detected for', place.title);
+        return null;
+      }
+
+      console.debug('Changes detected:', changes);
+
+      // 3. Prepare Update
+      const updatedPlace = {
+        ...place,
+        ...changes,
+      };
+
+      // If the current title matches the old localized name, update it to the
+      // new localized name. If the user renamed it (custom title), keep it.
+      const oldDefaultName = getLocalizedName(oldTags);
+      const newDefaultName = getLocalizedName(newTags);
+
+      if (place.title === oldDefaultName && oldDefaultName !== newDefaultName) {
+        updatedPlace.title = newDefaultName;
+      }
+
+      // 4. Save
+      return await this.updatePlace(updatedPlace);
+    } catch (e) {
+      console.error('Failed to refresh place:', e);
+      return null;
     }
   }
 
