@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@waysidemapping/pinhead':
+        specifier: ^15.17.0
+        version: 15.17.0
       ember-concurrency:
         specifier: ^5.2.0
         version: 5.2.0(@babel/core@7.28.6)
@@ -1650,6 +1653,9 @@ packages:
     resolution: {integrity: sha512-55cJjxIj0lQwLmhflQH3GqQs3oGGytlYjrpT/7mcvA7/zEnvfjlJH5z9r6WnMQXh4BN6scvKaFBw/lqeDGlIig==}
     peerDependencies:
       '@warp-drive/core': 5.8.1
+
+  '@waysidemapping/pinhead@15.17.0':
+    resolution: {integrity: sha512-XcL/0Ll+gkRIpXlO+skwd6USynA+mX3DNwqrWDMhgRmLP4DNRPTeaecK64BBxk1bB/F9Xi/9kgN6JA5zbdgejQ==}
 
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
@@ -7238,6 +7244,8 @@ snapshots:
     transitivePeerDependencies:
       - '@glint/template'
       - supports-color
+
+  '@waysidemapping/pinhead@15.17.0': {}
 
   '@xmldom/xmldom@0.8.11': {}
 
