@@ -6,10 +6,12 @@ import { on } from '@ember/modifier';
 import Icon from '#components/icon';
 import UserMenu from '#components/user-menu';
 import SearchBox from '#components/search-box';
+import CategoryChips from '#components/category-chips';
 
 export default class AppHeaderComponent extends Component {
   @service storage;
   @tracked isUserMenuOpen = false;
+  @tracked hasQuery = false;
 
   @action
   toggleUserMenu() {
@@ -21,10 +23,31 @@ export default class AppHeaderComponent extends Component {
     this.isUserMenuOpen = false;
   }
 
+  @action
+  handleQueryChange(query) {
+    this.hasQuery = !!query;
+  }
+
+  @action
+  handleChipSelect() {
+    // When a chip is selected, we might want to ensure the search box is cleared visually,
+    // although the route transition will happen.
+    // The SearchBox component manages its own state, so we rely on the route transition.
+    // However, if we want to clear the search box input from here, we'd need to control it.
+    // For now, let's just let the route change happen.
+  }
+
   <template>
     <header class="app-header">
       <div class="header-left">
-        <SearchBox @onToggleMenu={{@onToggleMenu}} />
+        <SearchBox
+          @onToggleMenu={{@onToggleMenu}}
+          @onQueryChange={{this.handleQueryChange}}
+        />
+      </div>
+
+      <div class="header-center {{if this.hasQuery 'searching'}}">
+        <CategoryChips @onSelect={{this.handleChipSelect}} />
       </div>
 
       <div class="header-right">

@@ -27,6 +27,10 @@ export default class SearchBoxComponent extends Component {
   @action
   handleInput(event) {
     this.query = event.target.value;
+    if (this.args.onQueryChange) {
+      this.args.onQueryChange(this.query);
+    }
+
     if (this.query.length < 2) {
       this.results = [];
       return;
@@ -34,6 +38,7 @@ export default class SearchBoxComponent extends Component {
 
     this.searchTask.perform();
   }
+
 
   searchTask = task({ restartable: true }, async () => {
     await timeout(300);
@@ -121,8 +126,10 @@ export default class SearchBoxComponent extends Component {
   clear() {
     this.query = '';
     this.results = [];
-    this.router.transitionTo('index'); // Or stay on current page?
-    // Usually clear just clears the input.
+    if (this.args.onQueryChange) {
+      this.args.onQueryChange('');
+    }
+    this.router.transitionTo('index');
   }
 
   <template>

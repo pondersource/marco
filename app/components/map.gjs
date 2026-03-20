@@ -914,6 +914,7 @@ export default class MapComponent extends Component {
     const [maxLon, maxLat] = toLonLat([extent[2], extent[3]]);
 
     const bbox = { minLat, minLon, maxLat, maxLon };
+    this.mapUi.updateBounds(bbox);
     await this.storage.loadPlacesInBounds(bbox);
     this.loadBookmarks(this.storage.placesInView);
 

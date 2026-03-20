@@ -1,5 +1,6 @@
 import Service, { service } from '@ember/service';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import { getCategoryById } from '../utils/poi-categories';
 
 export default class OsmService extends Service {
   @service settings;
@@ -73,6 +74,48 @@ out center;
         return [];
       }
       throw e;
+    }
+  }
+
+  async getCategoryPois(bounds, categoryId) {
+    const category = getCategoryById(categoryId);
+    if (!category || !bounds) return [];
+
+    const { minLat, minLon, maxLat, maxLon } = bounds;
+
+    // Build the query parts for each filter string and type
+    const queryParts = [];
+
+    // Default types if not specified (legacy fallback)
+    const types = category.types || ['node', 'way', 'relation'];
+
+    category.filter.forEach((filterString) => {
+      types.forEach((type) => {
+        // We ensure we only fetch named POIs to reduce noise
+        queryParts.push(`${type}${filterString}[~"^name"~"."];`);
+      });
+    });
+
+    const query = `
+[out:json][timeout:25][bbox:${minLat},${minLon},${maxLat},${maxLon}];
+(
+  ${queryParts.join('\n  ')}
+);
+out center;
+    `.trim();
+
+    // No caching for now as bounds change frequently
+    const url = `${this.settings.overpassApi}?data=${encodeURIComponent(query)}`;
+
+    try {
+      const res = await this.fetchWithRetry(url);
+      if (!res.ok) throw new Error('Overpass request failed');
+      const data = await res.json();
+      const results = data.elements.map(this.normalizePoi);
+      return results;
+    } catch (e) {
+      console.error('Category search failed', e);
+      return [];
     }
   }
 

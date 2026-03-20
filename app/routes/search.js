@@ -15,6 +15,7 @@ export default class SearchRoute extends Route {
     lon: { refreshModel: true },
     q: { refreshModel: true },
     selected: { refreshModel: true },
+    category: { refreshModel: true },
   };
 
   async model(params) {
@@ -22,8 +23,37 @@ export default class SearchRoute extends Route {
     const lon = params.lon ? parseFloat(params.lon) : null;
     let pois = [];
 
+    // Case 0: Category Search (category parameter present)
+    if (params.category && lat && lon) {
+      // We need bounds. If we have active map state, use it.
+      let bounds = this.mapUi.currentBounds;
+
+      // If we don't have bounds (direct URL visit), estimate them from lat/lon/zoom(16)
+      // or just use a fixed box around the center.
+      if (!bounds) {
+        // Approximate 0.01 degrees ~ 1km at equator. A viewport is roughly 0.02x0.01 at zoom 16?
+        // Let's take a safe box of ~1km radius.
+        const delta = 0.01;
+        bounds = {
+          minLat: lat - delta,
+          maxLat: lat + delta,
+          minLon: lon - delta,
+          maxLon: lon + delta,
+        };
+      }
+
+      pois = await this.osm.getCategoryPois(bounds, params.category);
+
+      // Sort by distance from center
+      pois = pois
+        .map((p) => ({
+          ...p,
+          _distance: getDistance(lat, lon, p.lat, p.lon),
+        }))
+        .sort((a, b) => a._distance - b._distance);
+    }
     // Case 1: Text Search (q parameter present)
-    if (params.q) {
+    else if (params.q) {
       // Search with Photon (using lat/lon for bias if available)
       pois = await this.photon.search(params.q, lat, lon);
 
