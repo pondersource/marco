@@ -134,4 +134,45 @@ module('Integration | Component | search-box', function (hooks) {
 
     assert.verifySteps(['search: cafe, 52.52, 13.405']);
   });
+
+  test('it allows typing even when controlled by parent with a query argument', async function (assert) {
+    class MockPhotonService extends Service {
+      async search() {
+        return [];
+      }
+    }
+    this.owner.register('service:photon', MockPhotonService);
+
+    this.query = '';
+    this.updateQuery = (val) => {
+      this.set('query', val);
+    };
+    this.noop = () => {};
+
+    await render(
+      <template>
+        <SearchBox
+          @query={{this.query}}
+          @onQueryChange={{this.updateQuery}}
+          @onToggleMenu={{this.noop}}
+        />
+      </template>
+    );
+
+    // Initial state
+    assert.dom('.search-input').hasValue('');
+
+    // Simulate typing
+    await fillIn('.search-input', 't');
+    assert.dom('.search-input').hasValue('t', 'Input should show "t"');
+
+    await fillIn('.search-input', 'te');
+    assert.dom('.search-input').hasValue('te', 'Input should show "te"');
+
+    // Simulate external update (e.g. chip click)
+    this.set('query', 'restaurant');
+    // wait for re-render
+    await click('.search-input'); // just to trigger a change cycle or ensure stability
+    assert.dom('.search-input').hasValue('restaurant', 'Input should update from external change');
+  });
 });

@@ -35,23 +35,26 @@ export default class SearchBoxComponent extends Component {
 
   @action
   handleInput(event) {
-    this.query = event.target.value;
+    const value = event.target.value;
+    this.query = value;
     if (this.args.onQueryChange) {
-      this.args.onQueryChange(this.query);
+      this.args.onQueryChange(value);
     }
 
-    if (this.query.length < 2) {
+    if (value.length < 2) {
       this.results = [];
       return;
     }
 
-    this.searchTask.perform();
+    this.searchTask.perform(value);
   }
 
-  searchTask = task({ restartable: true }, async () => {
+  searchTask = task({ restartable: true }, async (term) => {
     await timeout(300);
 
-    if (this.query.length < 2) return;
+    const query = typeof term === 'string' ? term : this.query;
+
+    if (query.length < 2) return;
 
     this.isLoading = true;
     try {
@@ -62,7 +65,7 @@ export default class SearchBoxComponent extends Component {
       }
 
       // Filter categories
-      const q = this.query.toLowerCase();
+      const q = query.toLowerCase();
       const categoryMatches = POI_CATEGORIES.filter((c) =>
         c.label.toLowerCase().includes(q)
       ).map((c) => ({
@@ -72,7 +75,7 @@ export default class SearchBoxComponent extends Component {
         icon: 'search',
       }));
 
-      const results = await this.photon.search(this.query, lat, lon);
+      const results = await this.photon.search(query, lat, lon);
       this.results = [...categoryMatches, ...results];
     } catch (e) {
       console.error('Search failed', e);
