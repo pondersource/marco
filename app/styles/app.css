@@ -75,6 +75,7 @@ body {
 
   /* Layout */
   display: grid;
+
   /* Desktop: 1fr auto 1fr ensures the center element is absolutely centered */
   grid-template-columns: 1fr auto 1fr;
   grid-template-areas: 'search chips user';
@@ -104,6 +105,7 @@ body {
   display: flex;
   align-items: center;
   grid-area: search;
+
   /* Ensure it sits at the start of its grid area */
   justify-self: start;
   width: 100%;
@@ -1262,12 +1264,15 @@ button.create-place {
 .category-chips-scroll {
   width: 100%;
   overflow-x: auto;
+
   /* Add padding for shadows */
   padding: 4px 0;
   -webkit-overflow-scrolling: touch;
+
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
+
   /* Remove top margin as spacing is handled by grid/layout */
   margin-top: 0;
 }
@@ -1279,6 +1284,7 @@ button.create-place {
 .category-chips-container {
   display: flex;
   gap: 8px;
+
   /* Padding on sides so first/last chip isn't flush with screen edge */
   padding: 0 4px;
   width: max-content; /* Ensure it scrolls */
@@ -1296,7 +1302,7 @@ button.create-place {
   color: #333;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
   transition: background-color 0.2s;
 }
 

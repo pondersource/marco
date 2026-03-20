@@ -39,7 +39,6 @@ export default class SearchBoxComponent extends Component {
     this.searchTask.perform();
   }
 
-
   searchTask = task({ restartable: true }, async () => {
     await timeout(300);
 
