@@ -215,5 +215,7 @@ module('Acceptance | search', function (hooks) {
     );
     assert.dom('.places-list li').exists({ count: 1 });
     assert.dom('.places-list li .place-name').hasText('Latte Art Cafe');
+    // Ensure it shows "Results" not "Nearby"
+    assert.dom('.sidebar-header h2').includesText('Results');
   });
 });
