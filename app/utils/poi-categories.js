@@ -12,14 +12,14 @@ export const POI_CATEGORIES = [
   {
     id: 'restaurants',
     label: 'Restaurants',
-    icon: 'search', // Placeholder
+    icon: 'fork-and-knife',
     filter: ['["amenity"~"^(restaurant|fast_food|food_court|pub|cafe)$"]'],
     types: ['node', 'way'],
   },
   {
     id: 'coffee',
     label: 'Coffee',
-    icon: 'search', // Placeholder
+    icon: 'cup-and-saucer',
     filter: [
       '["amenity"~"^(cafe|ice_cream)$"]',
       '["shop"~"^(coffee|tea)$"]',
@@ -30,18 +30,20 @@ export const POI_CATEGORIES = [
   {
     id: 'groceries',
     label: 'Groceries',
-    icon: 'search', // Placeholder
+    icon: 'shopping-basket',
     filter: [
       '["shop"~"^(supermarket|convenience|grocery|greengrocer|bakery|butcher|deli|farm|seafood)$"]',
     ],
     types: ['node', 'way'],
   },
   {
-    id: 'attractions',
-    label: 'Attractions',
-    icon: 'search', // Placeholder
+    id: 'things-to-do',
+    label: 'Things to do',
+    icon: 'camera',
     filter: [
-      '["tourism"~"^(museum|gallery|attraction|viewpoint|zoo|theme_park)$"]',
+      '["tourism"~"^(museum|gallery|attraction|viewpoint|zoo|theme_park|aquarium|artwork)$"]',
+      '["amenity"~"^(cinema|theatre|arts_centre|planetarium)$"]',
+      '["leisure"~"^(sports_centre|stadium|water_park)$"]',
       '["historic"]',
     ],
     types: ['node', 'way', 'relation'],
@@ -49,8 +51,8 @@ export const POI_CATEGORIES = [
   {
     id: 'accommodation',
     label: 'Hotels',
-    icon: 'search', // Placeholder
-    filter: ['["tourism"~"^(hotel|hostel|guest_house|apartment|motel)$"]'],
+    icon: 'person-sleeping-in-bed',
+    filter: ['["tourism"~"^(hotel|hostel|motel)$"]'],
     types: ['node', 'way', 'relation'],
   },
 ];

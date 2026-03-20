@@ -27,15 +27,21 @@ import target from 'feather-icons/dist/icons/target.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
-import wikipedia from '../icons/wikipedia.svg?raw';
+import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
+import cupAndSaucer from '@waysidemapping/pinhead/dist/icons/cup_and_saucer.svg?raw';
 import forkAndKnife from '@waysidemapping/pinhead/dist/icons/fork_and_knife.svg?raw';
+import personSleepingInBed from '@waysidemapping/pinhead/dist/icons/person_sleeping_in_bed.svg?raw';
+import shoppingBasket from '@waysidemapping/pinhead/dist/icons/shopping_basket.svg?raw';
+import wikipedia from '../icons/wikipedia.svg?raw';
 
 const ICONS = {
   'arrow-left': arrowLeft,
   activity,
   bookmark,
+  camera,
   'check-square': checkSquare,
   clock,
+  'cup-and-saucer': cupAndSaucer,
   edit,
   facebook,
   gift,
@@ -52,11 +58,13 @@ const ICONS = {
   'map-pin': mapPin,
   menu,
   navigation,
+  'person-sleeping-in-bed': personSleepingInBed,
   phone,
   plus,
   server,
   search,
   settings,
+  'shopping-basket': shoppingBasket,
   target,
   user,
   wikipedia,
@@ -64,7 +72,14 @@ const ICONS = {
   zap,
 };
 
-const FILLED_ICONS = ['fork-and-knife', 'wikipedia'];
+const FILLED_ICONS = [
+  'fork-and-knife',
+  'wikipedia',
+  'cup-and-saucer',
+  'shopping-basket',
+  'camera',
+  'person-sleeping-in-bed',
+];
 
 export function getIcon(name) {
   return ICONS[name];
