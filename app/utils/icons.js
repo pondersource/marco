@@ -64,6 +64,12 @@ const ICONS = {
   zap,
 };
 
+const FILLED_ICONS = ['fork-and-knife', 'wikipedia'];
+
 export function getIcon(name) {
   return ICONS[name];
+}
+
+export function isIconFilled(name) {
+  return FILLED_ICONS.includes(name);
 }
