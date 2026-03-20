@@ -84,7 +84,7 @@ export default class SearchBoxComponent extends Component {
     event.preventDefault();
     if (!this.query) return;
 
-    let queryParams = { q: this.query, selected: null };
+    let queryParams = { q: this.query, selected: null, category: null };
 
     if (this.mapUi.currentCenter) {
       const { lat, lon } = this.mapUi.currentCenter;
@@ -116,6 +116,7 @@ export default class SearchBoxComponent extends Component {
           lat: place.lat,
           lon: place.lon,
           selected: null,
+          category: null,
         },
       });
     }

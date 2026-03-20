@@ -100,7 +100,7 @@ module('Integration | Component | search-box', function (hooks) {
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
     assert.verifySteps([
-      'transitionTo: search {"queryParams":{"q":"berlin","selected":null,"lat":"52.5200","lon":"13.4050"}}',
+      'transitionTo: search {"queryParams":{"q":"berlin","selected":null,"category":null,"lat":"52.5200","lon":"13.4050"}}',
     ]);
   });
 
