@@ -7,6 +7,7 @@ import { fn } from '@ember/helper';
 import { task, timeout } from 'ember-concurrency';
 import Icon from '#components/icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
+import { POI_CATEGORIES } from '../utils/poi-categories';
 import eq from 'ember-truth-helpers/helpers/eq';
 
 export default class SearchBoxComponent extends Component {
@@ -15,10 +16,18 @@ export default class SearchBoxComponent extends Component {
   @service mapUi;
   @service map; // Assuming we might need map context, but mostly we use router
 
-  @tracked query = '';
+  @tracked _internalQuery = '';
   @tracked results = [];
   @tracked isFocused = false;
   @tracked isLoading = false;
+
+  get query() {
+    return this.args.query ?? this._internalQuery;
+  }
+
+  set query(value) {
+    this._internalQuery = value;
+  }
 
   get showPopover() {
     return this.isFocused && this.results.length > 0;
@@ -51,8 +60,20 @@ export default class SearchBoxComponent extends Component {
       if (this.mapUi.currentCenter) {
         ({ lat, lon } = this.mapUi.currentCenter);
       }
+
+      // Filter categories
+      const q = this.query.toLowerCase();
+      const categoryMatches = POI_CATEGORIES.filter((c) =>
+        c.label.toLowerCase().includes(q)
+      ).map((c) => ({
+        source: 'category',
+        title: c.label,
+        id: c.id,
+        icon: 'search',
+      }));
+
       const results = await this.photon.search(this.query, lat, lon);
-      this.results = results;
+      this.results = [...categoryMatches, ...results];
     } catch (e) {
       console.error('Search failed', e);
       this.results = [];
@@ -98,7 +119,29 @@ export default class SearchBoxComponent extends Component {
 
   @action
   selectResult(place) {
+    if (place.source === 'category') {
+      this.query = place.title;
+      if (this.args.onQueryChange) {
+        this.args.onQueryChange(place.title);
+      }
+      this.results = [];
+
+      this.router.transitionTo('search', {
+        queryParams: {
+          q: place.title,
+          category: place.id,
+          selected: null,
+          lat: null,
+          lon: null,
+        },
+      });
+      return;
+    }
+
     this.query = place.title;
+    if (this.args.onQueryChange) {
+      this.args.onQueryChange(place.title);
+    }
     this.results = []; // Hide popover
 
     // If it has an OSM ID, go to place details
@@ -183,7 +226,11 @@ export default class SearchBoxComponent extends Component {
                   {{on "click" (fn this.selectResult result)}}
                 >
                   <div class="result-icon">
-                    <Icon @name="map-pin" @size={{16}} @color="#666" />
+                    <Icon
+                      @name={{if result.icon result.icon "map-pin"}}
+                      @size={{16}}
+                      @color="#666"
+                    />
                   </div>
                   <div class="result-info">
                     <span class="result-title">{{result.title}}</span>

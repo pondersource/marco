@@ -11,7 +11,11 @@ import CategoryChips from '#components/category-chips';
 export default class AppHeaderComponent extends Component {
   @service storage;
   @tracked isUserMenuOpen = false;
-  @tracked hasQuery = false;
+  @tracked searchQuery = '';
+
+  get hasQuery() {
+    return !!this.searchQuery;
+  }
 
   @action
   toggleUserMenu() {
@@ -25,22 +29,21 @@ export default class AppHeaderComponent extends Component {
 
   @action
   handleQueryChange(query) {
-    this.hasQuery = !!query;
+    this.searchQuery = query;
   }
 
   @action
-  handleChipSelect() {
-    // When a chip is selected, we might want to ensure the search box is cleared visually,
-    // although the route transition will happen.
-    // The SearchBox component manages its own state, so we rely on the route transition.
-    // However, if we want to clear the search box input from here, we'd need to control it.
-    // For now, let's just let the route change happen.
+  handleChipSelect(category) {
+    this.searchQuery = category.label;
+    // The existing logic in CategoryChips triggers the route transition.
+    // This update simply fills the search box.
   }
 
   <template>
     <header class="app-header">
       <div class="header-left">
         <SearchBox
+          @query={{this.searchQuery}}
           @onToggleMenu={{@onToggleMenu}}
           @onQueryChange={{this.handleQueryChange}}
         />
