@@ -129,13 +129,21 @@ export default class SearchBoxComponent extends Component {
       }
       this.results = [];
 
+      let lat = null,
+        lon = null;
+      if (this.mapUi.currentCenter) {
+        ({ lat, lon } = this.mapUi.currentCenter);
+        lat = lat?.toString();
+        lon = lon?.toString();
+      }
+
       this.router.transitionTo('search', {
         queryParams: {
           q: place.title,
           category: place.id,
           selected: null,
-          lat: null,
-          lon: null,
+          lat: lat,
+          lon: lon,
         },
       });
       return;

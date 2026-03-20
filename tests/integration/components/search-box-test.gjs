@@ -173,6 +173,57 @@ module('Integration | Component | search-box', function (hooks) {
     this.set('query', 'restaurant');
     // wait for re-render
     await click('.search-input'); // just to trigger a change cycle or ensure stability
-    assert.dom('.search-input').hasValue('restaurant', 'Input should update from external change');
+    assert
+      .dom('.search-input')
+      .hasValue('restaurant', 'Input should update from external change');
+  });
+
+  test('it triggers category search with current location when clicking category result', async function (assert) {
+    // Mock MapUi Service
+    class MockMapUiService extends Service {
+      currentCenter = { lat: 51.5074, lon: -0.1278 };
+      setSearchBoxFocus() {}
+    }
+    this.owner.register('service:map-ui', MockMapUiService);
+
+    // Mock Photon Service
+    class MockPhotonService extends Service {
+      async search() {
+        return [];
+      }
+    }
+    this.owner.register('service:photon', MockPhotonService);
+
+    // Mock Router Service
+    class MockRouterService extends Service {
+      transitionTo(routeName, options) {
+        assert.step(`transitionTo: ${routeName} ${JSON.stringify(options)}`);
+      }
+    }
+    this.owner.register('service:router', MockRouterService);
+
+    this.noop = () => {};
+    await render(
+      <template><SearchBox @onToggleMenu={{this.noop}} /></template>
+    );
+
+    // Type "Resta" to trigger "Restaurants" category match
+    await fillIn('.search-input', 'Resta');
+
+    // Wait for debounce (300ms) + execution
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    await delay(400);
+
+    // The first result should be the category match
+    assert.dom('.search-result-item').exists({ count: 1 });
+    assert.dom('.result-title').hasText('Restaurants');
+
+    // Click the result
+    await click('.search-result-item');
+
+    // Assert transition with lat/lon from map center
+    assert.verifySteps([
+      'transitionTo: search {"queryParams":{"q":"Restaurants","category":"restaurants","selected":null,"lat":"51.5074","lon":"-0.1278"}}',
+    ]);
   });
 });
