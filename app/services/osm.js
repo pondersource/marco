@@ -77,9 +77,22 @@ out center;
     }
   }
 
-  async getCategoryPois(bounds, categoryId) {
+  async getCategoryPois(bounds, categoryId, lat, lon) {
     const category = getCategoryById(categoryId);
     if (!category || !bounds) return [];
+
+    const queryKey = lat && lon ? `cat:${categoryId}:${lat}:${lon}` : null;
+
+    if (queryKey && this.lastQueryKey === queryKey && this.cachedResults) {
+      console.debug('Returning cached category results for:', queryKey);
+      return this.cachedResults;
+    }
+
+    if (this.controller) {
+      this.controller.abort();
+    }
+    this.controller = new AbortController();
+    const signal = this.controller.signal;
 
     const { minLat, minLon, maxLat, maxLon } = bounds;
 
@@ -104,16 +117,25 @@ out center;
 out center;
     `.trim();
 
-    // No caching for now as bounds change frequently
     const url = `${this.settings.overpassApi}?data=${encodeURIComponent(query)}`;
 
     try {
-      const res = await this.fetchWithRetry(url);
+      const res = await this.fetchWithRetry(url, { signal });
       if (!res.ok) throw new Error('Overpass request failed');
       const data = await res.json();
       const results = data.elements.map(this.normalizePoi);
+
+      if (queryKey) {
+        this.lastQueryKey = queryKey;
+        this.cachedResults = results;
+      }
+
       return results;
     } catch (e) {
+      if (e.name === 'AbortError') {
+        console.debug('Category search aborted');
+        return [];
+      }
       console.error('Category search failed', e);
       return [];
     }

@@ -42,7 +42,7 @@ export default class SearchRoute extends Route {
         };
       }
 
-      pois = await this.osm.getCategoryPois(bounds, params.category);
+      pois = await this.osm.getCategoryPois(bounds, params.category, lat, lon);
 
       // Sort by distance from center
       pois = pois
