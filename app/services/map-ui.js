@@ -12,6 +12,7 @@ export default class MapUiService extends Service {
   @tracked searchBoxHasFocus = false;
   @tracked selectionOptions = {};
   @tracked preventNextZoom = false;
+  @tracked searchResults = [];
 
   selectPlace(place, options = {}) {
     this.selectedPlace = place;
@@ -22,6 +23,14 @@ export default class MapUiService extends Service {
     this.selectedPlace = null;
     this.selectionOptions = {};
     this.preventNextZoom = false;
+  }
+
+  setSearchResults(results) {
+    this.searchResults = results || [];
+  }
+
+  clearSearchResults() {
+    this.searchResults = [];
   }
 
   startSearch() {

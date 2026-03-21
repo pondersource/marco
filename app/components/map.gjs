@@ -16,7 +16,7 @@ import Feature from 'ol/Feature.js';
 import GeoJSON from 'ol/format/GeoJSON.js';
 import Point from 'ol/geom/Point.js';
 import Geolocation from 'ol/Geolocation.js';
-import { Style, Circle, Fill, Stroke } from 'ol/style.js';
+import { Style, Circle, Fill, Stroke, Icon } from 'ol/style.js';
 import { apply } from 'ol-mapbox-style';
 
 export default class MapComponent extends Component {
@@ -28,6 +28,7 @@ export default class MapComponent extends Component {
 
   mapInstance;
   bookmarkSource;
+  searchResultsSource;
   selectedShapeSource;
   searchOverlay;
   searchOverlayElement;
@@ -110,6 +111,47 @@ export default class MapComponent extends Component {
       zIndex: 10, // Ensure it sits above the map tiles
     });
 
+    // Create a vector source and layer for search results
+    this.searchResultsSource = new VectorSource();
+    let cachedSearchResultSvgUrl = null;
+
+      const searchResultStyle = (feature) => {
+      if (!cachedSearchResultSvgUrl) {
+        const markerColor =
+          getComputedStyle(document.documentElement)
+            .getPropertyValue('--marker-color-primary')
+            .trim() || '#ea4335';
+
+        const svg = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 40" width="40" height="50">
+            <defs>
+              <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="black" flood-opacity="0.3"/>
+              </filter>
+            </defs>
+            <path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 12 24 12 24C12 24 22 17.5 22 12C22 6.5 17.5 2 12 2Z" fill="white" filter="url(#shadow)"/>
+            <circle cx="12" cy="12" r="8" fill="${markerColor}"/>
+          </svg>
+        `;
+        cachedSearchResultSvgUrl =
+          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.trim());
+      }
+
+      return new Style({
+        image: new Icon({
+          src: cachedSearchResultSvgUrl,
+          anchor: [0.5, 0.65],
+          scale: 1,
+        }),
+      });
+    };
+
+    const searchResultLayer = new VectorLayer({
+      source: this.searchResultsSource,
+      style: searchResultStyle,
+      zIndex: 11, // Above bookmarks (10)
+    });
+
     // Default view settings
     let center = [14.21683569, 27.060114248];
     let zoom = 2.661;
@@ -143,7 +185,7 @@ export default class MapComponent extends Component {
 
     this.mapInstance = new Map({
       target: element,
-      layers: [openfreemap, selectedShapeLayer, bookmarkLayer],
+      layers: [openfreemap, selectedShapeLayer, searchResultLayer, bookmarkLayer],
       view: view,
       controls: defaultControls({
         zoom: true,
@@ -178,7 +220,7 @@ export default class MapComponent extends Component {
     const pinIcon = document.createElement('div');
     pinIcon.className = 'selected-pin';
     // Simple SVG for Map Pin
-    pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" style="fill: #b31412; stroke: none;"></circle></svg>`;
+    pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" style="fill: var(--marker-color-dark); stroke: none;"></circle></svg>`;
 
     const pinShadow = document.createElement('div');
     pinShadow.className = 'selected-pin-shadow';
@@ -462,6 +504,33 @@ export default class MapComponent extends Component {
         kinetic: kinetic,
       })
     );
+  });
+
+  updateSearchResults = modifier(() => {
+    if (!this.searchResultsSource) return;
+
+    this.searchResultsSource.clear();
+    const results = this.mapUi.searchResults;
+
+    if (!results || results.length === 0) return;
+
+    const features = [];
+    results.forEach((place) => {
+      if (place.lat && place.lon) {
+        const feature = new Feature({
+          geometry: new Point(fromLonLat([place.lon, place.lat])),
+          name: place.title,
+          id: place.id,
+          isSearchResult: true,
+          originalPlace: place,
+        });
+        features.push(feature);
+      }
+    });
+
+    if (features.length > 0) {
+      this.searchResultsSource.addFeatures(features);
+    }
   });
 
   // Track the selected place from the UI Service (Router -> Map)
@@ -946,6 +1015,7 @@ export default class MapComponent extends Component {
       hitTolerance: 10,
     });
     let clickedBookmark = null;
+    let clickedSearchResult = null;
     let selectedFeatureName = null;
 
     if (features && features.length > 0) {
@@ -954,8 +1024,12 @@ export default class MapComponent extends Component {
         console.debug(f);
       }
       const bookmarkFeature = features.find((f) => f.get('isBookmark'));
+      const searchResultFeature = features.find((f) => f.get('isSearchResult'));
+
       if (bookmarkFeature) {
         clickedBookmark = bookmarkFeature.get('originalPlace');
+      } else if (searchResultFeature) {
+        clickedSearchResult = searchResultFeature.get('originalPlace');
       }
       // Also get visual props for standard map click logic later
       const props = features[0].getProperties();
@@ -966,14 +1040,15 @@ export default class MapComponent extends Component {
 
     // Special handling when sidebar is OPEN
     if (this.args.isSidebarOpen) {
-      // If it's a bookmark, we allow "switching" to it even if sidebar is open
-      if (clickedBookmark) {
+      // If it's a bookmark or search result, we allow "switching" to it even if sidebar is open
+      const targetPlace = clickedBookmark || clickedSearchResult;
+      if (targetPlace) {
         console.debug(
-          'Clicked bookmark while sidebar open (switching):',
-          clickedBookmark
+          'Clicked feature while sidebar open (switching):',
+          targetPlace
         );
         this.mapUi.preventNextZoom = true;
-        this.router.transitionTo('place', clickedBookmark);
+        this.router.transitionTo('place', targetPlace);
         return;
       }
 
@@ -989,6 +1064,13 @@ export default class MapComponent extends Component {
       console.debug('Clicked bookmark:', clickedBookmark);
       this.mapUi.preventNextZoom = true;
       this.router.transitionTo('place', clickedBookmark);
+      return;
+    }
+
+    if (clickedSearchResult) {
+      console.debug('Clicked search result:', clickedSearchResult);
+      this.mapUi.preventNextZoom = true;
+      this.router.transitionTo('place', clickedSearchResult);
       return;
     }
 
@@ -1041,6 +1123,7 @@ export default class MapComponent extends Component {
       {{this.setupMap}}
       {{this.updateInteractions}}
       {{this.updateBookmarks}}
+      {{this.updateSearchResults}}
       {{this.updateSelectedPin}}
       {{this.syncPulse}}
       {{this.syncCreationMode}}

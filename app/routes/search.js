@@ -169,6 +169,7 @@ export default class SearchRoute extends Route {
     super.setupController(controller, model);
     // Ensure pulse is stopped if we reach here
     this.mapUi.stopSearch();
+    this.mapUi.setSearchResults(model);
   }
 
   @action
