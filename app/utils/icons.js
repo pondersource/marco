@@ -29,9 +29,11 @@ import x from 'feather-icons/dist/icons/x.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
 
 import angelfish from '@waysidemapping/pinhead/dist/icons/angelfish.svg?raw';
+import barbell from '@waysidemapping/pinhead/dist/icons/barbell.svg?raw';
 import beachUmbrellaInGround from '@waysidemapping/pinhead/dist/icons/beach_umbrella_in_ground.svg?raw';
 import beerMugWithFoam from '@waysidemapping/pinhead/dist/icons/beer_mug_with_foam.svg?raw';
 import burgerAndDrinkCupWithStraw from '@waysidemapping/pinhead/dist/icons/burger_and_drink_cup_with_straw.svg?raw';
+import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.svg?raw';
 import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
 import classicalBuilding from '@waysidemapping/pinhead/dist/icons/classical_building.svg?raw';
 import classicalBuildingWithDomeAndFlag from '@waysidemapping/pinhead/dist/icons/classical_building_with_dome_and_flag.svg?raw';
@@ -43,21 +45,29 @@ import croissant from '@waysidemapping/pinhead/dist/icons/croissant.svg?raw';
 import cupAndSaucer from '@waysidemapping/pinhead/dist/icons/cup_and_saucer.svg?raw';
 import donut from '@waysidemapping/pinhead/dist/icons/donut.svg?raw';
 import film from '@waysidemapping/pinhead/dist/icons/film.svg?raw';
+import fish from '@waysidemapping/pinhead/dist/icons/fish.svg?raw';
 import flagCheckered from '@waysidemapping/pinhead/dist/icons/flag_checkered.svg?raw';
 import fort from '@waysidemapping/pinhead/dist/icons/fort.svg?raw';
 import forkAndKnife from '@waysidemapping/pinhead/dist/icons/fork_and_knife.svg?raw';
+import gravestone from '@waysidemapping/pinhead/dist/icons/gravestone.svg?raw';
+import grecianVase from '@waysidemapping/pinhead/dist/icons/grecian_vase.svg?raw';
 import iceCreamOnCone from '@waysidemapping/pinhead/dist/icons/ice_cream_on_cone.svg?raw';
+import marketStall from '@waysidemapping/pinhead/dist/icons/market_stall.svg?raw';
 import memorialStoneWithInscription from '@waysidemapping/pinhead/dist/icons/memorial_stone_with_inscription.svg?raw';
 import palace from '@waysidemapping/pinhead/dist/icons/palace.svg?raw';
 import personCricketBattingAtCricketBall from '@waysidemapping/pinhead/dist/icons/person_cricket_batting_at_cricket_ball.svg?raw';
 import personJockeyingRacehorse from '@waysidemapping/pinhead/dist/icons/person_jockeying_racehorse.svg?raw';
+import personPlayingTennis from '@waysidemapping/pinhead/dist/icons/person_playing_tennis.svg?raw';
 import personRunning from '@waysidemapping/pinhead/dist/icons/person_running.svg?raw';
 import personSleepingInBed from '@waysidemapping/pinhead/dist/icons/person_sleeping_in_bed.svg?raw';
 import personSwimmingInWater from '@waysidemapping/pinhead/dist/icons/person_swimming_in_water.svg?raw';
 import personSwingingGolfClub from '@waysidemapping/pinhead/dist/icons/person_swinging_golf_club.svg?raw';
+import planeTopRight from '@waysidemapping/pinhead/dist/icons/plane_top_right.svg?raw';
 import roundStructureWithFlag from '@waysidemapping/pinhead/dist/icons/round_structure_with_flag.svg?raw';
 import sailingShipInWater from '@waysidemapping/pinhead/dist/icons/sailing_ship_in_water.svg?raw';
+import shipwreckInWater from '@waysidemapping/pinhead/dist/icons/shipwreck_in_water.svg?raw';
 import shoppingBasket from '@waysidemapping/pinhead/dist/icons/shopping_basket.svg?raw';
+import tableTennisPaddle from '@waysidemapping/pinhead/dist/icons/table_tennis_paddle.svg?raw';
 import shoppingCart from '@waysidemapping/pinhead/dist/icons/shopping_cart.svg?raw';
 import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/wall_hanging_with_mountains_and_sun.svg?raw';
 
@@ -67,9 +77,11 @@ const ICONS = {
   activity,
   angelfish,
   'arrow-left': arrowLeft,
+  barbell,
   'beach-umbrella-in-ground': beachUmbrellaInGround,
   'beer-mug-with-foam': beerMugWithFoam,
   bookmark,
+  'boxing-glove-up': boxingGloveUp,
   'burger-and-drink-cup-with-straw': burgerAndDrinkCupWithStraw,
   camera,
   'check-square': checkSquare,
@@ -86,11 +98,14 @@ const ICONS = {
   edit,
   facebook,
   film,
+  fish,
   'flag-checkered': flagCheckered,
   'fork-and-knife': forkAndKnife,
   fort,
   gift,
   globe,
+  gravestone,
+  'grecian-vase': grecianVase,
   heart,
   home,
   'ice-cream-on-cone': iceCreamOnCone,
@@ -101,25 +116,30 @@ const ICONS = {
   mail,
   map,
   'map-pin': mapPin,
+  'market-stall': marketStall,
   'memorial-stone-with-inscription': memorialStoneWithInscription,
   menu,
   navigation,
   palace,
   'person-cricket-batting-at-cricket-ball': personCricketBattingAtCricketBall,
   'person-jockeying-racehorse': personJockeyingRacehorse,
+  'person-playing-tennis': personPlayingTennis,
   'person-running': personRunning,
   'person-sleeping-in-bed': personSleepingInBed,
   'person-swimming-in-water': personSwimmingInWater,
   'person-swinging-golf-club': personSwingingGolfClub,
   phone,
+  'plane-top-right': planeTopRight,
   plus,
   'round-structure-with-flag': roundStructureWithFlag,
   'sailing-ship-in-water': sailingShipInWater,
+  'shipwreck-in-water': shipwreckInWater,
   search,
   server,
   settings,
   'shopping-basket': shoppingBasket,
   'shopping-cart': shoppingCart,
+  'table-tennis-paddle': tableTennisPaddle,
   target,
   user,
   'wall-hanging-with-mountains-and-sun': wallHangingWithMountainsAndSun,

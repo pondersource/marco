@@ -31,10 +31,17 @@ export const POI_ICON_RULES = [
   { tags: { shop: 'greengrocer' }, icon: 'shopping-basket' },
   { tags: { shop: 'bakery' }, icon: 'croissant' },
   { tags: { shop: 'butcher' }, icon: 'cleaver' },
+  { tags: { shop: 'seafood' }, icon: 'fish' },
   { tags: { shop: 'deli' }, icon: 'shopping-basket' },
+  { tags: { shop: 'flea_market' }, icon: 'market-stall' },
 
   // Natural
   { tags: { natural: 'beach' }, icon: 'beach-umbrella-in-ground' },
+
+  // Transport
+  { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
+  { tags: { aeroway: 'heliport' }, icon: 'plane-top-right' },
+  { tags: { aeroway: 'helipad' }, icon: 'plane-top-right' },
 
   // Tourism
   { tags: { tourism: 'museum' }, icon: 'classical-building' },
@@ -54,13 +61,18 @@ export const POI_ICON_RULES = [
   { tags: { historic: 'fort' }, icon: 'fort' },
   { tags: { historic: 'castle' }, icon: 'palace' },
   { tags: { historic: 'building' }, icon: 'classical-building-with-flag' },
-  { tags: { historic: 'archaeological_site' }, icon: 'camera' },
+  { tags: { historic: 'archaeological_site' }, icon: 'grecian-vase' },
   { tags: { historic: 'memorial' }, icon: 'memorial-stone-with-inscription' },
+  { tags: { historic: 'tomb' }, icon: 'gravestone' },
   {
     tags: { historic: 'monument' },
     icon: 'classical-building-with-dome-and-flag',
   },
   { tags: { historic: 'ship' }, icon: 'sailing-ship-in-water' },
+  { tags: { historic: 'wreck' }, icon: 'shipwreck-in-water' },
+  { tags: { historic: 'ruins' }, icon: 'camera' },
+  { tags: { historic: 'ruin' }, icon: 'camera' },
+  { tags: { historic: 'yes' }, icon: 'camera' },
 
   // Accommodation
   { tags: { tourism: 'hotel' }, icon: 'person-sleeping-in-bed' },
@@ -76,15 +88,23 @@ export const POI_ICON_RULES = [
     tags: { sport: 'cricket' },
     icon: 'person-cricket-batting-at-cricket-ball',
   },
+  { tags: { sport: 'boxing' }, icon: 'boxing-glove-up' },
+  { tags: { sport: 'martial_arts' }, icon: 'boxing-glove-up' },
+  { tags: { sport: 'tennis' }, icon: 'person-playing-tennis' },
+  { tags: { sport: 'squash' }, icon: 'person-playing-tennis' },
+  { tags: { sport: 'padel' }, icon: 'person-playing-tennis' },
+  { tags: { sport: 'table_tennis' }, icon: 'table-tennis-paddle' },
   { tags: { leisure: 'water_park' }, icon: 'person-swimming-in-water' },
+  { tags: { sport: 'swimming' }, icon: 'person-swimming-in-water' },
   { tags: { sport: 'golf' }, icon: 'person-swinging-golf-club' },
   { tags: { leisure: 'golf_course' }, icon: 'person-swinging-golf-club' },
   { tags: { sport: 'horse_racing' }, icon: 'person-jockeying-racehorse' },
-  { tags: { leisure: 'stadium' }, icon: 'round-structure-with-flag' },
-  { tags: { sport: 'stadium' }, icon: 'round-structure-with-flag' },
+  { tags: { sport: 'fitness' }, icon: 'barbell' },
+  { tags: { sport: 'fitness_centre' }, icon: 'barbell' },
 
+  { tags: { sport: 'stadium' }, icon: 'round-structure-with-flag' },
+  { tags: { leisure: 'stadium' }, icon: 'round-structure-with-flag' },
   { tags: { leisure: 'sports_centre' }, icon: 'person-running' },
-  { tags: { sport: 'fitness_centre' }, icon: 'person-running' },
 ];
 
 /**

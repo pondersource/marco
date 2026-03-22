@@ -45,6 +45,7 @@ export const POI_CATEGORIES = [
       '["amenity"~"^(cinema|theatre|arts_centre|planetarium)$"]',
       '["leisure"~"^(sports_centre|stadium|water_park)$"]',
       '["historic"]',
+      '["shop"="flea_market"]',
     ],
     types: ['node', 'way', 'relation'],
   },
