@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { modifier } from 'ember-modifier';
 import 'ol/ol.css';
-import Map from 'ol/Map.js';
+import OlMap from 'ol/Map.js';
 import { defaults as defaultControls, Control } from 'ol/control.js';
 import { defaults as defaultInteractions, DragPan } from 'ol/interaction.js';
 import Kinetic from 'ol/Kinetic.js';
@@ -18,6 +18,8 @@ import Point from 'ol/geom/Point.js';
 import Geolocation from 'ol/Geolocation.js';
 import { Style, Circle, Fill, Stroke, Icon } from 'ol/style.js';
 import { apply } from 'ol-mapbox-style';
+import { getIcon } from '../utils/icons';
+import { getIconNameForTags } from '../utils/osm-icons';
 
 export default class MapComponent extends Component {
   @service osm;
@@ -113,14 +115,65 @@ export default class MapComponent extends Component {
 
     // Create a vector source and layer for search results
     this.searchResultsSource = new VectorSource();
-    let cachedSearchResultSvgUrl = null;
+    const cachedIconUrls = new Map();
 
-      const searchResultStyle = (feature) => {
-      if (!cachedSearchResultSvgUrl) {
+    const searchResultStyle = (feature) => {
+      const originalPlace = feature.get('originalPlace');
+      // Some search results might be just the place object without separate tags
+      // If it's a raw place object, it might have osmTags property.
+      // Or it might be the tags object itself.
+      const tags = originalPlace.osmTags || originalPlace;
+      const iconName = getIconNameForTags(tags);
+
+      // Use 'default' key for the standard red dot marker. Use iconName as key if present.
+      const cacheKey = iconName || 'default';
+
+      if (!cachedIconUrls.has(cacheKey)) {
         const markerColor =
           getComputedStyle(document.documentElement)
             .getPropertyValue('--marker-color-primary')
             .trim() || '#ea4335';
+
+        // Default content: Red circle
+        let innerContent = `<circle cx="12" cy="12" r="8" fill="${markerColor}"/>`;
+
+        if (iconName) {
+          const rawSvg = getIcon(iconName);
+          if (rawSvg) {
+            // Pinhead icons are usually 15x15 viewBox="0 0 15 15".
+            // We want to center it on 12,12.
+            // A 12x12 icon centered at 12,12 means top-left at 6,6.
+            // However, since we are embedding a new SVG, we can just use x/y/width/height.
+            // But we need to strip the outer <svg> tag to embed the paths cleanly if we want full control,
+            // or we can nest the SVG. Nesting is safer.
+
+            // The rawSvg string contains <svg ...>...</svg>.
+            // We want to make it white. We can add a group with fill="white".
+            // But if the SVG has fill attributes, they override. Pinhead icons usually don't have fills.
+
+            // Let's strip the outer SVG tag to get the path content.
+            let content = rawSvg.trim();
+            const svgStart = content.indexOf('<svg');
+            const svgEnd = content.indexOf('>', svgStart);
+            const contentStart = svgEnd + 1;
+            const contentEnd = content.lastIndexOf('</svg>');
+
+            if (svgStart !== -1 && contentEnd !== -1) {
+              content = content.substring(contentStart, contentEnd);
+            }
+
+            // We render the red circle background, then the icon on top.
+            // Icon is scaled down slightly to fit nicely inside the circle.
+            // 15x15 scaled by 0.8 is 12x12.
+            // Translate to 6,6 to center.
+            innerContent = `
+              <circle cx="12" cy="12" r="8" fill="${markerColor}"/>
+              <g transform="translate(6, 6) scale(0.8)" fill="white">
+                ${content}
+              </g>
+            `;
+          }
+        }
 
         const svg = `
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 40" width="40" height="50">
@@ -130,16 +183,19 @@ export default class MapComponent extends Component {
               </filter>
             </defs>
             <path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 12 24 12 24C12 24 22 17.5 22 12C22 6.5 17.5 2 12 2Z" fill="white" filter="url(#shadow)"/>
-            <circle cx="12" cy="12" r="8" fill="${markerColor}"/>
+            ${innerContent}
           </svg>
         `;
-        cachedSearchResultSvgUrl =
-          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.trim());
+
+        cachedIconUrls.set(
+          cacheKey,
+          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.trim())
+        );
       }
 
       return new Style({
         image: new Icon({
-          src: cachedSearchResultSvgUrl,
+          src: cachedIconUrls.get(cacheKey),
           anchor: [0.5, 0.65],
           scale: 1,
         }),
@@ -183,9 +239,14 @@ export default class MapComponent extends Component {
       projection: 'EPSG:3857',
     });
 
-    this.mapInstance = new Map({
+    this.mapInstance = new OlMap({
       target: element,
-      layers: [openfreemap, selectedShapeLayer, searchResultLayer, bookmarkLayer],
+      layers: [
+        openfreemap,
+        selectedShapeLayer,
+        searchResultLayer,
+        bookmarkLayer,
+      ],
       view: view,
       controls: defaultControls({
         zoom: true,
