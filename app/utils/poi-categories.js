@@ -13,7 +13,9 @@ export const POI_CATEGORIES = [
     id: 'restaurants',
     label: 'Restaurants',
     icon: 'fork-and-knife',
-    filter: ['["amenity"~"^(restaurant|fast_food|food_court|pub|cafe)$"]'],
+    filter: [
+      '["amenity"~"^(restaurant|fast_food|food_court|pub|cafe)$"]["cuisine"!~"coffee"]',
+    ],
     types: ['node', 'way'],
   },
   {
