@@ -18,13 +18,14 @@ export const POI_ICON_RULES = [
   { tags: { amenity: 'restaurant' }, icon: 'fork-and-knife' },
   { tags: { amenity: 'fast_food' }, icon: 'burger-and-drink-cup-with-straw' },
   { tags: { amenity: 'pub' }, icon: 'beer-mug-with-foam' },
+  { tags: { amenity: 'bar' }, icon: 'cocktail' },
   { tags: { amenity: 'food_court' }, icon: 'fork-and-knife' },
 
   { tags: { shop: 'coffee' }, icon: 'coffee-bean' },
   { tags: { shop: 'tea' }, icon: 'coffee-bean' },
   { tags: { shop: 'pastry' }, icon: 'donut' }, // Pastry shops often have donuts
 
-  // Groceries
+  // Shopping
   { tags: { shop: 'supermarket' }, icon: 'shopping-cart' },
   { tags: { shop: 'convenience' }, icon: 'shopping-basket' },
   { tags: { shop: 'grocery' }, icon: 'shopping-basket' },
@@ -33,7 +34,34 @@ export const POI_ICON_RULES = [
   { tags: { shop: 'butcher' }, icon: 'cleaver' },
   { tags: { shop: 'seafood' }, icon: 'fish' },
   { tags: { shop: 'deli' }, icon: 'shopping-basket' },
+  { tags: { shop: 'clothes' }, icon: 'clothes-hanger' },
+  { tags: { shop: 'clothing' }, icon: 'clothes-hanger' },
+  { tags: { shop: 'hairdresser' }, icon: 'scissors-open' },
+  { tags: { shop: 'optician' }, icon: 'eyeglasses' },
+  { tags: { shop: 'fabric' }, icon: 'cloth' },
   { tags: { shop: 'flea_market' }, icon: 'market-stall' },
+  { tags: { shop: 'kiosk' }, icon: 'shopping-basket' },
+  { tags: { shop: 'leather' }, icon: 'shopping-bag' },
+  { tags: { shop: 'tailor' }, icon: 'needle-and-spool-of-thread' },
+  { tags: { craft: 'tailor' }, icon: 'needle-and-spool-of-thread' },
+  { tags: { shop: 'jewelry' }, icon: 'jewel' },
+  { tags: { shop: 'jewellery' }, icon: 'jewel' },
+  { tags: { shop: 'tobacco' }, icon: 'cigarette-with-smoke-curl' },
+  { tags: { shop: 'cannabis' }, icon: 'cigarette-with-smoke-curl' },
+  { tags: { shop: 'florist' }, icon: 'flower-bouquet' },
+  { tags: { shop: 'garden_centre' }, icon: 'plant-in-raised-planter' },
+  { tags: { office: 'estate_agent' }, icon: 'village-buildings' },
+  { tags: { shop: 'estate_agent' }, icon: 'village-buildings' },
+  {
+    tags: { shop: 'mobile_phone' },
+    icon: 'mobile-phone-with-keypad-and-antenna',
+  },
+  { tags: { beauty: 'nails' }, icon: 'fingernail-polished' },
+  { tags: { shop: 'tattoo' }, icon: 'tattoo-machine' },
+  {
+    tags: { shop: 'beauty' },
+    icon: 'fancy-mirror-with-reflection-and-stars',
+  },
 
   // Natural
   { tags: { natural: 'beach' }, icon: 'beach-umbrella-in-ground' },
@@ -42,6 +70,10 @@ export const POI_ICON_RULES = [
   { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
   { tags: { aeroway: 'heliport' }, icon: 'plane-top-right' },
   { tags: { aeroway: 'helipad' }, icon: 'plane-top-right' },
+  {
+    tags: { railway: 'tram_stop' },
+    icon: 'person-boarding-tram-with-destination-display-and-pantograph-on-tram-track',
+  },
 
   // Tourism
   { tags: { tourism: 'museum' }, icon: 'classical-building' },
@@ -101,6 +133,7 @@ export const POI_ICON_RULES = [
   { tags: { sport: 'horse_racing' }, icon: 'person-jockeying-racehorse' },
   { tags: { sport: 'fitness' }, icon: 'barbell' },
   { tags: { sport: 'fitness_centre' }, icon: 'barbell' },
+  { tags: { leisure: 'fitness_centre' }, icon: 'barbell' },
 
   { tags: { sport: 'stadium' }, icon: 'round-structure-with-flag' },
   { tags: { leisure: 'stadium' }, icon: 'round-structure-with-flag' },
