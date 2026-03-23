@@ -1315,3 +1315,9 @@ button.create-place {
 .category-chip:active {
   background: #eee;
 }
+
+.category-chip:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  pointer-events: none;
+}

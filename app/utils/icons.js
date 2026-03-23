@@ -34,6 +34,7 @@ import user from 'feather-icons/dist/icons/user.svg?raw';
 import villageBuildings from '@waysidemapping/pinhead/dist/icons/village_buildings.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
+import loadingRing from '../icons/270-ring.svg?raw';
 
 import angelfish from '@waysidemapping/pinhead/dist/icons/angelfish.svg?raw';
 import barbell from '@waysidemapping/pinhead/dist/icons/barbell.svg?raw';
@@ -211,6 +212,7 @@ const ICONS = {
   wikipedia,
   x,
   zap,
+  'loading-ring': loadingRing,
 };
 
 const FILLED_ICONS = [
@@ -221,6 +223,7 @@ const FILLED_ICONS = [
   'shopping-basket',
   'camera',
   'person-sleeping-in-bed',
+  'loading-ring',
 ];
 
 export function getIcon(name) {

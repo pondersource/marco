@@ -5,6 +5,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import Icon from '#components/icon';
 import { POI_CATEGORIES } from '../utils/poi-categories';
+import { eq, and } from 'ember-truth-helpers';
 
 export default class CategoryChipsComponent extends Component {
   @service router;
@@ -41,6 +42,7 @@ export default class CategoryChipsComponent extends Component {
             class="category-chip"
             {{on "click" (fn this.searchCategory category)}}
             aria-label={{category.label}}
+            disabled={{and (eq this.mapUi.loadingState.type "category") (eq this.mapUi.loadingState.value category.id)}}
           >
             <Icon @name={{category.icon}} @size={{16}} />
             <span>{{category.label}}</span>

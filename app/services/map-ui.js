@@ -14,6 +14,7 @@ export default class MapUiService extends Service {
   @tracked preventNextZoom = false;
   @tracked searchResults = [];
   @tracked currentSearch = null;
+  @tracked loadingState = null;
 
   selectPlace(place, options = {}) {
     this.selectedPlace = place;
@@ -69,5 +70,27 @@ export default class MapUiService extends Service {
 
   updateBounds(bounds) {
     this.currentBounds = bounds;
+  }
+
+  startLoading(type, value) {
+    this.loadingState = { type, value };
+  }
+
+  stopLoading(type = null, value = null) {
+    // If no arguments provided, force stop (legacy/cleanup)
+    if (!type && !value) {
+      this.loadingState = null;
+      return;
+    }
+
+    // Only clear if the current state matches the request
+    // This prevents a previous search from clearing the state of a new search
+    if (
+      this.loadingState &&
+      this.loadingState.type === type &&
+      this.loadingState.value === value
+    ) {
+      this.loadingState = null;
+    }
   }
 }
