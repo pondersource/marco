@@ -79,8 +79,8 @@ export default class PlaceTemplate extends Component {
     if (place === null) {
       // If we have an active search context, return to it (UP navigation)
       if (this.mapUi.returnToSearch && this.mapUi.currentSearch) {
-        this.router.transitionTo('search', { 
-          queryParams: this.mapUi.currentSearch 
+        this.router.transitionTo('search', {
+          queryParams: this.mapUi.currentSearch,
         });
       } else {
         // Otherwise just close the sidebar (return to map index)

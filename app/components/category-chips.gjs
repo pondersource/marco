@@ -42,7 +42,10 @@ export default class CategoryChipsComponent extends Component {
             class="category-chip"
             {{on "click" (fn this.searchCategory category)}}
             aria-label={{category.label}}
-            disabled={{and (eq this.mapUi.loadingState.type "category") (eq this.mapUi.loadingState.value category.id)}}
+            disabled={{and
+              (eq this.mapUi.loadingState.type "category")
+              (eq this.mapUi.loadingState.value category.id)
+            }}
           >
             <Icon @name={{category.icon}} @size={{16}} />
             <span>{{category.label}}</span>

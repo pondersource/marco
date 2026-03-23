@@ -217,7 +217,12 @@ export default class SearchBoxComponent extends Component {
         />
 
         <button type="submit" class="search-submit-btn" aria-label="Search">
-          {{#if (or (eq this.mapUi.loadingState.type "text") (eq this.mapUi.loadingState.type "category"))}}
+          {{#if
+            (or
+              (eq this.mapUi.loadingState.type "text")
+              (eq this.mapUi.loadingState.type "category")
+            )
+          }}
             <Icon @name="loading-ring" @size={{20}} />
           {{else}}
             <Icon @name="search" @size={{20}} @color="#5f6368" />

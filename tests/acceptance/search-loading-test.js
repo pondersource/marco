@@ -1,11 +1,5 @@
 import { module, test } from 'qunit';
-import {
-  visit,
-  click,
-  fillIn,
-  triggerEvent,
-  currentURL,
-} from '@ember/test-helpers';
+import { visit, click, fillIn, currentURL } from '@ember/test-helpers';
 import { setupApplicationTest } from 'marco/tests/helpers';
 import Service from '@ember/service';
 import { Promise } from 'rsvp';
