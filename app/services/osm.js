@@ -40,15 +40,26 @@ export default class OsmService extends Service {
     ];
     const typeKeysQuery = [`~"^(${typeKeys.join('|')})$"~".*"`];
 
+    const negativeFilters = {
+      public_transport: ['stop_area', 'platform'],
+    };
+
+    const negativeFiltersQuery = Object.entries(negativeFilters)
+      .map(([key, values]) => {
+        const valueRegex = `^(${values.join('|')})$`;
+        return `["${key}"!~"${valueRegex}"]`;
+      })
+      .join('');
+
     const query = `
 [out:json][timeout:25];
 (
   node(around:${radius},${lat},${lon})
-    [${typeKeysQuery}][~"^name"~"."];
+    [${typeKeysQuery}]${negativeFiltersQuery}[~"^name"~"."];
   way(around:${radius},${lat},${lon})
-    [${typeKeysQuery}][~"^name"~"."];
+    [${typeKeysQuery}]${negativeFiltersQuery}[~"^name"~"."];
   relation(around:${radius},${lat},${lon})
-    [${typeKeysQuery}][~"^name"~"."];
+    [${typeKeysQuery}]${negativeFiltersQuery}[~"^name"~"."];
 );
 out center;
     `.trim();
