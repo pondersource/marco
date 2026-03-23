@@ -20,10 +20,21 @@ export const POI_ICON_RULES = [
   { tags: { amenity: 'pub' }, icon: 'beer-mug-with-foam' },
   { tags: { amenity: 'bar' }, icon: 'cocktail' },
   { tags: { amenity: 'food_court' }, icon: 'fork-and-knife' },
+  { tags: { amenity: 'childcare' }, icon: 'family-restroom-symbol' },
+  { tags: { amenity: 'community_centre' }, icon: 'family-restroom-symbol' },
+  { tags: { amenity: 'social_centre' }, icon: 'family-restroom-symbol' },
+  { tags: { amenity: 'social_facility' }, icon: 'family-restroom-symbol' },
+
+  { tags: { amenity: 'bank' }, icon: 'banknote' },
+  { tags: { amenity: 'place_of_worship' }, icon: 'place-of-worship-building' },
+  { tags: { amenity: 'fire_station' }, icon: 'badge-shield-with-fire' },
+  { tags: { amenity: 'police' }, icon: 'police-officer-with-stop-arm' },
+  { tags: { amenity: 'toilets' }, icon: 'womens-and-mens-restroom-symbol' },
+  { tags: { amenity: 'school' }, icon: 'open-book' },
 
   { tags: { shop: 'coffee' }, icon: 'coffee-bean' },
   { tags: { shop: 'tea' }, icon: 'coffee-bean' },
-  { tags: { shop: 'pastry' }, icon: 'donut' }, // Pastry shops often have donuts
+  { tags: { shop: 'pastry' }, icon: 'donut' },
 
   // Shopping
   { tags: { shop: 'supermarket' }, icon: 'shopping-cart' },
@@ -43,14 +54,12 @@ export const POI_ICON_RULES = [
   { tags: { shop: 'kiosk' }, icon: 'shopping-basket' },
   { tags: { shop: 'leather' }, icon: 'shopping-bag' },
   { tags: { shop: 'tailor' }, icon: 'needle-and-spool-of-thread' },
-  { tags: { craft: 'tailor' }, icon: 'needle-and-spool-of-thread' },
   { tags: { shop: 'jewelry' }, icon: 'jewel' },
   { tags: { shop: 'jewellery' }, icon: 'jewel' },
   { tags: { shop: 'tobacco' }, icon: 'cigarette-with-smoke-curl' },
   { tags: { shop: 'cannabis' }, icon: 'cigarette-with-smoke-curl' },
   { tags: { shop: 'florist' }, icon: 'flower-bouquet' },
   { tags: { shop: 'garden_centre' }, icon: 'plant-in-raised-planter' },
-  { tags: { office: 'estate_agent' }, icon: 'village-buildings' },
   { tags: { shop: 'estate_agent' }, icon: 'village-buildings' },
   {
     tags: { shop: 'mobile_phone' },
@@ -62,14 +71,23 @@ export const POI_ICON_RULES = [
     tags: { shop: 'beauty' },
     icon: 'fancy-mirror-with-reflection-and-stars',
   },
+  { tags: { craft: 'tailor' }, icon: 'needle-and-spool-of-thread' },
+  { tags: { office: 'estate_agent' }, icon: 'village-buildings' },
+  { tags: { office: true }, icon: 'commercial-building' },
+  { tags: { craft: true }, icon: 'toolbox' },
+  { tags: { shop: true }, icon: 'shopping-bag' },
 
   // Natural
   { tags: { natural: 'beach' }, icon: 'beach-umbrella-in-ground' },
+  { tags: { leisure: 'park' }, icon: 'tree-and-bench-with-backrest' },
+  { tags: { leisure: 'playground' }, icon: 'play-structure-with-slide' },
 
   // Transport
   { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
   { tags: { aeroway: 'heliport' }, icon: 'plane-top-right' },
   { tags: { aeroway: 'helipad' }, icon: 'plane-top-right' },
+  { tags: { highway: 'bus_stop' }, icon: 'bus' },
+  { tags: { bus: true }, icon: 'bus' },
   {
     tags: { railway: 'tram_stop' },
     icon: 'person-boarding-tram-with-destination-display-and-pantograph-on-tram-track',
@@ -138,9 +156,17 @@ export const POI_ICON_RULES = [
   { tags: { sport: 'stadium' }, icon: 'round-structure-with-flag' },
   { tags: { leisure: 'stadium' }, icon: 'round-structure-with-flag' },
   { tags: { leisure: 'sports_centre' }, icon: 'person-running' },
+  { tags: { leisure: 'pitch' }, icon: 'person-running' },
+  { tags: { sport: true }, icon: 'person-running' },
 
-  // Generic Catch-alls (must be last)
-  { tags: { shop: true }, icon: 'shopping-basket' },
+  // Healthcare
+  { tags: { amenity: 'dentist' }, icon: 'molar-tooth' },
+  { tags: { healthcare: 'dentist' }, icon: 'molar-tooth' },
+  { tags: { healthcare: true }, icon: 'greek-cross' },
+
+  // Buildings
+  { tags: { building: 'commercial' }, icon: 'commercial-building' },
+  { tags: { building: 'apartments' }, icon: 'lowrise-building' },
 ];
 
 /**
