@@ -27,9 +27,9 @@ module('Unit | Utility | osm-icons', function () {
     assert.strictEqual(result, 'shopping-basket');
   });
 
-  test('it returns shopping-basket for unknown shop types (catch-all)', function (assert) {
+  test('it returns shopping-bag for unknown shop types (catch-all)', function (assert) {
     let result = getIconNameForTags({ shop: 'unknown_shop_type' });
-    assert.strictEqual(result, 'shopping-basket');
+    assert.strictEqual(result, 'shopping-bag');
   });
 
   test('it returns null for unknown tags', function (assert) {

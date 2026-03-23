@@ -1099,6 +1099,20 @@ export default class MapComponent extends Component {
       }
     }
 
+    // Helper to transition with proper state
+    const transitionToPlace = (place) => {
+      // If we are currently in search mode OR have active search results,
+      // we want the "Back" button on the place details to return to the search results.
+      if (
+        this.router.currentRouteName === 'search' ||
+        (this.mapUi.currentSearch && this.mapUi.searchResults.length > 0)
+      ) {
+        this.mapUi.returnToSearch = true;
+      }
+      this.mapUi.preventNextZoom = true;
+      this.router.transitionTo('place', place);
+    };
+
     // Special handling when sidebar is OPEN
     if (this.args.isSidebarOpen) {
       // If it's a bookmark or search result, we allow "switching" to it even if sidebar is open
@@ -1108,8 +1122,7 @@ export default class MapComponent extends Component {
           'Clicked feature while sidebar open (switching):',
           targetPlace
         );
-        this.mapUi.preventNextZoom = true;
-        this.router.transitionTo('place', targetPlace);
+        transitionToPlace(targetPlace);
         return;
       }
 
@@ -1123,15 +1136,13 @@ export default class MapComponent extends Component {
     // Normal behavior (sidebar is closed)
     if (clickedBookmark) {
       console.debug('Clicked bookmark:', clickedBookmark);
-      this.mapUi.preventNextZoom = true;
-      this.router.transitionTo('place', clickedBookmark);
+      transitionToPlace(clickedBookmark);
       return;
     }
 
     if (clickedSearchResult) {
       console.debug('Clicked search result:', clickedSearchResult);
-      this.mapUi.preventNextZoom = true;
-      this.router.transitionTo('place', clickedSearchResult);
+      transitionToPlace(clickedSearchResult);
       return;
     }
 

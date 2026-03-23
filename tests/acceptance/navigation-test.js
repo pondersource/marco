@@ -64,25 +64,24 @@ module('Acceptance | navigation', function (hooks) {
     this.owner.register('service:storage', MockStorageService);
   });
 
-  test('navigating from search results to place and back uses history', async function (assert) {
+  test('navigating from search results to place and back returns to search', async function (assert) {
     const mapUi = this.owner.lookup('service:map-ui');
-    const backStub = sinon.stub(window.history, 'back');
 
-    try {
-      await visit('/search?lat=1&lon=1');
-      assert.strictEqual(currentURL(), '/search?lat=1&lon=1');
+    await visit('/search?lat=1&lon=1');
+    assert.strictEqual(currentURL(), '/search?lat=1&lon=1');
 
-      await click('.place-item');
-      assert.ok(currentURL().includes('/place/'), 'Navigated to place');
-      assert.true(mapUi.returnToSearch, 'Flag returnToSearch is set');
+    await click('.place-item');
+    assert.ok(currentURL().includes('/place/'), 'Navigated to place');
+    assert.true(mapUi.returnToSearch, 'Flag returnToSearch is set');
 
-      // Click the back button in the sidebar
-      await click('.back-btn');
+    // Click the back button in the sidebar
+    await click('.back-btn');
 
-      assert.true(backStub.calledOnce, 'window.history.back() was called');
-    } finally {
-      backStub.restore();
-    }
+    assert.strictEqual(
+      currentURL(),
+      '/search?lat=1&lon=1',
+      'Returned to search results'
+    );
   });
 
   test('closing the sidebar resets the returnToSearch flag', async function (assert) {

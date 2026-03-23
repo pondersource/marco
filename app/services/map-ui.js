@@ -13,6 +13,7 @@ export default class MapUiService extends Service {
   @tracked selectionOptions = {};
   @tracked preventNextZoom = false;
   @tracked searchResults = [];
+  @tracked currentSearch = null;
 
   selectPlace(place, options = {}) {
     this.selectedPlace = place;
@@ -31,6 +32,7 @@ export default class MapUiService extends Service {
 
   clearSearchResults() {
     this.searchResults = [];
+    this.currentSearch = null;
   }
 
   startSearch() {
