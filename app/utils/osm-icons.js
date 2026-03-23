@@ -164,6 +164,9 @@ export const POI_ICON_RULES = [
   { tags: { healthcare: 'dentist' }, icon: 'molar-tooth' },
   { tags: { healthcare: true }, icon: 'greek-cross' },
 
+  // Parking
+  { tags: { amenity: 'parking' }, icon: 'parking_p' },
+
   // Buildings
   { tags: { building: 'commercial' }, icon: 'commercial-building' },
   { tags: { building: 'apartments' }, icon: 'lowrise-building' },

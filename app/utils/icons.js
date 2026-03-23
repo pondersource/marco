@@ -105,6 +105,7 @@ import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/w
 import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/womens_and_mens_restroom_symbol.svg?raw';
 
 import wikipedia from '../icons/wikipedia.svg?raw';
+import parkingP from '@waysidemapping/pinhead/dist/icons/parking_p.svg?raw';
 
 const ICONS = {
   activity,
@@ -210,6 +211,7 @@ const ICONS = {
   'wall-hanging-with-mountains-and-sun': wallHangingWithMountainsAndSun,
   'womens-and-mens-restroom-symbol': womensAndMensRestroomSymbol,
   wikipedia,
+  parking_p: parkingP,
   x,
   zap,
   'loading-ring': loadingRing,
