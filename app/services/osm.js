@@ -9,6 +9,13 @@ export default class OsmService extends Service {
   cachedResults = null;
   lastQueryKey = null;
 
+  cancelAll() {
+    if (this.controller) {
+      this.controller.abort();
+      this.controller = null;
+    }
+  }
+
   async getNearbyPois(lat, lon, radius = 50) {
     const queryKey = `${lat},${lon},${radius}`;
 

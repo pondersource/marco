@@ -12,6 +12,7 @@ import { eq, or } from 'ember-truth-helpers';
 
 export default class SearchBoxComponent extends Component {
   @service photon;
+  @service osm;
   @service router;
   @service mapUi;
   @service map; // Assuming we might need map context, but mostly we use router
@@ -178,6 +179,11 @@ export default class SearchBoxComponent extends Component {
 
   @action
   clear() {
+    this.searchTask.cancelAll();
+    this.mapUi.stopLoading();
+    this.osm.cancelAll();
+    this.photon.cancelAll();
+
     this.query = '';
     this.results = [];
     if (this.args.onQueryChange) {

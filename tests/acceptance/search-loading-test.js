@@ -1,10 +1,18 @@
 import { module, test } from 'qunit';
-import { visit } from '@ember/test-helpers';
+import {
+  visit,
+  click,
+  fillIn,
+  triggerEvent,
+  currentURL,
+} from '@ember/test-helpers';
 import { setupApplicationTest } from 'marco/tests/helpers';
 import Service from '@ember/service';
 import { Promise } from 'rsvp';
 
 class MockPhotonService extends Service {
+  cancelAll() {}
+
   async search(query) {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -24,6 +32,8 @@ class MockPhotonService extends Service {
 }
 
 class MockOsmService extends Service {
+  cancelAll() {}
+
   async getCategoryPois(bounds, category) {
     await new Promise((resolve) => setTimeout(resolve, 50));
     if (category === 'slow_category') {
@@ -93,5 +103,40 @@ module('Acceptance | search loading', function (hooks) {
       null,
       'Loading state is NOT set for nearby search'
     );
+  });
+
+  test('clearing search stops loading indicator', async function (assert) {
+    const mapUi = this.owner.lookup('service:map-ui');
+
+    // 1. Start from index
+    await visit('/');
+
+    // 2. Type "slow" to trigger autocomplete (which is async)
+    await fillIn('.search-input', 'slow');
+
+    // 3. Submit search to trigger route loading
+    click('.search-submit-btn'); // Intentionally no await to not block on transition
+
+    // Wait for loading state to activate
+    await new Promise((r) => setTimeout(r, 100));
+
+    assert.deepEqual(
+      mapUi.loadingState,
+      { type: 'text', value: 'slow' },
+      'Loading state is set'
+    );
+
+    // 4. Click the clear button (should be visible since input has value)
+    await click('.search-clear-btn');
+
+    // Verify loading state is cleared immediately
+    assert.strictEqual(
+      mapUi.loadingState,
+      null,
+      'Loading state is cleared immediately after clicking clear'
+    );
+
+    // Verify we are back on index (or at least query is gone)
+    assert.strictEqual(currentURL(), '/', 'Navigated to index');
   });
 });
