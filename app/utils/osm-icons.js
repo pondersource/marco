@@ -138,6 +138,9 @@ export const POI_ICON_RULES = [
   { tags: { sport: 'stadium' }, icon: 'round-structure-with-flag' },
   { tags: { leisure: 'stadium' }, icon: 'round-structure-with-flag' },
   { tags: { leisure: 'sports_centre' }, icon: 'person-running' },
+
+  // Generic Catch-alls (must be last)
+  { tags: { shop: true }, icon: 'shopping-basket' },
 ];
 
 /**
@@ -160,6 +163,12 @@ export function getIconNameForTags(tags) {
       // Check for exact match or if value is in a semicolon-separated list
       // e.g. "donut;coffee_shop"
       const values = tagValue.split(';').map((v) => v.trim());
+
+      // If expectedValue is boolean true, any value is a match
+      if (expectedValue === true) {
+        continue;
+      }
+
       if (!values.includes(expectedValue)) {
         match = false;
         break;
