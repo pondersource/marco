@@ -1172,6 +1172,7 @@ export default class MapComponent extends Component {
       lat: lat.toFixed(6),
       lon: lon.toFixed(6),
       q: null, // Clear q to force spatial search
+      category: null, // Clear category to force spatial search
       selected: selectedFeatureName || null,
     };
 
