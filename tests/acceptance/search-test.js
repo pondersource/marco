@@ -218,4 +218,56 @@ module('Acceptance | search', function (hooks) {
     // Ensure it shows "Results" not "Nearby"
     assert.dom('.sidebar-header h2').includesText('Results');
   });
+
+  test('search error handling prevents opening empty panel and shows toast', async function (assert) {
+    // Mock Osm Service to throw an error
+    class MockOsmService extends Service {
+      async getCategoryPois() {
+        throw new Error('Overpass request failed');
+      }
+    }
+    this.owner.register('service:osm', MockOsmService);
+
+    class MockStorageService extends Service {
+      savedPlaces = [];
+      findPlaceById() {
+        return null;
+      }
+      isPlaceSaved() {
+        return false;
+      }
+      rs = { on: () => {} };
+      placesInView = [];
+      loadPlacesInBounds() {
+        return Promise.resolve();
+      }
+    }
+    this.owner.register('service:storage', MockStorageService);
+
+    class MockMapService extends Service {
+      getBounds() {
+        return {
+          minLat: 52.5,
+          minLon: 13.4,
+          maxLat: 52.6,
+          maxLon: 13.5,
+        };
+      }
+    }
+    this.owner.register('service:map', MockMapService);
+
+    await visit('/');
+
+    try {
+      await visit('/search?category=coffee&lat=52.52&lon=13.405');
+    } catch (e) {
+      // Aborted transition throws, which is expected
+    }
+
+    assert.dom('.toast-notification').exists('Toast should be visible');
+    assert
+      .dom('.toast-notification')
+      .hasText('Search request failed. Please try again.');
+    assert.dom('.places-sidebar').doesNotExist('Results panel should not open');
+  });
 });
