@@ -5,6 +5,7 @@ export default class SettingsService extends Service {
   @tracked overpassApi = 'https://overpass-api.de/api/interpreter';
   @tracked mapKinetic = true;
   @tracked photonApi = 'https://photon.komoot.io/api/';
+  @tracked showQuickSearchButtons = true;
 
   overpassApis = [
     {
@@ -56,6 +57,13 @@ export default class SettingsService extends Service {
       this.mapKinetic = savedKinetic === 'true';
     }
     // Default is true (initialized in class field)
+
+    const savedShowQuickSearch = localStorage.getItem(
+      'marco:show-quick-search'
+    );
+    if (savedShowQuickSearch !== null) {
+      this.showQuickSearchButtons = savedShowQuickSearch === 'true';
+    }
   }
 
   updateOverpassApi(url) {
@@ -66,6 +74,11 @@ export default class SettingsService extends Service {
   updateMapKinetic(enabled) {
     this.mapKinetic = enabled;
     localStorage.setItem('marco:map-kinetic', String(enabled));
+  }
+
+  updateShowQuickSearchButtons(enabled) {
+    this.showQuickSearchButtons = enabled;
+    localStorage.setItem('marco:show-quick-search', String(enabled));
   }
 
   updatePhotonApi(url) {

@@ -19,6 +19,11 @@ export default class AppMenuSettings extends Component {
   }
 
   @action
+  toggleQuickSearchButtons(event) {
+    this.settings.updateShowQuickSearchButtons(event.target.value === 'true');
+  }
+
+  @action
   updatePhotonApi(event) {
     this.settings.updatePhotonApi(event.target.value);
   }
@@ -36,6 +41,30 @@ export default class AppMenuSettings extends Component {
 
     <div class="sidebar-content">
       <section class="settings-section">
+        <div class="form-group">
+          <label for="show-quick-search">Quick search buttons visible</label>
+          <select
+            id="show-quick-search"
+            class="form-control"
+            {{on "change" this.toggleQuickSearchButtons}}
+          >
+            <option
+              value="true"
+              selected={{if this.settings.showQuickSearchButtons "selected"}}
+            >
+              Yes
+            </option>
+            <option
+              value="false"
+              selected={{unless
+                this.settings.showQuickSearchButtons
+                "selected"
+              }}
+            >
+              No
+            </option>
+          </select>
+        </div>
         <div class="form-group">
           <label for="map-kinetic">Map Inertia (Kinetic Panning)</label>
           <select

@@ -14,11 +14,15 @@ module('Integration | Component | app-header', function (hooks) {
     class MockRouterService extends Service {}
     class MockMapUiService extends Service {}
     class MockMapService extends Service {}
+    class MockSettingsService extends Service {
+      showQuickSearchButtons = true;
+    }
 
     this.owner.register('service:photon', MockPhotonService);
     this.owner.register('service:router', MockRouterService);
     this.owner.register('service:map-ui', MockMapUiService);
     this.owner.register('service:map', MockMapService);
+    this.owner.register('service:settings', MockSettingsService);
 
     await render(
       <template><AppHeader @onToggleMenu={{this.noop}} /></template>
@@ -43,11 +47,15 @@ module('Integration | Component | app-header', function (hooks) {
       currentCenter = null;
     }
     class MockMapService extends Service {}
+    class MockSettingsService extends Service {
+      showQuickSearchButtons = true;
+    }
 
     this.owner.register('service:photon', MockPhotonService);
     this.owner.register('service:router', MockRouterService);
     this.owner.register('service:map-ui', MockMapUiService);
     this.owner.register('service:map', MockMapService);
+    this.owner.register('service:settings', MockSettingsService);
 
     await render(
       <template><AppHeader @onToggleMenu={{this.noop}} /></template>
