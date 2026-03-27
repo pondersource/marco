@@ -260,7 +260,7 @@ module('Acceptance | search', function (hooks) {
 
     try {
       await visit('/search?category=coffee&lat=52.52&lon=13.405');
-    } catch (e) {
+    } catch {
       // Aborted transition throws, which is expected
     }
 
