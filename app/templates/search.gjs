@@ -11,6 +11,8 @@ export default class SearchTemplate extends Component {
   selectPlace(place) {
     if (place) {
       this.mapUi.returnToSearch = true;
+      // We don't need to manually set currentSearch here because
+      // it was already set in the route's setupController
       this.router.transitionTo('place', place);
     }
   }

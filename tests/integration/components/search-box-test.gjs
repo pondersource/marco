@@ -100,7 +100,7 @@ module('Integration | Component | search-box', function (hooks) {
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
     assert.verifySteps([
-      'transitionTo: search {"queryParams":{"q":"berlin","selected":null,"lat":"52.5200","lon":"13.4050"}}',
+      'transitionTo: search {"queryParams":{"q":"berlin","selected":null,"category":null,"lat":"52.5200","lon":"13.4050"}}',
     ]);
   });
 
@@ -133,5 +133,97 @@ module('Integration | Component | search-box', function (hooks) {
     await delay(400);
 
     assert.verifySteps(['search: cafe, 52.52, 13.405']);
+  });
+
+  test('it allows typing even when controlled by parent with a query argument', async function (assert) {
+    class MockPhotonService extends Service {
+      async search() {
+        return [];
+      }
+    }
+    this.owner.register('service:photon', MockPhotonService);
+
+    this.query = '';
+    this.updateQuery = (val) => {
+      this.set('query', val);
+    };
+    this.noop = () => {};
+
+    await render(
+      <template>
+        <SearchBox
+          @query={{this.query}}
+          @onQueryChange={{this.updateQuery}}
+          @onToggleMenu={{this.noop}}
+        />
+      </template>
+    );
+
+    // Initial state
+    assert.dom('.search-input').hasValue('');
+
+    // Simulate typing
+    await fillIn('.search-input', 't');
+    assert.dom('.search-input').hasValue('t', 'Input should show "t"');
+
+    await fillIn('.search-input', 'te');
+    assert.dom('.search-input').hasValue('te', 'Input should show "te"');
+
+    // Simulate external update (e.g. chip click)
+    this.set('query', 'restaurant');
+    // wait for re-render
+    await click('.search-input'); // just to trigger a change cycle or ensure stability
+    assert
+      .dom('.search-input')
+      .hasValue('restaurant', 'Input should update from external change');
+  });
+
+  test('it triggers category search with current location when clicking category result', async function (assert) {
+    // Mock MapUi Service
+    class MockMapUiService extends Service {
+      currentCenter = { lat: 51.5074, lon: -0.1278 };
+      setSearchBoxFocus() {}
+    }
+    this.owner.register('service:map-ui', MockMapUiService);
+
+    // Mock Photon Service
+    class MockPhotonService extends Service {
+      async search() {
+        return [];
+      }
+    }
+    this.owner.register('service:photon', MockPhotonService);
+
+    // Mock Router Service
+    class MockRouterService extends Service {
+      transitionTo(routeName, options) {
+        assert.step(`transitionTo: ${routeName} ${JSON.stringify(options)}`);
+      }
+    }
+    this.owner.register('service:router', MockRouterService);
+
+    this.noop = () => {};
+    await render(
+      <template><SearchBox @onToggleMenu={{this.noop}} /></template>
+    );
+
+    // Type "Resta" to trigger "Restaurants" category match
+    await fillIn('.search-input', 'Resta');
+
+    // Wait for debounce (300ms) + execution
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    await delay(400);
+
+    // The first result should be the category match
+    assert.dom('.search-result-item').exists({ count: 1 });
+    assert.dom('.result-title').hasText('Restaurants');
+
+    // Click the result
+    await click('.search-result-item');
+
+    // Assert transition with lat/lon from map center
+    assert.verifySteps([
+      'transitionTo: search {"queryParams":{"q":"Restaurants","category":"restaurants","selected":null,"lat":"51.5074","lon":"-0.1278"}}',
+    ]);
   });
 });

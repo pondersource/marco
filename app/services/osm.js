@@ -1,5 +1,6 @@
 import Service, { service } from '@ember/service';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import { getCategoryById } from '../utils/poi-categories';
 
 export default class OsmService extends Service {
   @service settings;
@@ -7,6 +8,13 @@ export default class OsmService extends Service {
   controller = null;
   cachedResults = null;
   lastQueryKey = null;
+
+  cancelAll() {
+    if (this.controller) {
+      this.controller.abort();
+      this.controller = null;
+    }
+  }
 
   async getNearbyPois(lat, lon, radius = 50) {
     const queryKey = `${lat},${lon},${radius}`;
@@ -39,15 +47,26 @@ export default class OsmService extends Service {
     ];
     const typeKeysQuery = [`~"^(${typeKeys.join('|')})$"~".*"`];
 
+    const negativeFilters = {
+      public_transport: ['stop_area', 'platform'],
+    };
+
+    const negativeFiltersQuery = Object.entries(negativeFilters)
+      .map(([key, values]) => {
+        const valueRegex = `^(${values.join('|')})$`;
+        return `["${key}"!~"${valueRegex}"]`;
+      })
+      .join('');
+
     const query = `
 [out:json][timeout:25];
 (
   node(around:${radius},${lat},${lon})
-    [${typeKeysQuery}][~"^name"~"."];
+    [${typeKeysQuery}]${negativeFiltersQuery}[~"^name"~"."];
   way(around:${radius},${lat},${lon})
-    [${typeKeysQuery}][~"^name"~"."];
+    [${typeKeysQuery}]${negativeFiltersQuery}[~"^name"~"."];
   relation(around:${radius},${lat},${lon})
-    [${typeKeysQuery}][~"^name"~"."];
+    [${typeKeysQuery}]${negativeFiltersQuery}[~"^name"~"."];
 );
 out center;
     `.trim();
@@ -73,6 +92,70 @@ out center;
         return [];
       }
       throw e;
+    }
+  }
+
+  async getCategoryPois(bounds, categoryId, lat, lon) {
+    const category = getCategoryById(categoryId);
+    if (!category || !bounds) return [];
+
+    const queryKey = lat && lon ? `cat:${categoryId}:${lat}:${lon}` : null;
+
+    if (queryKey && this.lastQueryKey === queryKey && this.cachedResults) {
+      console.debug('Returning cached category results for:', queryKey);
+      return this.cachedResults;
+    }
+
+    if (this.controller) {
+      this.controller.abort();
+    }
+    this.controller = new AbortController();
+    const signal = this.controller.signal;
+
+    const { minLat, minLon, maxLat, maxLon } = bounds;
+
+    // Build the query parts for each filter string and type
+    const queryParts = [];
+
+    // Default types if not specified (legacy fallback)
+    const types = category.types || ['node', 'way', 'relation'];
+
+    category.filter.forEach((filterString) => {
+      types.forEach((type) => {
+        // We ensure we only fetch named POIs to reduce noise
+        queryParts.push(`${type}${filterString}[~"^name"~"."];`);
+      });
+    });
+
+    const query = `
+[out:json][timeout:25][bbox:${minLat},${minLon},${maxLat},${maxLon}];
+(
+  ${queryParts.join('\n  ')}
+);
+out center;
+    `.trim();
+
+    const url = `${this.settings.overpassApi}?data=${encodeURIComponent(query)}`;
+
+    try {
+      const res = await this.fetchWithRetry(url, { signal });
+      if (!res.ok) throw new Error('Overpass request failed');
+      const data = await res.json();
+      const results = data.elements.map(this.normalizePoi);
+
+      if (queryKey) {
+        this.lastQueryKey = queryKey;
+        this.cachedResults = results;
+      }
+
+      return results;
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        console.debug('Category search aborted');
+        return [];
+      }
+      console.error('Category search failed', e);
+      return [];
     }
   }
 

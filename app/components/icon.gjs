@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import { htmlSafe } from '@ember/template';
-import { getIcon } from '../utils/icons';
+import { getIcon, isIconFilled } from '../utils/icons';
 
 export default class IconComponent extends Component {
   get svg() {
@@ -25,10 +25,14 @@ export default class IconComponent extends Component {
     return this.args.title || '';
   }
 
+  get isFilled() {
+    return this.args.filled || isIconFilled(this.args.name);
+  }
+
   <template>
     {{#if this.svg}}
       <span
-        class="icon {{if @filled 'icon-filled'}}"
+        class="icon {{if this.isFilled 'icon-filled'}}"
         style={{this.style}}
         title={{this.title}}
       >

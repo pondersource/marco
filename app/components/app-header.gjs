@@ -6,10 +6,16 @@ import { on } from '@ember/modifier';
 import Icon from '#components/icon';
 import UserMenu from '#components/user-menu';
 import SearchBox from '#components/search-box';
+import CategoryChips from '#components/category-chips';
 
 export default class AppHeaderComponent extends Component {
   @service storage;
   @tracked isUserMenuOpen = false;
+  @tracked searchQuery = '';
+
+  get hasQuery() {
+    return !!this.searchQuery;
+  }
 
   @action
   toggleUserMenu() {
@@ -21,10 +27,30 @@ export default class AppHeaderComponent extends Component {
     this.isUserMenuOpen = false;
   }
 
+  @action
+  handleQueryChange(query) {
+    this.searchQuery = query;
+  }
+
+  @action
+  handleChipSelect(category) {
+    this.searchQuery = category.label;
+    // The existing logic in CategoryChips triggers the route transition.
+    // This update simply fills the search box.
+  }
+
   <template>
     <header class="app-header">
       <div class="header-left">
-        <SearchBox @onToggleMenu={{@onToggleMenu}} />
+        <SearchBox
+          @query={{this.searchQuery}}
+          @onToggleMenu={{@onToggleMenu}}
+          @onQueryChange={{this.handleQueryChange}}
+        />
+      </div>
+
+      <div class="header-center {{if this.hasQuery 'searching'}}">
+        <CategoryChips @onSelect={{this.handleChipSelect}} />
       </div>
 
       <div class="header-right">

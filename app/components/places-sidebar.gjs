@@ -146,7 +146,7 @@ export default class PlacesSidebar extends Component {
 
   get isNearbySearch() {
     const qp = this.router.currentRoute.queryParams;
-    return !qp.q && qp.lat && qp.lon;
+    return !qp.q && !qp.category && qp.lat && qp.lon;
   }
 
   <template>

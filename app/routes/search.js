@@ -15,74 +15,126 @@ export default class SearchRoute extends Route {
     lon: { refreshModel: true },
     q: { refreshModel: true },
     selected: { refreshModel: true },
+    category: { refreshModel: true },
   };
 
   async model(params) {
     const lat = params.lat ? parseFloat(params.lat) : null;
     const lon = params.lon ? parseFloat(params.lon) : null;
     let pois = [];
+    let loadingType = null;
+    let loadingValue = null;
 
-    // Case 1: Text Search (q parameter present)
-    if (params.q) {
-      // Search with Photon (using lat/lon for bias if available)
-      pois = await this.photon.search(params.q, lat, lon);
+    try {
+      // Case 0: Category Search (category parameter present)
+      if (params.category && lat && lon) {
+        loadingType = 'category';
+        loadingValue = params.category;
+        this.mapUi.startLoading(loadingType, loadingValue);
 
-      // Search local bookmarks by name
-      const queryLower = params.q.toLowerCase();
-      const localMatches = this.storage.savedPlaces.filter((p) => {
-        return (
-          p.title?.toLowerCase().includes(queryLower) ||
-          p.description?.toLowerCase().includes(queryLower)
-        );
-      });
+        // We need bounds. If we have active map state, use it.
+        let bounds = this.mapUi.currentBounds;
 
-      // Merge local matches
-      localMatches.forEach((local) => {
-        const exists = pois.find(
-          (poi) =>
-            (local.osmId && poi.osmId === local.osmId) ||
-            (poi.id && poi.id === local.id)
-        );
-        if (!exists) {
-          pois.push(local);
+        // If we don't have bounds (direct URL visit), estimate them from lat/lon/zoom(16)
+        // or just use a fixed box around the center.
+        if (!bounds) {
+          // Approximate 0.01 degrees ~ 1km at equator. A viewport is roughly 0.02x0.01 at zoom 16?
+          // Let's take a safe box of ~1km radius.
+          const delta = 0.01;
+          bounds = {
+            minLat: lat - delta,
+            maxLat: lat + delta,
+            minLon: lon - delta,
+            maxLon: lon + delta,
+          };
         }
-      });
-    }
-    // Case 2: Nearby Search (lat/lon present, no q)
-    else if (lat && lon) {
-      const searchRadius = 50; // Default radius
 
-      // Fetch POIs from Overpass
-      pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
-
-      // Get cached/saved places in search radius
-      const localMatches = this.storage.savedPlaces.filter((p) => {
-        const dist = getDistance(lat, lon, p.lat, p.lon);
-        return dist <= searchRadius;
-      });
-
-      // Merge local matches
-      localMatches.forEach((local) => {
-        const exists = pois.find(
-          (poi) =>
-            (local.osmId && poi.osmId === local.osmId) ||
-            (poi.id && poi.id === local.id)
+        pois = await this.osm.getCategoryPois(
+          bounds,
+          params.category,
+          lat,
+          lon
         );
 
-        if (!exists) {
-          pois.push(local);
-        }
-      });
-
-      // Sort by distance from click
-      pois = pois
-        .map((p) => {
-          return {
+        // Sort by distance from center
+        pois = pois
+          .map((p) => ({
             ...p,
             _distance: getDistance(lat, lon, p.lat, p.lon),
-          };
-        })
-        .sort((a, b) => a._distance - b._distance);
+          }))
+          .sort((a, b) => a._distance - b._distance);
+      }
+      // Case 1: Text Search (q parameter present)
+      else if (params.q) {
+        loadingType = 'text';
+        loadingValue = params.q;
+        this.mapUi.startLoading(loadingType, loadingValue);
+
+        // Search with Photon (using lat/lon for bias if available)
+        pois = await this.photon.search(params.q, lat, lon);
+
+        // Search local bookmarks by name
+        const queryLower = params.q.toLowerCase();
+        const localMatches = this.storage.savedPlaces.filter((p) => {
+          return (
+            p.title?.toLowerCase().includes(queryLower) ||
+            p.description?.toLowerCase().includes(queryLower)
+          );
+        });
+
+        // Merge local matches
+        localMatches.forEach((local) => {
+          const exists = pois.find(
+            (poi) =>
+              (local.osmId && poi.osmId === local.osmId) ||
+              (poi.id && poi.id === local.id)
+          );
+          if (!exists) {
+            pois.push(local);
+          }
+        });
+      }
+      // Case 2: Nearby Search (lat/lon present, no q)
+      else if (lat && lon) {
+        // Nearby search does NOT trigger loading state (pulse is used instead)
+        const searchRadius = 50; // Default radius
+
+        // Fetch POIs from Overpass
+        pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
+
+        // Get cached/saved places in search radius
+        const localMatches = this.storage.savedPlaces.filter((p) => {
+          const dist = getDistance(lat, lon, p.lat, p.lon);
+          return dist <= searchRadius;
+        });
+
+        // Merge local matches
+        localMatches.forEach((local) => {
+          const exists = pois.find(
+            (poi) =>
+              (local.osmId && poi.osmId === local.osmId) ||
+              (poi.id && poi.id === local.id)
+          );
+
+          if (!exists) {
+            pois.push(local);
+          }
+        });
+
+        // Sort by distance from click
+        pois = pois
+          .map((p) => {
+            return {
+              ...p,
+              _distance: getDistance(lat, lon, p.lat, p.lon),
+            };
+          })
+          .sort((a, b) => a._distance - b._distance);
+      }
+    } finally {
+      if (loadingType && loadingValue) {
+        this.mapUi.stopLoading(loadingType, loadingValue);
+      }
     }
 
     // Check if any of these are already bookmarked
@@ -139,6 +191,11 @@ export default class SearchRoute extends Route {
     super.setupController(controller, model);
     // Ensure pulse is stopped if we reach here
     this.mapUi.stopSearch();
+    this.mapUi.setSearchResults(model);
+
+    // Store current search params to allow "Up" navigation from place details
+    const { q, category, lat, lon } = this.paramsFor('search');
+    this.mapUi.currentSearch = { q, category, lat, lon };
   }
 
   @action

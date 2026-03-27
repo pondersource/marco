@@ -7,18 +7,28 @@ import { fn } from '@ember/helper';
 import { task, timeout } from 'ember-concurrency';
 import Icon from '#components/icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
-import eq from 'ember-truth-helpers/helpers/eq';
+import { POI_CATEGORIES } from '../utils/poi-categories';
+import { eq, or } from 'ember-truth-helpers';
 
 export default class SearchBoxComponent extends Component {
   @service photon;
+  @service osm;
   @service router;
   @service mapUi;
   @service map; // Assuming we might need map context, but mostly we use router
 
-  @tracked query = '';
+  @tracked _internalQuery = '';
   @tracked results = [];
   @tracked isFocused = false;
   @tracked isLoading = false;
+
+  get query() {
+    return this.args.query ?? this._internalQuery;
+  }
+
+  set query(value) {
+    this._internalQuery = value;
+  }
 
   get showPopover() {
     return this.isFocused && this.results.length > 0;
@@ -26,19 +36,26 @@ export default class SearchBoxComponent extends Component {
 
   @action
   handleInput(event) {
-    this.query = event.target.value;
-    if (this.query.length < 2) {
+    const value = event.target.value;
+    this.query = value;
+    if (this.args.onQueryChange) {
+      this.args.onQueryChange(value);
+    }
+
+    if (value.length < 2) {
       this.results = [];
       return;
     }
 
-    this.searchTask.perform();
+    this.searchTask.perform(value);
   }
 
-  searchTask = task({ restartable: true }, async () => {
+  searchTask = task({ restartable: true }, async (term) => {
     await timeout(300);
 
-    if (this.query.length < 2) return;
+    const query = typeof term === 'string' ? term : this.query;
+
+    if (query.length < 2) return;
 
     this.isLoading = true;
     try {
@@ -47,8 +64,20 @@ export default class SearchBoxComponent extends Component {
       if (this.mapUi.currentCenter) {
         ({ lat, lon } = this.mapUi.currentCenter);
       }
-      const results = await this.photon.search(this.query, lat, lon);
-      this.results = results;
+
+      // Filter categories
+      const q = query.toLowerCase();
+      const categoryMatches = POI_CATEGORIES.filter((c) =>
+        c.label.toLowerCase().includes(q)
+      ).map((c) => ({
+        source: 'category',
+        title: c.label,
+        id: c.id,
+        icon: 'search',
+      }));
+
+      const results = await this.photon.search(query, lat, lon);
+      this.results = [...categoryMatches, ...results];
     } catch (e) {
       console.error('Search failed', e);
       this.results = [];
@@ -80,7 +109,7 @@ export default class SearchBoxComponent extends Component {
     event.preventDefault();
     if (!this.query) return;
 
-    let queryParams = { q: this.query, selected: null };
+    let queryParams = { q: this.query, selected: null, category: null };
 
     if (this.mapUi.currentCenter) {
       const { lat, lon } = this.mapUi.currentCenter;
@@ -94,7 +123,37 @@ export default class SearchBoxComponent extends Component {
 
   @action
   selectResult(place) {
+    if (place.source === 'category') {
+      this.query = place.title;
+      if (this.args.onQueryChange) {
+        this.args.onQueryChange(place.title);
+      }
+      this.results = [];
+
+      let lat = null,
+        lon = null;
+      if (this.mapUi.currentCenter) {
+        ({ lat, lon } = this.mapUi.currentCenter);
+        lat = lat?.toString();
+        lon = lon?.toString();
+      }
+
+      this.router.transitionTo('search', {
+        queryParams: {
+          q: place.title,
+          category: place.id,
+          selected: null,
+          lat: lat,
+          lon: lon,
+        },
+      });
+      return;
+    }
+
     this.query = place.title;
+    if (this.args.onQueryChange) {
+      this.args.onQueryChange(place.title);
+    }
     this.results = []; // Hide popover
 
     // If it has an OSM ID, go to place details
@@ -112,6 +171,7 @@ export default class SearchBoxComponent extends Component {
           lat: place.lat,
           lon: place.lon,
           selected: null,
+          category: null,
         },
       });
     }
@@ -119,10 +179,17 @@ export default class SearchBoxComponent extends Component {
 
   @action
   clear() {
+    this.searchTask.cancelAll();
+    this.mapUi.stopLoading();
+    this.osm.cancelAll();
+    this.photon.cancelAll();
+
     this.query = '';
     this.results = [];
-    this.router.transitionTo('index'); // Or stay on current page?
-    // Usually clear just clears the input.
+    if (this.args.onQueryChange) {
+      this.args.onQueryChange('');
+    }
+    this.router.transitionTo('index');
   }
 
   <template>
@@ -150,7 +217,16 @@ export default class SearchBoxComponent extends Component {
         />
 
         <button type="submit" class="search-submit-btn" aria-label="Search">
-          <Icon @name="search" @size={{20}} @color="#5f6368" />
+          {{#if
+            (or
+              (eq this.mapUi.loadingState.type "text")
+              (eq this.mapUi.loadingState.type "category")
+            )
+          }}
+            <Icon @name="loading-ring" @size={{20}} />
+          {{else}}
+            <Icon @name="search" @size={{20}} @color="#5f6368" />
+          {{/if}}
         </button>
 
         {{#if this.query}}
@@ -176,7 +252,11 @@ export default class SearchBoxComponent extends Component {
                   {{on "click" (fn this.selectResult result)}}
                 >
                   <div class="result-icon">
-                    <Icon @name="map-pin" @size={{16}} @color="#666" />
+                    <Icon
+                      @name={{if result.icon result.icon "map-pin"}}
+                      @size={{16}}
+                      @color="#666"
+                    />
                   </div>
                   <div class="result-info">
                     <span class="result-title">{{result.title}}</span>

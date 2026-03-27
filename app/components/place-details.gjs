@@ -318,7 +318,7 @@ export default class PlaceDetails extends Component {
 
         {{#if this.cuisine}}
           <p class="content-with-icon">
-            <Icon @name="fork-and-knife" @title="Cuisine" @filled={{true}} />
+            <Icon @name="fork-and-knife" @title="Cuisine" />
             <span>
               {{this.cuisine}}
             </span>
@@ -393,7 +393,7 @@ export default class PlaceDetails extends Component {
 
         {{#if this.wikipedia}}
           <p class="content-with-icon">
-            <Icon @name="wikipedia" @title="Wikipedia" @filled={{true}} />
+            <Icon @name="wikipedia" @title="Wikipedia" />
             <span>
               <a
                 href="https://wikipedia.org/wiki/{{this.wikipedia}}"

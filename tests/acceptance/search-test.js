@@ -155,4 +155,67 @@ module('Acceptance | search', function (hooks) {
     assert.dom('.places-list li').exists({ count: 1 });
     assert.dom('.places-list li .place-name').hasText('My Secret Base');
   });
+
+  test('visiting /search with category parameter performs category search', async function (assert) {
+    // Mock Osm Service
+    class MockOsmService extends Service {
+      async getCategoryPois(bounds, categoryId) {
+        if (categoryId === 'coffee') {
+          return [
+            {
+              title: 'Latte Art Cafe',
+              lat: 52.52,
+              lon: 13.405,
+              osmId: '101',
+              osmType: 'N',
+              description: 'Best Coffee',
+            },
+          ];
+        }
+        return [];
+      }
+    }
+    this.owner.register('service:osm', MockOsmService);
+
+    // Mock Storage Service (empty)
+    class MockStorageService extends Service {
+      savedPlaces = [];
+      findPlaceById() {
+        return null;
+      }
+      isPlaceSaved() {
+        return false;
+      }
+      rs = { on: () => {} };
+      placesInView = [];
+      loadPlacesInBounds() {
+        return Promise.resolve();
+      }
+    }
+    this.owner.register('service:storage', MockStorageService);
+
+    // Mock Map Service (needed for bounds)
+    class MockMapService extends Service {
+      getBounds() {
+        return {
+          minLat: 52.5,
+          minLon: 13.4,
+          maxLat: 52.6,
+          maxLon: 13.5,
+        };
+      }
+    }
+    this.owner.register('service:map', MockMapService);
+
+    await visit('/search?category=coffee&lat=52.52&lon=13.405');
+
+    assert.strictEqual(
+      currentURL(),
+      '/search?category=coffee&lat=52.52&lon=13.405'
+    );
+    assert.dom('.places-list li').exists({ count: 1 });
+    assert.dom('.places-list li .place-name').hasText('Latte Art Cafe');
+    // Ensure it shows "Results" not "Nearby"
+    assert.dom('.sidebar-header h2').includesText('Results');
+  });
 });

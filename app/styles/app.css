@@ -6,6 +6,8 @@
   --sidebar-width: 350px;
   --link-color: #2a7fff;
   --link-color-visited: #6a4fbf;
+  --marker-color-primary: #ea4335;
+  --marker-color-dark: #b31412;
 }
 
 html,
@@ -70,27 +72,96 @@ body {
   right: 0;
   height: 60px;
   padding: 0.5rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   z-index: 3000; /* Above sidebar (2000) and map */
   pointer-events: none; /* Let clicks pass through to map where transparent */
+
+  /* Layout */
+  display: grid;
+
+  /* Desktop: 1fr auto 1fr ensures the center element is absolutely centered */
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-areas: 'search chips user';
+  align-items: center;
+  gap: 1rem;
 }
 
 @media (width <= 768px) {
   .app-header {
-    padding: 0 0.5rem;
+    padding: 0.5rem 0.5rem 0;
+    height: auto;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'search user'
+      'chips chips';
+    row-gap: 8px; /* Increased spacing */
   }
 }
 
 .header-left,
-.header-right {
-  pointer-events: auto; /* Re-enable clicks for buttons */
+.header-right,
+.header-center {
+  pointer-events: auto; /* Re-enable clicks */
 }
 
 .header-left {
   display: flex;
   align-items: center;
+  grid-area: search;
+
+  /* Ensure it sits at the start of its grid area */
+  justify-self: start;
+  width: 100%;
+}
+
+@media (width > 768px) {
+  .header-left {
+    min-width: 300px;
+    max-width: 400px;
+  }
+}
+
+@media (width > 768px) {
+  .header-left {
+    /* Desktop: Ensure minimum width for search box so it's not squeezed */
+    min-width: 300px;
+    max-width: 350px;
+  }
+}
+
+.header-right {
+  grid-area: user;
+  justify-self: end;
+}
+
+.header-center {
+  grid-area: chips;
+
+  /* Desktop: Center the chips block in the available space */
+  display: flex;
+  justify-content: center;
+  min-width: 0; /* Allow shrinking */
+}
+
+/* Adjust scroll container for desktop centering */
+@media (width > 768px) {
+  .header-center .category-chips-scroll {
+    width: auto;
+    max-width: 100%;
+  }
+}
+
+@media (width <= 768px) {
+  /* No need to reset min-width/max-width since they are only set in media query above */
+  .header-center {
+    width: 100%;
+    overflow: hidden;
+    justify-content: start;
+  }
+
+  /* Hide chips on mobile when searching to save space */
+  .header-center.searching {
+    display: none;
+  }
 }
 
 .btn-press {
@@ -803,15 +874,15 @@ span.icon {
 .selected-pin {
   width: 40px;
   height: 40px;
-  color: #ea4335; /* Google Red */
+  color: var(--marker-color-primary);
   filter: drop-shadow(0 4px 6px rgb(0 0 0 / 30%));
 }
 
 .selected-pin svg {
   width: 100%;
   height: 100%;
-  fill: #ea4335;
-  stroke: #b31412; /* Darker red stroke */
+  fill: var(--marker-color-primary);
+  stroke: var(--marker-color-dark);
   stroke-width: 1;
 }
 
@@ -1189,4 +1260,64 @@ button.create-place {
   height: 1px;
   background: #eee;
   margin: 0.5rem 0;
+}
+
+/* Category Chips */
+.category-chips-scroll {
+  width: 100%;
+  overflow-x: auto;
+
+  /* Add padding for shadows */
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+
+  /* Remove top margin as spacing is handled by grid/layout */
+  margin-top: 0;
+}
+
+.category-chips-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.category-chips-container {
+  display: flex;
+  gap: 8px;
+
+  /* Padding on sides so first/last chip isn't flush with screen edge */
+  padding: 0 4px;
+  width: max-content; /* Ensure it scrolls */
+}
+
+.category-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 16px; /* Pill shape */
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+  transition: background-color 0.2s;
+}
+
+.category-chip:hover {
+  background: var(--hover-bg);
+}
+
+.category-chip:active {
+  background: #eee;
+}
+
+.category-chip:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  pointer-events: none;
 }

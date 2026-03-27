@@ -5,12 +5,27 @@ import { humanizeOsmTag } from '../utils/format-text';
 export default class PhotonService extends Service {
   @service settings;
 
+  controller = null;
+
+  cancelAll() {
+    if (this.controller) {
+      this.controller.abort();
+      this.controller = null;
+    }
+  }
+
   get baseUrl() {
     return this.settings.photonApi;
   }
 
   async search(query, lat, lon, limit = 10) {
     if (!query || query.length < 2) return [];
+
+    if (this.controller) {
+      this.controller.abort();
+    }
+    this.controller = new AbortController();
+    const signal = this.controller.signal;
 
     const params = new URLSearchParams({
       q: query,
@@ -25,7 +40,7 @@ export default class PhotonService extends Service {
     const url = `${this.baseUrl}?${params.toString()}`;
 
     try {
-      const res = await this.fetchWithRetry(url);
+      const res = await this.fetchWithRetry(url, { signal });
       if (!res.ok) {
         throw new Error(`Photon request failed with status ${res.status}`);
       }
@@ -35,6 +50,9 @@ export default class PhotonService extends Service {
 
       return data.features.map((f) => this.normalizeFeature(f));
     } catch (e) {
+      if (e.name === 'AbortError') {
+        return [];
+      }
       console.error('Photon search error:', e);
       // Return empty array on error so UI doesn't break
       return [];

@@ -251,4 +251,45 @@ module('Unit | Service | osm', function (hooks) {
       [30, 30],
     ]);
   });
+
+  test('getCategoryPois uses cache when lat/lon matches', async function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    // Mock settings
+    service.settings = { overpassApi: 'http://test-api' };
+
+    // Mock fetchWithRetry
+    let fetchCount = 0;
+    service.fetchWithRetry = async () => {
+      fetchCount++;
+      return {
+        ok: true,
+        json: async () => ({
+          elements: [{ id: 1, type: 'node', tags: { name: 'Test' } }],
+        }),
+      };
+    };
+
+    const bounds = { minLat: 0, minLon: 0, maxLat: 1, maxLon: 1 };
+
+    // First call - should fetch
+    await service.getCategoryPois(bounds, 'restaurants', 52.5, 13.4);
+    assert.strictEqual(fetchCount, 1, 'First call should trigger fetch');
+
+    // Second call with same lat/lon - should cache
+    await service.getCategoryPois(bounds, 'restaurants', 52.5, 13.4);
+    assert.strictEqual(
+      fetchCount,
+      1,
+      'Second call with same lat/lon should use cache'
+    );
+
+    // Third call with diff lat/lon - should fetch
+    await service.getCategoryPois(bounds, 'restaurants', 52.6, 13.5);
+    assert.strictEqual(
+      fetchCount,
+      2,
+      'Call with different lat/lon should trigger fetch'
+    );
+  });
 });

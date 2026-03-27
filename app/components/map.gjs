@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { modifier } from 'ember-modifier';
 import 'ol/ol.css';
-import Map from 'ol/Map.js';
+import OlMap from 'ol/Map.js';
 import { defaults as defaultControls, Control } from 'ol/control.js';
 import { defaults as defaultInteractions, DragPan } from 'ol/interaction.js';
 import Kinetic from 'ol/Kinetic.js';
@@ -16,8 +16,10 @@ import Feature from 'ol/Feature.js';
 import GeoJSON from 'ol/format/GeoJSON.js';
 import Point from 'ol/geom/Point.js';
 import Geolocation from 'ol/Geolocation.js';
-import { Style, Circle, Fill, Stroke } from 'ol/style.js';
+import { Style, Circle, Fill, Stroke, Icon } from 'ol/style.js';
 import { apply } from 'ol-mapbox-style';
+import { getIcon } from '../utils/icons';
+import { getIconNameForTags } from '../utils/osm-icons';
 
 export default class MapComponent extends Component {
   @service osm;
@@ -28,6 +30,7 @@ export default class MapComponent extends Component {
 
   mapInstance;
   bookmarkSource;
+  searchResultsSource;
   selectedShapeSource;
   searchOverlay;
   searchOverlayElement;
@@ -110,6 +113,101 @@ export default class MapComponent extends Component {
       zIndex: 10, // Ensure it sits above the map tiles
     });
 
+    // Create a vector source and layer for search results
+    this.searchResultsSource = new VectorSource();
+    const cachedIconUrls = new Map();
+
+    const searchResultStyle = (feature) => {
+      const originalPlace = feature.get('originalPlace');
+      // Some search results might be just the place object without separate tags
+      // If it's a raw place object, it might have osmTags property.
+      // Or it might be the tags object itself.
+      const tags = originalPlace.osmTags || originalPlace;
+      const iconName = getIconNameForTags(tags);
+
+      // Use 'default' key for the standard red dot marker. Use iconName as key if present.
+      const cacheKey = iconName || 'default';
+
+      if (!cachedIconUrls.has(cacheKey)) {
+        const markerColor =
+          getComputedStyle(document.documentElement)
+            .getPropertyValue('--marker-color-primary')
+            .trim() || '#ea4335';
+
+        // Default content: Red circle
+        let innerContent = `<circle cx="12" cy="12" r="8" fill="${markerColor}"/>`;
+
+        if (iconName) {
+          const rawSvg = getIcon(iconName);
+          if (rawSvg) {
+            // Pinhead icons are usually 15x15 viewBox="0 0 15 15".
+            // We want to center it on 12,12.
+            // A 12x12 icon centered at 12,12 means top-left at 6,6.
+            // However, since we are embedding a new SVG, we can just use x/y/width/height.
+            // But we need to strip the outer <svg> tag to embed the paths cleanly if we want full control,
+            // or we can nest the SVG. Nesting is safer.
+
+            // The rawSvg string contains <svg ...>...</svg>.
+            // We want to make it white. We can add a group with fill="white".
+            // But if the SVG has fill attributes, they override. Pinhead icons usually don't have fills.
+
+            // Let's strip the outer SVG tag to get the path content.
+            let content = rawSvg.trim();
+            const svgStart = content.indexOf('<svg');
+            const svgEnd = content.indexOf('>', svgStart);
+            const contentStart = svgEnd + 1;
+            const contentEnd = content.lastIndexOf('</svg>');
+
+            if (svgStart !== -1 && contentEnd !== -1) {
+              content = content.substring(contentStart, contentEnd);
+            }
+
+            // We render the red circle background, then the icon on top.
+            // Icon is scaled down slightly to fit nicely inside the circle.
+            // 15x15 scaled by 0.8 is 12x12.
+            // Translate to 6,6 to center.
+            innerContent = `
+              <circle cx="12" cy="12" r="8" fill="${markerColor}"/>
+              <g transform="translate(6, 6) scale(0.8)" fill="white">
+                ${content}
+              </g>
+            `;
+          }
+        }
+
+        const svg = `
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 40" width="40" height="50">
+            <defs>
+              <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="black" flood-opacity="0.3"/>
+              </filter>
+            </defs>
+            <path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 12 24 12 24C12 24 22 17.5 22 12C22 6.5 17.5 2 12 2Z" fill="white" filter="url(#shadow)"/>
+            ${innerContent}
+          </svg>
+        `;
+
+        cachedIconUrls.set(
+          cacheKey,
+          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.trim())
+        );
+      }
+
+      return new Style({
+        image: new Icon({
+          src: cachedIconUrls.get(cacheKey),
+          anchor: [0.5, 0.65],
+          scale: 1,
+        }),
+      });
+    };
+
+    const searchResultLayer = new VectorLayer({
+      source: this.searchResultsSource,
+      style: searchResultStyle,
+      zIndex: 11, // Above bookmarks (10)
+    });
+
     // Default view settings
     let center = [14.21683569, 27.060114248];
     let zoom = 2.661;
@@ -141,9 +239,14 @@ export default class MapComponent extends Component {
       projection: 'EPSG:3857',
     });
 
-    this.mapInstance = new Map({
+    this.mapInstance = new OlMap({
       target: element,
-      layers: [openfreemap, selectedShapeLayer, bookmarkLayer],
+      layers: [
+        openfreemap,
+        selectedShapeLayer,
+        searchResultLayer,
+        bookmarkLayer,
+      ],
       view: view,
       controls: defaultControls({
         zoom: true,
@@ -178,7 +281,7 @@ export default class MapComponent extends Component {
     const pinIcon = document.createElement('div');
     pinIcon.className = 'selected-pin';
     // Simple SVG for Map Pin
-    pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" style="fill: #b31412; stroke: none;"></circle></svg>`;
+    pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" style="fill: var(--marker-color-dark); stroke: none;"></circle></svg>`;
 
     const pinShadow = document.createElement('div');
     pinShadow.className = 'selected-pin-shadow';
@@ -462,6 +565,33 @@ export default class MapComponent extends Component {
         kinetic: kinetic,
       })
     );
+  });
+
+  updateSearchResults = modifier(() => {
+    if (!this.searchResultsSource) return;
+
+    this.searchResultsSource.clear();
+    const results = this.mapUi.searchResults;
+
+    if (!results || results.length === 0) return;
+
+    const features = [];
+    results.forEach((place) => {
+      if (place.lat && place.lon) {
+        const feature = new Feature({
+          geometry: new Point(fromLonLat([place.lon, place.lat])),
+          name: place.title,
+          id: place.id,
+          isSearchResult: true,
+          originalPlace: place,
+        });
+        features.push(feature);
+      }
+    });
+
+    if (features.length > 0) {
+      this.searchResultsSource.addFeatures(features);
+    }
   });
 
   // Track the selected place from the UI Service (Router -> Map)
@@ -914,6 +1044,7 @@ export default class MapComponent extends Component {
     const [maxLon, maxLat] = toLonLat([extent[2], extent[3]]);
 
     const bbox = { minLat, minLon, maxLat, maxLon };
+    this.mapUi.updateBounds(bbox);
     await this.storage.loadPlacesInBounds(bbox);
     this.loadBookmarks(this.storage.placesInView);
 
@@ -945,6 +1076,7 @@ export default class MapComponent extends Component {
       hitTolerance: 10,
     });
     let clickedBookmark = null;
+    let clickedSearchResult = null;
     let selectedFeatureName = null;
 
     if (features && features.length > 0) {
@@ -953,8 +1085,12 @@ export default class MapComponent extends Component {
         console.debug(f);
       }
       const bookmarkFeature = features.find((f) => f.get('isBookmark'));
+      const searchResultFeature = features.find((f) => f.get('isSearchResult'));
+
       if (bookmarkFeature) {
         clickedBookmark = bookmarkFeature.get('originalPlace');
+      } else if (searchResultFeature) {
+        clickedSearchResult = searchResultFeature.get('originalPlace');
       }
       // Also get visual props for standard map click logic later
       const props = features[0].getProperties();
@@ -963,16 +1099,30 @@ export default class MapComponent extends Component {
       }
     }
 
+    // Helper to transition with proper state
+    const transitionToPlace = (place) => {
+      // If we are currently in search mode OR have active search results,
+      // we want the "Back" button on the place details to return to the search results.
+      if (
+        this.router.currentRouteName === 'search' ||
+        (this.mapUi.currentSearch && this.mapUi.searchResults.length > 0)
+      ) {
+        this.mapUi.returnToSearch = true;
+      }
+      this.mapUi.preventNextZoom = true;
+      this.router.transitionTo('place', place);
+    };
+
     // Special handling when sidebar is OPEN
     if (this.args.isSidebarOpen) {
-      // If it's a bookmark, we allow "switching" to it even if sidebar is open
-      if (clickedBookmark) {
+      // If it's a bookmark or search result, we allow "switching" to it even if sidebar is open
+      const targetPlace = clickedBookmark || clickedSearchResult;
+      if (targetPlace) {
         console.debug(
-          'Clicked bookmark while sidebar open (switching):',
-          clickedBookmark
+          'Clicked feature while sidebar open (switching):',
+          targetPlace
         );
-        this.mapUi.preventNextZoom = true;
-        this.router.transitionTo('place', clickedBookmark);
+        transitionToPlace(targetPlace);
         return;
       }
 
@@ -986,8 +1136,13 @@ export default class MapComponent extends Component {
     // Normal behavior (sidebar is closed)
     if (clickedBookmark) {
       console.debug('Clicked bookmark:', clickedBookmark);
-      this.mapUi.preventNextZoom = true;
-      this.router.transitionTo('place', clickedBookmark);
+      transitionToPlace(clickedBookmark);
+      return;
+    }
+
+    if (clickedSearchResult) {
+      console.debug('Clicked search result:', clickedSearchResult);
+      transitionToPlace(clickedSearchResult);
       return;
     }
 
@@ -1028,6 +1183,7 @@ export default class MapComponent extends Component {
       lat: lat.toFixed(6),
       lon: lon.toFixed(6),
       q: null, // Clear q to force spatial search
+      category: null, // Clear category to force spatial search
       selected: selectedFeatureName || null,
     };
 
@@ -1040,6 +1196,7 @@ export default class MapComponent extends Component {
       {{this.setupMap}}
       {{this.updateInteractions}}
       {{this.updateBookmarks}}
+      {{this.updateSearchResults}}
       {{this.updateSelectedPin}}
       {{this.syncPulse}}
       {{this.syncCreationMode}}

@@ -77,9 +77,11 @@ export default class PlaceTemplate extends Component {
   navigateBack(place) {
     // The sidebar calls this with null when "Back" is clicked.
     if (place === null) {
-      // If we came from search results, go back in history
-      if (this.mapUi.returnToSearch) {
-        window.history.back();
+      // If we have an active search context, return to it (UP navigation)
+      if (this.mapUi.returnToSearch && this.mapUi.currentSearch) {
+        this.router.transitionTo('search', {
+          queryParams: this.mapUi.currentSearch,
+        });
       } else {
         // Otherwise just close the sidebar (return to map index)
         this.router.transitionTo('index');
