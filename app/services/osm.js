@@ -155,7 +155,7 @@ out center;
         return [];
       }
       console.error('Category search failed', e);
-      return [];
+      throw e;
     }
   }
 

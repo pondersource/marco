@@ -9,6 +9,7 @@ export default class SearchRoute extends Route {
   @service mapUi;
   @service storage;
   @service router;
+  @service toast;
 
   queryParams = {
     lat: { refreshModel: true },
@@ -199,8 +200,12 @@ export default class SearchRoute extends Route {
   }
 
   @action
-  error() {
+  error(error, transition) {
     this.mapUi.stopSearch();
-    return true; // Bubble error
+    this.toast.show('Search request failed. Please try again.');
+    if (transition) {
+      transition.abort();
+    }
+    return false; // Prevent bubble and stop transition
   }
 }

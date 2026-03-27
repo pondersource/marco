@@ -3,6 +3,7 @@ import { pageTitle } from 'ember-page-title';
 import Map from '#components/map';
 import AppHeader from '#components/app-header';
 import AppMenu from '#components/app-menu/index';
+import Toast from '#components/toast';
 import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
@@ -88,6 +89,8 @@ export default class ApplicationComponent extends Component {
     {{#if this.isAppMenuOpen}}
       <AppMenu @onClose={{this.closeAppMenu}} />
     {{/if}}
+
+    <Toast />
 
     {{outlet}}
   </template>
