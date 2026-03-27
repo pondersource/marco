@@ -10,6 +10,7 @@ import CategoryChips from '#components/category-chips';
 
 export default class AppHeaderComponent extends Component {
   @service storage;
+  @service settings;
   @tracked isUserMenuOpen = false;
   @tracked searchQuery = '';
 
@@ -49,9 +50,11 @@ export default class AppHeaderComponent extends Component {
         />
       </div>
 
-      <div class="header-center {{if this.hasQuery 'searching'}}">
-        <CategoryChips @onSelect={{this.handleChipSelect}} />
-      </div>
+      {{#if this.settings.showQuickSearchButtons}}
+        <div class="header-center {{if this.hasQuery 'searching'}}">
+          <CategoryChips @onSelect={{this.handleChipSelect}} />
+        </div>
+      {{/if}}
 
       <div class="header-right">
         <div class="user-menu-container">
