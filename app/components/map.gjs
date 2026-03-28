@@ -119,6 +119,28 @@ export default class MapComponent extends Component {
 
     const searchResultStyle = (feature) => {
       const originalPlace = feature.get('originalPlace');
+
+      // If this place is currently selected, hide the search result marker
+      // because the main red drop pin will be shown instead.
+      const selectedPlace = this.mapUi.selectedPlace;
+      if (selectedPlace) {
+        const isSameOsmId =
+          originalPlace.osmId &&
+          selectedPlace.osmId &&
+          originalPlace.osmId === selectedPlace.osmId;
+        const isSameId =
+          originalPlace.id &&
+          selectedPlace.id &&
+          originalPlace.id === selectedPlace.id;
+        const isSameCoords =
+          originalPlace.lat === selectedPlace.lat &&
+          originalPlace.lon === selectedPlace.lon;
+
+        if (isSameOsmId || isSameId || isSameCoords) {
+          return new Style({}); // Empty style makes it invisible
+        }
+      }
+
       // Some search results might be just the place object without separate tags
       // If it's a raw place object, it might have osmTags property.
       // Or it might be the tags object itself.
@@ -598,6 +620,11 @@ export default class MapComponent extends Component {
   updateSelectedPin = modifier(() => {
     const selected = this.mapUi.selectedPlace;
     const options = this.mapUi.selectionOptions || {};
+
+    // Force a redraw of the search results layer so it can hide/show the selected pin
+    if (this.searchResultsSource) {
+      this.searchResultsSource.changed();
+    }
 
     if (!this.selectedPinOverlay || !this.selectedPinElement) return;
 
