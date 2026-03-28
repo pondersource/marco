@@ -31,6 +31,7 @@ export const POI_ICON_RULES = [
   { tags: { amenity: 'police' }, icon: 'police-officer-with-stop-arm' },
   { tags: { amenity: 'toilets' }, icon: 'womens-and-mens-restroom-symbol' },
   { tags: { amenity: 'school' }, icon: 'open-book' },
+  { tags: { amenity: 'driving_school' }, icon: 'car' },
 
   { tags: { shop: 'coffee' }, icon: 'coffee-bean' },
   { tags: { shop: 'tea' }, icon: 'coffee-bean' },
@@ -144,6 +145,7 @@ export const POI_ICON_RULES = [
   { tags: { sport: 'squash' }, icon: 'person-playing-tennis' },
   { tags: { sport: 'padel' }, icon: 'person-playing-tennis' },
   { tags: { sport: 'table_tennis' }, icon: 'table-tennis-paddle' },
+  { tags: { sport: 'climbing' }, icon: 'climbing_wall' },
   { tags: { leisure: 'water_park' }, icon: 'person-swimming-in-water' },
   { tags: { sport: 'swimming' }, icon: 'person-swimming-in-water' },
   { tags: { sport: 'golf' }, icon: 'person-swinging-golf-club' },

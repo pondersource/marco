@@ -38,6 +38,7 @@ import loadingRing from '../icons/270-ring.svg?raw';
 
 import angelfish from '@waysidemapping/pinhead/dist/icons/angelfish.svg?raw';
 import barbell from '@waysidemapping/pinhead/dist/icons/barbell.svg?raw';
+import climbingWall from '@waysidemapping/pinhead/dist/icons/climbing_wall.svg?raw';
 import banknote from '@waysidemapping/pinhead/dist/icons/banknote.svg?raw';
 import badgeShieldWithFire from '@waysidemapping/pinhead/dist/icons/badge_shield_with_fire.svg?raw';
 import beachUmbrellaInGround from '@waysidemapping/pinhead/dist/icons/beach_umbrella_in_ground.svg?raw';
@@ -106,6 +107,7 @@ import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/wome
 
 import wikipedia from '../icons/wikipedia.svg?raw';
 import parkingP from '@waysidemapping/pinhead/dist/icons/parking_p.svg?raw';
+import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
 
 const ICONS = {
   activity,
@@ -123,6 +125,7 @@ const ICONS = {
   camera,
   'check-square': checkSquare,
   'cigarette-with-smoke-curl': cigaretteWithSmokeCurl,
+  climbing_wall: climbingWall,
   'classical-building': classicalBuilding,
   'classical-building-with-dome-and-flag': classicalBuildingWithDomeAndFlag,
   'classical-building-with-flag': classicalBuildingWithFlag,
@@ -212,6 +215,7 @@ const ICONS = {
   'womens-and-mens-restroom-symbol': womensAndMensRestroomSymbol,
   wikipedia,
   parking_p: parkingP,
+  car,
   x,
   zap,
   'loading-ring': loadingRing,
