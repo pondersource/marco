@@ -1,6 +1,6 @@
 # Project Status: Marco
 
-**Last Updated:** Wed Mar 18 2026
+**Last Updated:** Wed Apr 1 2026
 
 ## Project Context
 
@@ -46,7 +46,9 @@ We are building **Marco**, a decentralized maps application using **Ember.js** (
 
 ### 5. Features
 
-- **Search:** Typo-tolerant **Photon API** integration with location bias and debounce.
+- **Search:** Typo-tolerant **Photon API** integration with location bias, debounce, query aborting, and loading indicators.
+- **Category Search:** Quick search buttons/chips for POI categories, rendering distinct map markers with custom icons for results.
+- **UI Enhancements:** Toast notifications for failed search requests
 - **Creation & Editing:**
   - "Crosshair" mode for precise location picking.
   - Edit Title/Description for saved places.
