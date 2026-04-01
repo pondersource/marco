@@ -108,6 +108,7 @@ import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/w
 import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/womens_and_mens_restroom_symbol.svg?raw';
 
 import loadingRing from '../icons/270-ring.svg?raw';
+import nostrich from '../icons/nostrich-2.svg?raw';
 import remotestorage from '../icons/remotestorage.svg?raw';
 import wikipedia from '../icons/wikipedia.svg?raw';
 
@@ -178,6 +179,7 @@ const ICONS = {
   'molar-tooth': molarTooth,
   navigation,
   'needle-and-spool-of-thread': needleAndSpoolOfThread,
+  nostrich,
   'open-book': openBook,
   palace,
   'person-cricket-batting-at-cricket-ball': personCricketBattingAtCricketBall,
@@ -233,6 +235,7 @@ const FILLED_ICONS = [
   'camera',
   'person-sleeping-in-bed',
   'loading-ring',
+  'nostrich',
 ];
 
 export function getIcon(name) {
