@@ -108,6 +108,7 @@ import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/w
 import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/womens_and_mens_restroom_symbol.svg?raw';
 
 import loadingRing from '../icons/270-ring.svg?raw';
+import remotestorage from '../icons/remotestorage.svg?raw';
 import wikipedia from '../icons/wikipedia.svg?raw';
 
 const ICONS = {
@@ -196,6 +197,7 @@ const ICONS = {
   'police-officer-with-stop-arm': policeOfficerWithStopArm,
   plus,
   'round-structure-with-flag': roundStructureWithFlag,
+  remotestorage,
   'sailing-ship-in-water': sailingShipInWater,
   'scissors-open': scissorsOpen,
   'shipwreck-in-water': shipwreckInWater,

@@ -21,7 +21,7 @@ export default class UserMenuComponent extends Component {
         <li class="account-item">
           <div class="account-header">
             <div class="account-info">
-              <Icon @name="server" @size={{18}} />
+              <Icon @name="remotestorage" @size={{18}} />
               <span>RemoteStorage</span>
             </div>
             {{#if @storage.connected}}
