@@ -1,14 +1,11 @@
+// AGENT: Keep imports sorted alphabetically, grouped by feather-icons → pinhead → custom/local
 import activity from 'feather-icons/dist/icons/activity.svg?raw';
 import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
 import checkSquare from 'feather-icons/dist/icons/check-square.svg?raw';
-import cigaretteWithSmokeCurl from '@waysidemapping/pinhead/dist/icons/cigarette_with_smoke_curl.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
 import edit from 'feather-icons/dist/icons/edit.svg?raw';
-import eyeglasses from '@waysidemapping/pinhead/dist/icons/eyeglasses.svg?raw';
 import facebook from 'feather-icons/dist/icons/facebook.svg?raw';
-import fancyMirrorWithReflectionAndStars from '@waysidemapping/pinhead/dist/icons/fancy_mirror_with_reflection_and_stars.svg?raw';
-import familyRestroomSymbol from '@waysidemapping/pinhead/dist/icons/family_restroom_symbol.svg?raw';
 import gift from 'feather-icons/dist/icons/gift.svg?raw';
 import globe from 'feather-icons/dist/icons/globe.svg?raw';
 import heart from 'feather-icons/dist/icons/heart.svg?raw';
@@ -17,13 +14,11 @@ import info from 'feather-icons/dist/icons/info.svg?raw';
 import instagram from 'feather-icons/dist/icons/instagram.svg?raw';
 import logIn from 'feather-icons/dist/icons/log-in.svg?raw';
 import logOut from 'feather-icons/dist/icons/log-out.svg?raw';
-import lowriseBuilding from '@waysidemapping/pinhead/dist/icons/lowrise_building.svg?raw';
 import mail from 'feather-icons/dist/icons/mail.svg?raw';
 import map from 'feather-icons/dist/icons/map.svg?raw';
 import mapPin from 'feather-icons/dist/icons/map-pin.svg?raw';
 import menu from 'feather-icons/dist/icons/menu.svg?raw';
 import navigation from 'feather-icons/dist/icons/navigation.svg?raw';
-import needleAndSpoolOfThread from '@waysidemapping/pinhead/dist/icons/needle_and_spool_of_thread.svg?raw';
 import phone from 'feather-icons/dist/icons/phone.svg?raw';
 import plus from 'feather-icons/dist/icons/plus.svg?raw';
 import search from 'feather-icons/dist/icons/search.svg?raw';
@@ -31,10 +26,8 @@ import server from 'feather-icons/dist/icons/server.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
 import target from 'feather-icons/dist/icons/target.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
-import villageBuildings from '@waysidemapping/pinhead/dist/icons/village_buildings.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
-import loadingRing from '../icons/270-ring.svg?raw';
 
 import angelfish from '@waysidemapping/pinhead/dist/icons/angelfish.svg?raw';
 import barbell from '@waysidemapping/pinhead/dist/icons/barbell.svg?raw';
@@ -47,6 +40,8 @@ import burgerAndDrinkCupWithStraw from '@waysidemapping/pinhead/dist/icons/burge
 import bus from '@waysidemapping/pinhead/dist/icons/bus.svg?raw';
 import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.svg?raw';
 import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
+import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
+import cigaretteWithSmokeCurl from '@waysidemapping/pinhead/dist/icons/cigarette_with_smoke_curl.svg?raw';
 import classicalBuilding from '@waysidemapping/pinhead/dist/icons/classical_building.svg?raw';
 import classicalBuildingWithDomeAndFlag from '@waysidemapping/pinhead/dist/icons/classical_building_with_dome_and_flag.svg?raw';
 import classicalBuildingWithFlag from '@waysidemapping/pinhead/dist/icons/classical_building_with_flag.svg?raw';
@@ -60,6 +55,9 @@ import comedyMaskAndTragedyMask from '@waysidemapping/pinhead/dist/icons/comedy_
 import croissant from '@waysidemapping/pinhead/dist/icons/croissant.svg?raw';
 import cupAndSaucer from '@waysidemapping/pinhead/dist/icons/cup_and_saucer.svg?raw';
 import donut from '@waysidemapping/pinhead/dist/icons/donut.svg?raw';
+import eyeglasses from '@waysidemapping/pinhead/dist/icons/eyeglasses.svg?raw';
+import fancyMirrorWithReflectionAndStars from '@waysidemapping/pinhead/dist/icons/fancy_mirror_with_reflection_and_stars.svg?raw';
+import familyRestroomSymbol from '@waysidemapping/pinhead/dist/icons/family_restroom_symbol.svg?raw';
 import film from '@waysidemapping/pinhead/dist/icons/film.svg?raw';
 import fingernailPolished from '@waysidemapping/pinhead/dist/icons/fingernail_polished.svg?raw';
 import fish from '@waysidemapping/pinhead/dist/icons/fish.svg?raw';
@@ -72,12 +70,15 @@ import grecianVase from '@waysidemapping/pinhead/dist/icons/grecian_vase.svg?raw
 import greekCross from '@waysidemapping/pinhead/dist/icons/greek_cross.svg?raw';
 import iceCreamOnCone from '@waysidemapping/pinhead/dist/icons/ice_cream_on_cone.svg?raw';
 import jewel from '@waysidemapping/pinhead/dist/icons/jewel.svg?raw';
+import lowriseBuilding from '@waysidemapping/pinhead/dist/icons/lowrise_building.svg?raw';
 import marketStall from '@waysidemapping/pinhead/dist/icons/market_stall.svg?raw';
 import memorialStoneWithInscription from '@waysidemapping/pinhead/dist/icons/memorial_stone_with_inscription.svg?raw';
 import mobilePhoneWithKeypadAndAntenna from '@waysidemapping/pinhead/dist/icons/mobile_phone_with_keypad_and_antenna.svg?raw';
 import molarTooth from '@waysidemapping/pinhead/dist/icons/molar_tooth.svg?raw';
+import needleAndSpoolOfThread from '@waysidemapping/pinhead/dist/icons/needle_and_spool_of_thread.svg?raw';
 import openBook from '@waysidemapping/pinhead/dist/icons/open_book.svg?raw';
 import palace from '@waysidemapping/pinhead/dist/icons/palace.svg?raw';
+import parkingP from '@waysidemapping/pinhead/dist/icons/parking_p.svg?raw';
 import personCricketBattingAtCricketBall from '@waysidemapping/pinhead/dist/icons/person_cricket_batting_at_cricket_ball.svg?raw';
 import personBoardingTramWithDestinationDisplayAndPantographOnTramTrack from '@waysidemapping/pinhead/dist/icons/person_boarding_tram_with_destination_display_and_pantograph_on_tram_track.svg?raw';
 import personJockeyingRacehorse from '@waysidemapping/pinhead/dist/icons/person_jockeying_racehorse.svg?raw';
@@ -97,17 +98,17 @@ import scissorsOpen from '@waysidemapping/pinhead/dist/icons/scissors_open.svg?r
 import shipwreckInWater from '@waysidemapping/pinhead/dist/icons/shipwreck_in_water.svg?raw';
 import shoppingBag from '@waysidemapping/pinhead/dist/icons/shopping_bag.svg?raw';
 import shoppingBasket from '@waysidemapping/pinhead/dist/icons/shopping_basket.svg?raw';
+import shoppingCart from '@waysidemapping/pinhead/dist/icons/shopping_cart.svg?raw';
 import tableTennisPaddle from '@waysidemapping/pinhead/dist/icons/table_tennis_paddle.svg?raw';
 import tattooMachine from '@waysidemapping/pinhead/dist/icons/tattoo_machine.svg?raw';
 import toolbox from '@waysidemapping/pinhead/dist/icons/toolbox.svg?raw';
 import treeAndBenchWithBackrest from '@waysidemapping/pinhead/dist/icons/tree_and_bench_with_backrest.svg?raw';
-import shoppingCart from '@waysidemapping/pinhead/dist/icons/shopping_cart.svg?raw';
+import villageBuildings from '@waysidemapping/pinhead/dist/icons/village_buildings.svg?raw';
 import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/wall_hanging_with_mountains_and_sun.svg?raw';
 import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/womens_and_mens_restroom_symbol.svg?raw';
 
+import loadingRing from '../icons/270-ring.svg?raw';
 import wikipedia from '../icons/wikipedia.svg?raw';
-import parkingP from '@waysidemapping/pinhead/dist/icons/parking_p.svg?raw';
-import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
 
 const ICONS = {
   activity,
