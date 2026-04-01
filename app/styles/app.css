@@ -216,14 +216,6 @@ body {
   /* background: rgb(0 0 0 / 10%); Optional dimming */
 }
 
-.user-status {
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #eee;
-  color: #666;
-  font-size: 0.9rem;
-}
-
 .account-list {
   list-style: none;
   padding: 0;
@@ -232,9 +224,31 @@ body {
 
 .account-item {
   display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.account-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.account-item:first-child {
+  padding-top: 0;
+}
+
+.account-header {
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 0;
+}
+
+.account-status {
+  font-size: 0.85rem;
+  color: #898989;
+  margin-top: 0.35rem;
+  margin-left: calc(18px + 0.75rem);
 }
 
 .account-item.disabled {
