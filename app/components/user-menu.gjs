@@ -50,7 +50,7 @@ export default class UserMenuComponent extends Component {
         <li class="account-item disabled">
           <div class="account-header">
             <div class="account-info">
-              <Icon @name="globe" @size={{18}} />
+              <Icon @name="map" @size={{18}} />
               <span>OpenStreetMap</span>
             </div>
           </div>
