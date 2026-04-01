@@ -104,6 +104,7 @@
   "dependencies": {
     "@waysidemapping/pinhead": "^15.20.0",
     "ember-concurrency": "^5.2.0",
-    "ember-lifeline": "^7.0.0"
+    "ember-lifeline": "^7.0.0",
+    "oauth2-pkce": "^2.1.3"
   }
 }

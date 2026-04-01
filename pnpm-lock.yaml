@@ -17,6 +17,9 @@ importers:
       ember-lifeline:
         specifier: ^7.0.0
         version: 7.0.0(@ember/test-helpers@5.4.1(@babel/core@7.28.6))
+      oauth2-pkce:
+        specifier: ^2.1.3
+        version: 2.1.3
     devDependencies:
       '@babel/core':
         specifier: ^7.28.5
@@ -4149,6 +4152,9 @@ packages:
 
   nwsapi@2.2.23:
     resolution: {integrity: sha512-7wfH4sLbt4M0gCDzGE6vzQBo0bfTKjU7Sfpqy/7gs1qBfYz2vEJH6vXcBKpO3+6Yu1telwd0t9HpyOoLEQQbIQ==}
+
+  oauth2-pkce@2.1.3:
+    resolution: {integrity: sha512-DcMiG5XUKNabf0qV1GOEPo+zwIdYsO2K1FMhiP8XnSCJbujZLOnSC5BCYiCtD0le+aue2fK6qDDvGjcQNF53jQ==}
 
   object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
@@ -10260,6 +10266,8 @@ snapshots:
       set-blocking: 2.0.0
 
   nwsapi@2.2.23: {}
+
+  oauth2-pkce@2.1.3: {}
 
   object-assign@4.1.1: {}
 

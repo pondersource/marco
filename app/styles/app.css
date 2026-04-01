@@ -246,6 +246,7 @@ body {
 
 .account-status {
   font-size: 0.85rem;
+  font-weight: bold;
   color: #898989;
   margin-top: 0.35rem;
   margin-left: calc(18px + 0.75rem);
