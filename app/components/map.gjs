@@ -284,7 +284,9 @@ export default class MapComponent extends Component {
     const initialCenter = toLonLat(view.getCenter());
     this.mapUi.updateCenter(initialCenter[1], initialCenter[0]);
 
-    apply(this.mapInstance, 'https://tiles.openfreemap.org/styles/liberty');
+    apply(this.mapInstance, 'https://tiles.openfreemap.org/styles/liberty', {
+      webfonts: 'data:text/css,',
+    });
 
     this.searchOverlayElement = document.createElement('div');
     this.searchOverlayElement.className = 'search-pulse';

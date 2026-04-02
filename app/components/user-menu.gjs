@@ -55,7 +55,7 @@ export default class UserMenuComponent extends Component {
           </div>
           <div class="account-status">
             {{#if @storage.connected}}
-              {{@storage.userAddress}}
+              <strong>{{@storage.userAddress}}</strong>
             {{else}}
               Not connected
             {{/if}}
@@ -84,7 +84,7 @@ export default class UserMenuComponent extends Component {
           </div>
           <div class="account-status">
             {{#if this.osmAuth.isConnected}}
-              {{this.osmAuth.userDisplayName}}
+              <strong>{{this.osmAuth.userDisplayName}}</strong>
             {{else}}
               Not connected
             {{/if}}
