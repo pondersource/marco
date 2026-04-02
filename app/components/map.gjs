@@ -394,7 +394,10 @@ export default class MapComponent extends Component {
     const locateElement = document.createElement('div');
     locateElement.className = 'ol-control ol-locate';
     const locateBtn = document.createElement('button');
-    locateBtn.innerHTML = '⊙';
+    locateBtn.style.display = 'flex';
+    locateBtn.style.alignItems = 'center';
+    locateBtn.style.justifyContent = 'center';
+    locateBtn.innerHTML = `<span class="icon" style="width: 14px; height: 14px; display: flex;">${getIcon('navigation')}</span>`;
     locateBtn.title = 'Locate Me';
     locateElement.appendChild(locateBtn);
 
