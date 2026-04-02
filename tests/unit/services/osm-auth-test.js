@@ -52,6 +52,7 @@ module('Unit | Service | osm-auth', function (hooks) {
     // Because restoreSession runs in the constructor, we might need to overwrite it after, but it's async.
     // Let's just create it, let the original restoreSession fail or do nothing, and then we stub and re-call it.
 
+    service.oauthClient.ready = Promise.resolve();
     service.oauthClient.isAuthorized = async () => true;
     window.localStorage.setItem('marco:osm_user_display_name', 'CachedName');
 
@@ -68,6 +69,7 @@ module('Unit | Service | osm-auth', function (hooks) {
   test('it fetches user info when logged in but no cached name', async function (assert) {
     let service = this.owner.factoryFor('service:osm-auth').create();
 
+    service.oauthClient.ready = Promise.resolve();
     service.oauthClient.isAuthorized = async () => true;
     service.oauthClient.getTokens = async () => ({ accessToken: 'fake-token' });
     // Ensure localStorage is empty for this key

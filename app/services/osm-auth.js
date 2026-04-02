@@ -7,7 +7,15 @@ class MarcoOsmAuthStorage {
     localStorage.setItem('marco:osm_auth_state', serializedState);
   }
   loadState() {
-    return localStorage.getItem('marco:osm_auth_state');
+    const state = localStorage.getItem('marco:osm_auth_state');
+    if (!state) return false;
+    try {
+      JSON.parse(state);
+      return state;
+    } catch (e) {
+      console.warn('Failed to parse OSM auth state', e);
+      return false;
+    }
   }
 }
 
@@ -45,6 +53,11 @@ export default class OsmAuthService extends Service {
   }
 
   async restoreSession() {
+    try {
+      await this.oauthClient.ready;
+    } catch (e) {
+      console.warn('oauthClient.ready failed', e);
+    }
     const isAuthorized = await this.oauthClient.isAuthorized();
     if (isAuthorized) {
       this.isConnected = true;
