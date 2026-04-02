@@ -254,6 +254,10 @@ body {
   margin-left: calc(18px + 0.75rem);
 }
 
+.account-status strong {
+  font-weight: 600;
+}
+
 .account-item.disabled {
   opacity: 0.5;
   pointer-events: none;
