@@ -155,6 +155,15 @@ export default class PlaceDetails extends Component {
       );
     }
 
+    if (type === 'whatsapp') {
+      return htmlSafe(
+        parts.map((p) => {
+          const safeTel = p.replace(/[\s-]+/g, '');
+          return `<a href="https://wa.me/${safeTel}" target="_blank" rel="noopener noreferrer">${p}</a>`;
+        }).join('<br>')
+      );
+    }
+
     if (type === 'url') {
       return htmlSafe(
         parts
@@ -182,6 +191,17 @@ export default class PlaceDetails extends Component {
     if (rawValues.length === 0) return null;
 
     return this.formatMultiLine(rawValues.join(';'), 'phone');
+  }
+
+  get whatsapp() {
+    const rawValues = [
+      this.tags.whatsapp,
+      this.tags['contact:whatsapp'],
+    ].filter(Boolean);
+
+    if (rawValues.length === 0) return null;
+
+    return this.formatMultiLine(rawValues.join(';'), 'whatsapp');
   }
 
   get email() {
@@ -354,6 +374,15 @@ export default class PlaceDetails extends Component {
             <Icon @name="phone" @title="Phone" />
             <span>
               {{this.phone}}
+            </span>
+          </p>
+        {{/if}}
+
+        {{#if this.whatsapp}}
+          <p class="content-with-icon">
+            <Icon @name="whatsapp" @title="WhatsApp" />
+            <span>
+              {{this.whatsapp}}
             </span>
           </p>
         {{/if}}
