@@ -255,4 +255,40 @@ module('Integration | Component | place-details', function (hooks) {
     assert.dom('.actions button').hasText('Save');
     assert.dom('.actions button').doesNotHaveClass('btn-secondary');
   });
+
+  test('it aggregates phone and mobile tags without duplicates', async function (assert) {
+    const place = {
+      title: 'Phone Shop',
+      osmTags: {
+        phone: '+1 234 567 8900',
+        'contact:phone': '+1 234 567 8900; +1 000 000 0000',
+        mobile: '+1 987 654 3210',
+        'contact:mobile': '+1 987 654 3210',
+      },
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    // Use specific selector for the phone block since there's no cuisine or opening_hours
+    const metaInfos = Array.from(
+      this.element.querySelectorAll('.meta-info .content-with-icon')
+    );
+    const phoneBlock = metaInfos.find((el) => {
+      const iconSpan = el.querySelector('span.icon[title="Phone"]');
+      return !!iconSpan;
+    });
+
+    assert.ok(phoneBlock, 'Phone block is rendered');
+
+    const links = phoneBlock.querySelectorAll('a[href^="tel:"]');
+    assert.strictEqual(
+      links.length,
+      3,
+      'Rendered exactly 3 unique phone links'
+    );
+
+    assert.dom(links[0]).hasText('+1 234 567 8900');
+    assert.dom(links[1]).hasText('+1 000 000 0000');
+    assert.dom(links[2]).hasText('+1 987 654 3210');
+  });
 });

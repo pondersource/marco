@@ -130,10 +130,14 @@ export default class PlaceDetails extends Component {
 
   formatMultiLine(val, type) {
     if (!val) return null;
-    const parts = val
-      .split(';')
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const parts = [
+      ...new Set(
+        val
+          .split(';')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      ),
+    ];
     if (parts.length === 0) return null;
 
     if (type === 'phone') {
@@ -165,8 +169,16 @@ export default class PlaceDetails extends Component {
   }
 
   get phone() {
-    const val = this.tags.phone || this.tags['contact:phone'];
-    return this.formatMultiLine(val, 'phone');
+    const rawValues = [
+      this.tags.phone,
+      this.tags['contact:phone'],
+      this.tags.mobile,
+      this.tags['contact:mobile'],
+    ].filter(Boolean);
+
+    if (rawValues.length === 0) return null;
+
+    return this.formatMultiLine(rawValues.join(';'), 'phone');
   }
 
   get email() {
