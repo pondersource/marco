@@ -142,10 +142,12 @@ export default class PlaceDetails extends Component {
 
     if (type === 'phone') {
       return htmlSafe(
-        parts.map((p) => {
-          const safeTel = p.replace(/[\s-]+/g, '');
-          return `<a href="tel:${safeTel}">${p}</a>`;
-        }).join('<br>')
+        parts
+          .map((p) => {
+            const safeTel = p.replace(/[\s-]+/g, '');
+            return `<a href="tel:${safeTel}">${p}</a>`;
+          })
+          .join('<br>')
       );
     }
 
@@ -157,10 +159,12 @@ export default class PlaceDetails extends Component {
 
     if (type === 'whatsapp') {
       return htmlSafe(
-        parts.map((p) => {
-          const safeTel = p.replace(/[\s-]+/g, '');
-          return `<a href="https://wa.me/${safeTel}" target="_blank" rel="noopener noreferrer">${p}</a>`;
-        }).join('<br>')
+        parts
+          .map((p) => {
+            const safeTel = p.replace(/[\s-]+/g, '');
+            return `<a href="https://wa.me/${safeTel}" target="_blank" rel="noopener noreferrer">${p}</a>`;
+          })
+          .join('<br>')
       );
     }
 

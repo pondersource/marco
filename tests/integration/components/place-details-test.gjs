@@ -318,15 +318,17 @@ module('Integration | Component | place-details', function (hooks) {
     assert.ok(whatsappBlock, 'WhatsApp block is rendered');
 
     const links = whatsappBlock.querySelectorAll('a[href^="https://wa.me/"]');
-    assert.strictEqual(
-      links.length,
-      2,
-      'Rendered exactly 2 WhatsApp links'
-    );
+    assert.strictEqual(links.length, 2, 'Rendered exactly 2 WhatsApp links');
 
     // Verify it stripped the dashes and spaces for the wa.me URL
-    assert.strictEqual(links[0].getAttribute('href'), 'https://wa.me/+44987654321');
-    assert.strictEqual(links[1].getAttribute('href'), 'https://wa.me/+12345678900');
+    assert.strictEqual(
+      links[0].getAttribute('href'),
+      'https://wa.me/+44987654321'
+    );
+    assert.strictEqual(
+      links[1].getAttribute('href'),
+      'https://wa.me/+12345678900'
+    );
 
     // Verify it kept the dashes and spaces for the visible text
     assert.dom(links[0]).hasText('+44 987 654 321');
