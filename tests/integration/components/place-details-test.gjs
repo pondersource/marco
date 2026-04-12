@@ -260,8 +260,8 @@ module('Integration | Component | place-details', function (hooks) {
     const place = {
       title: 'Phone Shop',
       osmTags: {
-        phone: '+1 234 567 8900',
-        'contact:phone': '+1 234 567 8900; +1 000 000 0000',
+        phone: '+1-234-567-8900',
+        'contact:phone': '+1-234-567-8900; +1 000 000 0000',
         mobile: '+1 987 654 3210',
         'contact:mobile': '+1 987 654 3210',
       },
@@ -287,7 +287,11 @@ module('Integration | Component | place-details', function (hooks) {
       'Rendered exactly 3 unique phone links'
     );
 
-    assert.dom(links[0]).hasText('+1 234 567 8900');
+    assert.strictEqual(links[0].getAttribute('href'), 'tel:+12345678900');
+    assert.strictEqual(links[1].getAttribute('href'), 'tel:+10000000000');
+    assert.strictEqual(links[2].getAttribute('href'), 'tel:+19876543210');
+
+    assert.dom(links[0]).hasText('+1-234-567-8900');
     assert.dom(links[1]).hasText('+1 000 000 0000');
     assert.dom(links[2]).hasText('+1 987 654 3210');
   });

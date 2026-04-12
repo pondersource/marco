@@ -142,7 +142,10 @@ export default class PlaceDetails extends Component {
 
     if (type === 'phone') {
       return htmlSafe(
-        parts.map((p) => `<a href="tel:${p}">${p}</a>`).join('<br>')
+        parts.map((p) => {
+          const safeTel = p.replace(/[\s-]+/g, '');
+          return `<a href="tel:${safeTel}">${p}</a>`;
+        }).join('<br>')
       );
     }
 
