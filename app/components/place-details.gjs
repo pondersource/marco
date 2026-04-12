@@ -130,21 +130,41 @@ export default class PlaceDetails extends Component {
 
   formatMultiLine(val, type) {
     if (!val) return null;
-    const parts = val
-      .split(';')
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const parts = [
+      ...new Set(
+        val
+          .split(';')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      ),
+    ];
     if (parts.length === 0) return null;
 
     if (type === 'phone') {
       return htmlSafe(
-        parts.map((p) => `<a href="tel:${p}">${p}</a>`).join('<br>')
+        parts
+          .map((p) => {
+            const safeTel = p.replace(/[\s-]+/g, '');
+            return `<a href="tel:${safeTel}">${p}</a>`;
+          })
+          .join('<br>')
       );
     }
 
     if (type === 'email') {
       return htmlSafe(
         parts.map((p) => `<a href="mailto:${p}">${p}</a>`).join('<br>')
+      );
+    }
+
+    if (type === 'whatsapp') {
+      return htmlSafe(
+        parts
+          .map((p) => {
+            const safeTel = p.replace(/[\s-]+/g, '');
+            return `<a href="https://wa.me/${safeTel}" target="_blank" rel="noopener noreferrer">${p}</a>`;
+          })
+          .join('<br>')
       );
     }
 
@@ -165,8 +185,27 @@ export default class PlaceDetails extends Component {
   }
 
   get phone() {
-    const val = this.tags.phone || this.tags['contact:phone'];
-    return this.formatMultiLine(val, 'phone');
+    const rawValues = [
+      this.tags.phone,
+      this.tags['contact:phone'],
+      this.tags.mobile,
+      this.tags['contact:mobile'],
+    ].filter(Boolean);
+
+    if (rawValues.length === 0) return null;
+
+    return this.formatMultiLine(rawValues.join(';'), 'phone');
+  }
+
+  get whatsapp() {
+    const rawValues = [
+      this.tags.whatsapp,
+      this.tags['contact:whatsapp'],
+    ].filter(Boolean);
+
+    if (rawValues.length === 0) return null;
+
+    return this.formatMultiLine(rawValues.join(';'), 'whatsapp');
   }
 
   get email() {
@@ -339,6 +378,15 @@ export default class PlaceDetails extends Component {
             <Icon @name="phone" @title="Phone" />
             <span>
               {{this.phone}}
+            </span>
+          </p>
+        {{/if}}
+
+        {{#if this.whatsapp}}
+          <p class="content-with-icon">
+            <Icon @name="whatsapp" @title="WhatsApp" />
+            <span>
+              {{this.whatsapp}}
             </span>
           </p>
         {{/if}}

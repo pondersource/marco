@@ -110,6 +110,7 @@ import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/wome
 import loadingRing from '../icons/270-ring.svg?raw';
 import nostrich from '../icons/nostrich-2.svg?raw';
 import remotestorage from '../icons/remotestorage.svg?raw';
+import whatsapp from '../icons/whatsapp.svg?raw';
 import wikipedia from '../icons/wikipedia.svg?raw';
 
 const ICONS = {
@@ -218,6 +219,7 @@ const ICONS = {
   'village-buildings': villageBuildings,
   'wall-hanging-with-mountains-and-sun': wallHangingWithMountainsAndSun,
   'womens-and-mens-restroom-symbol': womensAndMensRestroomSymbol,
+  whatsapp,
   wikipedia,
   parking_p: parkingP,
   car,
@@ -229,6 +231,7 @@ const ICONS = {
 const FILLED_ICONS = [
   'fork-and-knife',
   'wikipedia',
+  'whatsapp',
   'cup-and-saucer',
   'coffee-bean',
   'shopping-basket',
