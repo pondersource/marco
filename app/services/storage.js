@@ -46,6 +46,14 @@ export default class StorageService extends Service {
       // console.debug('[rs] client ready');
     });
 
+    this.rs.on('error', (error) => {
+      if (!error) return;
+      console.info('[rs] Error —', `${error.name}: ${error.message}`);
+      if (error.name === 'Unauthorized') {
+        this.showConnectWidget();
+      }
+    });
+
     this.rs.on('connected', () => {
       this.connected = true;
       this.userAddress = this.rs.remote.userAddress;
@@ -445,7 +453,7 @@ export default class StorageService extends Service {
   }
 
   @action
-  connect() {
+  showConnectWidget() {
     this.isWidgetOpen = true;
 
     // Check if widget is already attached

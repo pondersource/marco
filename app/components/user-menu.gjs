@@ -11,7 +11,7 @@ export default class UserMenuComponent extends Component {
   @action
   connectRS() {
     this.args.onClose();
-    this.args.storage.connect();
+    this.args.storage.showConnectWidget();
   }
 
   @action
