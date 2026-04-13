@@ -166,8 +166,8 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0
       remotestorage-widget:
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.8.1
+        version: 1.8.1
       remotestoragejs:
         specifier: 2.0.0-beta.8
         version: 2.0.0-beta.8
@@ -4564,8 +4564,8 @@ packages:
     resolution: {integrity: sha512-NZQZdC5wOE/H3UT28fVGL+ikOZcEzfMGk/c3iN9UGxzWHMa1op7274oyiUVrAG4B2EuFhus8SvkaYnhvW92p9Q==}
     hasBin: true
 
-  remotestorage-widget@1.8.0:
-    resolution: {integrity: sha512-l8AE2npC2nNkC8bAU6WhWO5Wl4exaXbE2yR82s5Oiqg6h0KN2mYwvLLTQGkp6mSmZTA86e7XaOcNp4lXS8CsBA==}
+  remotestorage-widget@1.8.1:
+    resolution: {integrity: sha512-HxNu2VvIRW3wzkf5fLEzs56ySQ7+YQbRqyp3CKvmw/G+zKhRsmj06HtFoAcm3B14/nJh2SOAv3LyfKuXfUsKPw==}
 
   remotestoragejs@2.0.0-beta.8:
     resolution: {integrity: sha512-rtyHTG2VbtiKTRmbwjponRf5VTPJMcHv/ijNid1zX48C0Z0F8ZCBBfkKD2QCxTQyQvCupkWNy3wuIu4HE+AEng==}
@@ -10648,7 +10648,7 @@ snapshots:
     dependencies:
       jsesc: 3.1.0
 
-  remotestorage-widget@1.8.0: {}
+  remotestorage-widget@1.8.1: {}
 
   remotestoragejs@2.0.0-beta.8:
     dependencies:
