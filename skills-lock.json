@@ -5,6 +5,16 @@
       "source": "nullvoxpopuli/agent-skills",
       "sourceType": "github",
       "computedHash": "7909c3def6c4ddefb358d1973cf724269ede9f6cdba1dd2888e4e6072a897f3e"
+    },
+    "nak": {
+      "source": "soapbox-pub/nostr-skills",
+      "sourceType": "github",
+      "computedHash": "710d3f3945ff421ed2b7f40ecd32c5e263bc029d43fe8f4fd1491a8013c7389a"
+    },
+    "nostr": {
+      "source": "soapbox-pub/nostr-skills",
+      "sourceType": "github",
+      "computedHash": "e1e6834c18d18a5deef4cd9555f6eee0fc0b968acf1c619253999eda76beab8e"
     }
   }
 }
