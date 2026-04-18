@@ -8,6 +8,8 @@ export default class UserMenuComponent extends Component {
   @service storage;
   @service osmAuth;
 
+  @service nostrAuth;
+
   @action
   connectRS() {
     this.args.onClose();
@@ -28,6 +30,21 @@ export default class UserMenuComponent extends Component {
   @action
   disconnectOsm() {
     this.osmAuth.logout();
+  }
+
+  @action
+  async connectNostr() {
+    try {
+      await this.nostrAuth.login();
+    } catch (e) {
+      console.error(e);
+      alert(e.message);
+    }
+  }
+
+  @action
+  disconnectNostr() {
+    this.nostrAuth.logout();
   }
 
   <template>
@@ -91,15 +108,34 @@ export default class UserMenuComponent extends Component {
           </div>
         </li>
 
-        <li class="account-item disabled">
+        <li class="account-item">
           <div class="account-header">
             <div class="account-info">
               <Icon @name="zap" @size={{18}} />
               <span>Nostr</span>
             </div>
+            {{#if this.nostrAuth.isConnected}}
+              <button
+                class="btn-text text-danger"
+                type="button"
+                {{on "click" this.disconnectNostr}}
+              >Disconnect</button>
+            {{else}}
+              <button
+                class="btn-text text-primary"
+                type="button"
+                {{on "click" this.connectNostr}}
+              >Connect</button>
+            {{/if}}
           </div>
           <div class="account-status">
-            Coming soon
+            {{#if this.nostrAuth.isConnected}}
+              <strong title={{this.nostrAuth.pubkey}}>
+                {{this.nostrAuth.pubkey}}
+              </strong>
+            {{else}}
+              Not connected
+            {{/if}}
           </div>
         </li>
       </ul>
