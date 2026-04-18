@@ -8,10 +8,10 @@ This NIP defines a standardized event format for decentralized place reviews usi
 
 The design prioritizes:
 
-* Small event size
-* Interoperability across clients
-* Flexibility for different place types
-* Efficient geospatial querying using geohashes
+- Small event size
+- Interoperability across clients
+- Flexibility for different place types
+- Efficient geospatial querying using geohashes
 
 ## Event Kind
 
@@ -23,8 +23,8 @@ Additional tags MAY be included by clients but are not defined by this specifica
 
 This NIP reuses and builds upon existing Nostr tag conventions:
 
-* `i` tag: see NIP-73 (External Content Identifiers)
-* `g` tag: geohash-based geotagging (community conventions)
+- `i` tag: see NIP-73 (External Content Identifiers)
+- `g` tag: geohash-based geotagging (community conventions)
 
 Where conflicts arise, this NIP specifies the behavior for review events.
 
@@ -40,7 +40,7 @@ Identifies the reviewed place using an external identifier. OpenStreetMap data i
 
 Requirements:
 
-* For OSM POIs, `<type>` MUST be one of: `node`, `way`, `relation`
+- For OSM POIs, `<type>` MUST be one of: `node`, `way`, `relation`
 
 Examples:
 
@@ -57,15 +57,15 @@ Geohash tags are used for spatial indexing and discovery.
 
 ##### Requirements
 
-* Clients MUST include at least one high-precision geohash (length ≥ 9)
+- Clients MUST include at least one high-precision geohash (length ≥ 9)
 
 ##### Recommendations
 
 Clients SHOULD include geohashes at the following resolutions:
 
-* length 4 — coarse (city-scale discovery)
-* length 6 — medium (default query level, ~1 km)
-* length 7 — fine (neighborhood, ~150 m)
+- length 4 — coarse (city-scale discovery)
+- length 6 — medium (default query level, ~1 km)
+- length 7 — fine (neighborhood, ~150 m)
 
 Example:
 
@@ -80,10 +80,10 @@ Example:
 
 Geospatial queries are performed using the `g` tag.
 
-* Clients SHOULD query using a single geohash precision level per request
-* Clients MAY include multiple geohash values in a filter to cover a bounding box
-* Clients SHOULD limit the number of geohash values per query (e.g. ≤ 30)
-* Clients MAY reduce precision or split queries when necessary
+- Clients SHOULD query using a single geohash precision level per request
+- Clients MAY include multiple geohash values in a filter to cover a bounding box
+- Clients SHOULD limit the number of geohash values per query (e.g. ≤ 30)
+- Clients MAY reduce precision or split queries when necessary
 
 Note: Other queries (e.g. fetching reviews for a specific place) are performed using the `i` tag and are outside the scope of geospatial querying.
 
@@ -228,22 +228,22 @@ The event `content` MUST be valid JSON matching the following schema.
 
 ### Ratings
 
-* Scores are integers from 1 to 10
-* `quality` is required and represents the core evaluation of the place
-* Other fields are optional and context-dependent
+- Scores are integers from 1 to 10
+- `quality` is required and represents the core evaluation of the place
+- Other fields are optional and context-dependent
 
 ### Aspects
 
-* Free-form keys allow domain-specific ratings
-* Clients MAY define and interpret aspect keys
-* Clients SHOULD reuse commonly established aspect keys where possible
+- Free-form keys allow domain-specific ratings
+- Clients MAY define and interpret aspect keys
+- Clients SHOULD reuse commonly established aspect keys where possible
 
 ## Recommendation Signal
 
 The `recommend` field represents a binary verdict:
 
-* `true` → user recommends the place
-* `false` → user does not recommend the place
+- `true` → user recommends the place
+- `false` → user does not recommend the place
 
 Clients SHOULD strongly encourage users to provide this value.
 
@@ -251,9 +251,9 @@ Clients SHOULD strongly encourage users to provide this value.
 
 Represents user familiarity with the place:
 
-* `low` → first visit or limited exposure
-* `medium` → occasional visits
-* `high` → frequent or expert-level familiarity
+- `low` → first visit or limited exposure
+- `medium` → occasional visits
+- `high` → frequent or expert-level familiarity
 
 Clients MAY use this signal for weighting during aggregation.
 
@@ -261,16 +261,16 @@ Clients MAY use this signal for weighting during aggregation.
 
 Optional metadata about the visit.
 
-* `visited_at` is a Unix timestamp
-* `duration_minutes` represents time spent
-* `party_size` indicates group size
+- `visited_at` is a Unix timestamp
+- `duration_minutes` represents time spent
+- `party_size` indicates group size
 
 ## Interoperability
 
 This specification defines a content payload only.
 
-* In Nostr: place identity is conveyed via tags
-* In other protocols (e.g. ActivityPub, AT Protocol): identity MUST be mapped to the equivalent field (e.g. `object`)
+- In Nostr: place identity is conveyed via tags
+- In other protocols (e.g. ActivityPub, AT Protocol): identity MUST be mapped to the equivalent field (e.g. `object`)
 
 Content payloads SHOULD NOT include place identifiers.
 
@@ -296,18 +296,18 @@ Provides a human-friendly proxy for confidence without requiring numeric input.
 
 Multiple resolutions balance:
 
-* efficient querying
-* small event size
-* early-stage discoverability
+- efficient querying
+- small event size
+- early-stage discoverability
 
 ## Future Work
 
-* Standardized aspect vocabularies
-* Reputation and weighting models
-* Indexing/aggregation services
-* Cross-protocol mappings
+- Standardized aspect vocabularies
+- Reputation and weighting models
+- Indexing/aggregation services
+- Cross-protocol mappings
 
 ## Security Considerations
 
-* Clients SHOULD validate all input
-* Malicious or spam reviews may require external moderation or reputation systems
+- Clients SHOULD validate all input
+- Malicious or spam reviews may require external moderation or reputation systems

@@ -29,7 +29,8 @@ Identifies the exact place the media depicts using an external identifier (as de
 ```json
 ["i", "osm:node:123456"]
 ```
-* For OSM POIs, `<type>` MUST be one of: `node`, `way`, `relation`.
+
+- For OSM POIs, `<type>` MUST be one of: `node`, `way`, `relation`.
 
 #### 2. `g` — Geohash
 
@@ -61,9 +62,9 @@ Clients SHOULD include `alt` (accessibility descriptions), `dim` (dimensions), `
 
 ### Optional Tags
 
-* `t`: Hashtags for categorization (e.g., `["t", "food"]`, `["t", "architecture"]`).
-* `content-warning`: If the media contains NSFW or sensitive imagery.
-* `published_at`: Unix timestamp of when the photo was originally taken or published.
+- `t`: Hashtags for categorization (e.g., `["t", "food"]`, `["t", "architecture"]`).
+- `content-warning`: If the media contains NSFW or sensitive imagery.
+- `published_at`: Unix timestamp of when the photo was originally taken or published.
 
 ## Example Event
 
@@ -80,7 +81,8 @@ Clients SHOULD include `alt` (accessibility descriptions), `dim` (dimensions), `
     ["g", "xn0m7h"],
     ["g", "xn0m7hwq"],
 
-    ["imeta",
+    [
+      "imeta",
       "url https://example.com/ramen.jpg",
       "m image/jpeg",
       "dim 1080x1080",

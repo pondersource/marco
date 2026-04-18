@@ -2,23 +2,23 @@
 
 ## A. Core universal aspects
 
-These should work for *any* place:
+These should work for _any_ place:
 
 ```json
 [
-  "quality",      // core offering (food, repair, exhibits, etc.)
-  "value",        // value for money/time
-  "experience",   // comfort, usability, vibe
+  "quality", // core offering (food, repair, exhibits, etc.)
+  "value", // value for money/time
+  "experience", // comfort, usability, vibe
   "accessibility" // ease of access, inclusivity
 ]
 ```
 
 ### Why these work
 
-* **quality** → your “product” abstraction (critical)
-* **value** → universally meaningful signal
-* **experience** → captures everything “soft”
-* **accessibility** → often ignored but high utility
+- **quality** → your “product” abstraction (critical)
+- **value** → universally meaningful signal
+- **experience** → captures everything “soft”
+- **accessibility** → often ignored but high utility
 
 👉 Resist adding more. Every extra “universal” weakens the concept.
 
@@ -30,8 +30,8 @@ Not universal, but widely reusable:
 
 ```json
 [
-  "service",       // human interaction
-  "speed",         // waiting time / turnaround
+  "service", // human interaction
+  "speed", // waiting time / turnaround
   "cleanliness",
   "safety",
   "reliability",
@@ -41,7 +41,7 @@ Not universal, but widely reusable:
 
 These apply to:
 
-* restaurants, garages, clinics, parks, etc.
+- restaurants, garages, clinics, parks, etc.
 
 ---
 
@@ -69,11 +69,10 @@ Let clients define freely:
 
 To reduce fragmentation:
 
-* publish a **public registry (GitHub repo)**
-* clients can:
-
-  * suggest additions
-  * map synonyms
+- publish a **public registry (GitHub repo)**
+- clients can:
+  - suggest additions
+  - map synonyms
 
 ---
 
@@ -96,6 +95,6 @@ Not required, but useful for aggregation engines.
 
 Map familiarity in UI to:
 
-* high: “I know this place well”
-* medium: “Been a few times”
-* low: “First visit”
+- high: “I know this place well”
+- medium: “Been a few times”
+- low: “First visit”

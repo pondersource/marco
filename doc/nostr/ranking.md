@@ -2,13 +2,13 @@
 
 Your inputs:
 
-* many users
-* partial ratings
-* different priorities
+- many users
+- partial ratings
+- different priorities
 
 Your output:
 
-> “Best place *for this user right now*”
+> “Best place _for this user right now_”
 
 ---
 
@@ -22,8 +22,8 @@ normalized_score = (score - 1) / 9
 
 Why:
 
-* easier math
-* comparable across aspects
+- easier math
+- comparable across aspects
 
 ---
 
@@ -50,8 +50,8 @@ positive_ratio = positive_votes / total_votes
 
 Use something like a **Wilson score interval** (this is key):
 
-* prevents small-sample abuse
-* avoids “1 review = #1 place”
+- prevents small-sample abuse
+- avoids “1 review = #1 place”
 
 ---
 
@@ -102,13 +102,12 @@ final_score = Σ (aspect_score × weight)
 
 Filter reviews before scoring:
 
-* time-based:
+- time-based:
+  - “last 6 months”
 
-  * “last 6 months”
-* context-based:
-
-  * lunch vs dinner
-  * solo vs group
+- context-based:
+  - lunch vs dinner
+  - solo vs group
 
 This is something centralized platforms barely do.
 
@@ -118,9 +117,9 @@ This is something centralized platforms barely do.
 
 Weight reviews by:
 
-* consistency
-* similarity to user preferences
-* past agreement
+- consistency
+- similarity to user preferences
+- past agreement
 
 This gives you:
 
@@ -142,8 +141,8 @@ This gives you:
 
 ### Derived:
 
-* food → high positive ratio (~100%)
-* service → low (~33%)
+- food → high positive ratio (~100%)
+- service → low (~33%)
 
 ---
 
@@ -186,7 +185,7 @@ Let clients compute it.
 
 Most reviews will have:
 
-* 1–3 aspects only
+- 1–3 aspects only
 
 That’s fine.
 
@@ -206,12 +205,12 @@ weight = e^(-λ × age)
 
 Even in nostr:
 
-* spam will happen
+- spam will happen
 
 Mitigation later:
 
-* require minimum interactions
-* reputation layers
+- require minimum interactions
+- reputation layers
 
 ---
 
@@ -233,19 +232,19 @@ We can design:
 
 ### A. Query layer
 
-* how clients fetch & merge nostr reviews efficiently
+- how clients fetch & merge nostr reviews efficiently
 
 ### B. Anti-spam / trust model
 
-* web-of-trust
-* staking / reputation
+- web-of-trust
+- staking / reputation
 
 ### C. OSM integration details
 
-* handling duplicates
-* POI identity conflicts
+- handling duplicates
+- POI identity conflicts
 
 ---
 
 If I had to pick one next:
-👉 **trust/reputation system** — because without it, everything you built *will* get gamed.
+👉 **trust/reputation system** — because without it, everything you built _will_ get gamed.
