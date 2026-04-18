@@ -1,5 +1,7 @@
 # NIP-XX: Place Reviews
 
+`draft` `optional`
+
 ## Abstract
 
 This NIP defines a standardized event format for decentralized place reviews using Nostr. Reviews are tied to real-world locations (e.g. OpenStreetMap POIs) via tags, and include structured, multi-aspect ratings, a binary recommendation signal, and optional contextual metadata.
@@ -11,13 +13,9 @@ The design prioritizes:
 * Flexibility for different place types
 * Efficient geospatial querying using geohashes
 
----
-
 ## Event Kind
 
-`kind: 30315` (suggested; subject to coordination)
-
----
+`kind: 30360`
 
 ## Tags
 
@@ -50,8 +48,6 @@ Examples:
 ["i", "osm:node:123456"]
 ["i", "osm:way:987654"]
 ```
-
----
 
 ### Geospatial Tags
 
@@ -90,8 +86,6 @@ Geospatial queries are performed using the `g` tag.
 * Clients MAY reduce precision or split queries when necessary
 
 Note: Other queries (e.g. fetching reviews for a specific place) are performed using the `i` tag and are outside the scope of geospatial querying.
-
----
 
 ## Content (JSON)
 
@@ -183,8 +177,6 @@ The event `content` MUST be valid JSON matching the following schema.
 }
 ```
 
----
-
 ## Example
 
 ### Restaurant Review Event
@@ -232,8 +224,6 @@ The event `content` MUST be valid JSON matching the following schema.
 }
 ```
 
----
-
 ## Semantics
 
 ### Ratings
@@ -248,8 +238,6 @@ The event `content` MUST be valid JSON matching the following schema.
 * Clients MAY define and interpret aspect keys
 * Clients SHOULD reuse commonly established aspect keys where possible
 
----
-
 ## Recommendation Signal
 
 The `recommend` field represents a binary verdict:
@@ -258,8 +246,6 @@ The `recommend` field represents a binary verdict:
 * `false` → user does not recommend the place
 
 Clients SHOULD strongly encourage users to provide this value.
-
----
 
 ## Familiarity
 
@@ -271,8 +257,6 @@ Represents user familiarity with the place:
 
 Clients MAY use this signal for weighting during aggregation.
 
----
-
 ## Context
 
 Optional metadata about the visit.
@@ -280,8 +264,6 @@ Optional metadata about the visit.
 * `visited_at` is a Unix timestamp
 * `duration_minutes` represents time spent
 * `party_size` indicates group size
-
----
 
 ## Interoperability
 
@@ -291,8 +273,6 @@ This specification defines a content payload only.
 * In other protocols (e.g. ActivityPub, AT Protocol): identity MUST be mapped to the equivalent field (e.g. `object`)
 
 Content payloads SHOULD NOT include place identifiers.
-
----
 
 ## Rationale
 
@@ -320,8 +300,6 @@ Multiple resolutions balance:
 * small event size
 * early-stage discoverability
 
----
-
 ## Future Work
 
 * Standardized aspect vocabularies
@@ -329,15 +307,7 @@ Multiple resolutions balance:
 * Indexing/aggregation services
 * Cross-protocol mappings
 
----
-
 ## Security Considerations
 
 * Clients SHOULD validate all input
 * Malicious or spam reviews may require external moderation or reputation systems
-
----
-
-## Copyright
-
-This NIP is public domain.
