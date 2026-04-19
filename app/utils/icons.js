@@ -2,6 +2,7 @@
 import activity from 'feather-icons/dist/icons/activity.svg?raw';
 import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
+import camera from 'feather-icons/dist/icons/camera.svg?raw';
 import checkSquare from 'feather-icons/dist/icons/check-square.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
 import edit from 'feather-icons/dist/icons/edit.svg?raw';
@@ -39,7 +40,6 @@ import beerMugWithFoam from '@waysidemapping/pinhead/dist/icons/beer_mug_with_fo
 import burgerAndDrinkCupWithStraw from '@waysidemapping/pinhead/dist/icons/burger_and_drink_cup_with_straw.svg?raw';
 import bus from '@waysidemapping/pinhead/dist/icons/bus.svg?raw';
 import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.svg?raw';
-import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
 import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
 import cigaretteWithSmokeCurl from '@waysidemapping/pinhead/dist/icons/cigarette_with_smoke_curl.svg?raw';
 import classicalBuilding from '@waysidemapping/pinhead/dist/icons/classical_building.svg?raw';
@@ -235,7 +235,6 @@ const FILLED_ICONS = [
   'cup-and-saucer',
   'coffee-bean',
   'shopping-basket',
-  'camera',
   'person-sleeping-in-bed',
   'loading-ring',
   'nostrich',
