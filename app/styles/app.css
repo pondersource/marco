@@ -252,6 +252,9 @@ body {
   color: #898989;
   margin-top: 0.35rem;
   margin-left: calc(18px + 0.75rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .account-status strong {
