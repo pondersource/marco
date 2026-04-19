@@ -515,7 +515,10 @@ export default class PlaceDetails extends Component {
           </p>
         {{/if}}
 
-        {{#if this.osmUrl}}
+      </div>
+
+      {{#if this.osmUrl}}
+      <div class="meta-info">
           <p class="content-with-icon">
             <Icon @name="camera" />
             <span>
@@ -524,9 +527,8 @@ export default class PlaceDetails extends Component {
               </a>
             </span>
           </p>
-        {{/if}}
-
       </div>
+      {{/if}}
     </div>
 
     {{#if this.isPhotoUploadModalOpen}}
