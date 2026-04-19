@@ -4,16 +4,23 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { EventFactory } from 'applesauce-core';
+import Geohash from 'latlon-geohash';
 
 export default class PlacePhotoUpload extends Component {
   @service nostrAuth;
   @service nostrRelay;
 
   @tracked photoUrl = '';
-  @tracked osmId = '';
-  @tracked geohash = '';
   @tracked status = '';
   @tracked error = '';
+
+  get place() {
+    return this.args.place || {};
+  }
+
+  get title() {
+    return this.place.title || 'this place';
+  }
 
   @action
   async login() {
@@ -50,8 +57,16 @@ export default class PlacePhotoUpload extends Component {
       return;
     }
 
-    if (!this.photoUrl || !this.osmId || !this.geohash) {
-      this.error = 'Please provide an OSM ID, Geohash, and upload a photo.';
+    if (!this.photoUrl) {
+      this.error = 'Please upload a photo.';
+      return;
+    }
+
+    const { osmId, lat, lon } = this.place;
+    const osmType = this.place.osmType || 'node';
+
+    if (!osmId) {
+      this.error = 'This place does not have a valid OSM ID.';
       return;
     }
 
@@ -61,21 +76,28 @@ export default class PlacePhotoUpload extends Component {
     try {
       const factory = new EventFactory({ signer: this.nostrAuth.signer });
 
+      const tags = [['i', `osm:${osmType}:${osmId}`]];
+
+      if (lat && lon) {
+        tags.push(['g', Geohash.encode(lat, lon, 4)]);
+        tags.push(['g', Geohash.encode(lat, lon, 6)]);
+        tags.push(['g', Geohash.encode(lat, lon, 7)]);
+        tags.push(['g', Geohash.encode(lat, lon, 9)]);
+      }
+
+      tags.push([
+        'imeta',
+        `url ${this.photoUrl}`,
+        'm image/jpeg',
+        'dim 600x400',
+        'alt A photo of a place',
+      ]);
+
       // NIP-XX draft Place Photo event
       const template = {
         kind: 360,
         content: '',
-        tags: [
-          ['i', `osm:node:${this.osmId}`],
-          ['g', this.geohash],
-          [
-            'imeta',
-            `url ${this.photoUrl}`,
-            'm image/jpeg',
-            'dim 600x400',
-            'alt A photo of a place',
-          ],
-        ],
+        tags,
       };
 
       // Ensure created_at is present before signing
@@ -89,24 +111,15 @@ export default class PlacePhotoUpload extends Component {
       this.status = 'Published successfully!';
       // Reset form
       this.photoUrl = '';
-      this.osmId = '';
-      this.geohash = '';
     } catch (e) {
       this.error = 'Failed to publish: ' + e.message;
       this.status = '';
     }
   }
 
-  @action updateOsmId(e) {
-    this.osmId = e.target.value;
-  }
-  @action updateGeohash(e) {
-    this.geohash = e.target.value;
-  }
-
   <template>
     <div class="place-photo-upload">
-      <h2>Add Place Photo</h2>
+      <h2>Add Photo for {{this.title}}</h2>
 
       {{#if this.error}}
         <div class="alert alert-error">
@@ -127,30 +140,6 @@ export default class PlacePhotoUpload extends Component {
         </div>
 
         <form {{on "submit" this.uploadPhoto}}>
-          <div class="form-group">
-            <label>
-              OSM Node ID
-              <input
-                type="text"
-                value={{this.osmId}}
-                {{on "input" this.updateOsmId}}
-                placeholder="e.g. 123456"
-              />
-            </label>
-          </div>
-
-          <div class="form-group">
-            <label>
-              Geohash
-              <input
-                type="text"
-                value={{this.geohash}}
-                {{on "input" this.updateGeohash}}
-                placeholder="e.g. thrrn5"
-              />
-            </label>
-          </div>
-
           {{#if this.photoUrl}}
             <div class="preview-group">
               <p>Photo Preview:</p>

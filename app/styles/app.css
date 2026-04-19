@@ -1377,3 +1377,72 @@ button.create-place {
     transform: translate(-50%, 0);
   }
 }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+  padding: 1.5rem;
+  max-width: 90vw;
+  width: 450px;
+  position: relative;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  cursor: pointer;
+}
+
+/* Place Photo Upload */
+.place-photo-upload h2 {
+  margin-top: 0;
+}
+
+.alert {
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border-radius: 0.25rem;
+}
+
+.alert-error {
+  background: #fee;
+  color: #c00;
+}
+
+.alert-info {
+  background: #eef;
+  color: #00c;
+}
+
+.connected-status {
+  margin-bottom: 1rem;
+  color: #080;
+  word-break: break-all;
+}
+
+.preview-group {
+  margin-bottom: 1rem;
+}
+
+.preview-group p {
+  margin-bottom: 0.25rem;
+  font-weight: bold;
+}
+
+.preview-group img {
+  max-width: 100%;
+  border-radius: 0.25rem;
+}

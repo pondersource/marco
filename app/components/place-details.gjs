@@ -9,6 +9,8 @@ import { getSocialInfo } from '../utils/social-links';
 import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
 import PlaceListsManager from './place-lists-manager';
+import PlacePhotoUpload from './place-photo-upload';
+import Modal from './modal';
 
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
@@ -17,6 +19,20 @@ export default class PlaceDetails extends Component {
   @service storage;
   @tracked isEditing = false;
   @tracked showLists = false;
+  @tracked isPhotoUploadModalOpen = false;
+
+  @action
+  openPhotoUploadModal(e) {
+    if (e) {
+      e.preventDefault();
+    }
+    this.isPhotoUploadModalOpen = true;
+  }
+
+  @action
+  closePhotoUploadModal() {
+    this.isPhotoUploadModalOpen = false;
+  }
 
   get isSaved() {
     return this.storage.isPlaceSaved(this.place.id || this.place.osmId);
@@ -499,7 +515,24 @@ export default class PlaceDetails extends Component {
           </p>
         {{/if}}
 
+        {{#if this.osmUrl}}
+          <p class="content-with-icon">
+            <Icon @name="camera" />
+            <span>
+              <a href="#" {{on "click" this.openPhotoUploadModal}}>
+                Add a photo
+              </a>
+            </span>
+          </p>
+        {{/if}}
+
       </div>
     </div>
+
+    {{#if this.isPhotoUploadModalOpen}}
+      <Modal @onClose={{this.closePhotoUploadModal}}>
+        <PlacePhotoUpload @place={{this.saveablePlace}} />
+      </Modal>
+    {{/if}}
   </template>
 }
