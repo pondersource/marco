@@ -10,6 +10,7 @@ import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
 import PlaceListsManager from './place-lists-manager';
 import PlacePhotoUpload from './place-photo-upload';
+import NostrConnect from './nostr-connect';
 import Modal from './modal';
 
 import { tracked } from '@glimmer/tracking';
@@ -17,21 +18,38 @@ import { action } from '@ember/object';
 
 export default class PlaceDetails extends Component {
   @service storage;
+  @service nostrAuth;
   @tracked isEditing = false;
   @tracked showLists = false;
   @tracked isPhotoUploadModalOpen = false;
+  @tracked isNostrConnectModalOpen = false;
 
   @action
   openPhotoUploadModal(e) {
     if (e) {
       e.preventDefault();
     }
-    this.isPhotoUploadModalOpen = true;
+    if (!this.nostrAuth.isConnected) {
+      this.isNostrConnectModalOpen = true;
+    } else {
+      this.isPhotoUploadModalOpen = true;
+    }
   }
 
   @action
   closePhotoUploadModal() {
     this.isPhotoUploadModalOpen = false;
+  }
+
+  @action
+  closeNostrConnectModal() {
+    this.isNostrConnectModalOpen = false;
+  }
+
+  @action
+  onNostrConnected() {
+    this.isNostrConnectModalOpen = false;
+    this.isPhotoUploadModalOpen = true;
   }
 
   get isSaved() {
@@ -518,7 +536,7 @@ export default class PlaceDetails extends Component {
       </div>
 
       {{#if this.osmUrl}}
-      <div class="meta-info">
+        <div class="meta-info">
           <p class="content-with-icon">
             <Icon @name="camera" />
             <span>
@@ -527,13 +545,19 @@ export default class PlaceDetails extends Component {
               </a>
             </span>
           </p>
-      </div>
+        </div>
       {{/if}}
     </div>
 
     {{#if this.isPhotoUploadModalOpen}}
       <Modal @onClose={{this.closePhotoUploadModal}}>
         <PlacePhotoUpload @place={{this.saveablePlace}} />
+      </Modal>
+    {{/if}}
+
+    {{#if this.isNostrConnectModalOpen}}
+      <Modal @onClose={{this.closeNostrConnectModal}}>
+        <NostrConnect @onConnect={{this.onNostrConnected}} />
       </Modal>
     {{/if}}
   </template>

@@ -125,7 +125,7 @@ export default class NostrAuthService extends Service {
         }
 
         // We use a specific relay for the connection handshake.
-        const relay = 'wss://relay.damus.io';
+        const relay = 'wss://relay.nsec.app';
         localStorage.setItem(STORAGE_KEY_CONNECT_RELAY, relay);
 
         this._signerInstance = new NostrConnectSigner({
@@ -190,7 +190,7 @@ export default class NostrAuthService extends Service {
       STORAGE_KEY_CONNECT_REMOTE_PUBKEY
     );
     const relay =
-      localStorage.getItem(STORAGE_KEY_CONNECT_RELAY) || 'wss://relay.damus.io';
+      localStorage.getItem(STORAGE_KEY_CONNECT_RELAY) || 'wss://relay.nsec.app';
 
     if (!localKeyHex || !remotePubkey) {
       throw new Error('Missing Nostr Connect local state.');

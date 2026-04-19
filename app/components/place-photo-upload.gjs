@@ -23,16 +23,6 @@ export default class PlacePhotoUpload extends Component {
   }
 
   @action
-  async login() {
-    try {
-      this.error = '';
-      await this.nostrAuth.login();
-    } catch (e) {
-      this.error = e.message;
-    }
-  }
-
-  @action
   async uploadPhoto(event) {
     event.preventDefault();
     this.error = '';
@@ -133,36 +123,25 @@ export default class PlacePhotoUpload extends Component {
         </div>
       {{/if}}
 
-      {{#if this.nostrAuth.isConnected}}
-        <div class="connected-status">
-          <strong>Connected:</strong>
-          {{this.nostrAuth.pubkey}}
-        </div>
-
-        <form {{on "submit" this.uploadPhoto}}>
-          {{#if this.photoUrl}}
-            <div class="preview-group">
-              <p>Photo Preview:</p>
-              <img src={{this.photoUrl}} alt="Preview" />
-            </div>
-            <button
-              type="button"
-              class="btn btn-primary"
-              {{on "click" this.publish}}
-            >
-              Publish Event (kind: 360)
-            </button>
-          {{else}}
-            <button type="submit" class="btn btn-secondary">
-              Mock Upload Photo
-            </button>
-          {{/if}}
-        </form>
-      {{else}}
-        <button type="button" class="btn btn-primary" {{on "click" this.login}}>
-          Connect Nostr Extension
-        </button>
-      {{/if}}
+      <form {{on "submit" this.uploadPhoto}}>
+        {{#if this.photoUrl}}
+          <div class="preview-group">
+            <p>Photo Preview:</p>
+            <img src={{this.photoUrl}} alt="Preview" />
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary"
+            {{on "click" this.publish}}
+          >
+            Publish Event (kind: 360)
+          </button>
+        {{else}}
+          <button type="submit" class="btn btn-secondary">
+            Mock Upload Photo
+          </button>
+        {{/if}}
+      </form>
     </div>
   </template>
 }
