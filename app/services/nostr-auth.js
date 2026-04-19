@@ -62,6 +62,10 @@ export default class NostrAuthService extends Service {
     }
   }
 
+  get isMobile() {
+    return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  }
+
   get isConnected() {
     return (
       !!this.pubkey &&
@@ -153,8 +157,10 @@ export default class NostrAuthService extends Service {
           icons: [],
         });
 
-        // Trigger the deep link intent immediately for the user
-        window.location.href = this.connectUri;
+        // Trigger the deep link intent immediately for the user if on mobile
+        if (this.isMobile) {
+          window.location.href = this.connectUri;
+        }
 
         // Start listening to the relay
         await this._signerInstance.open();

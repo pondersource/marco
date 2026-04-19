@@ -3,6 +3,7 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { eq } from 'ember-truth-helpers';
+import qrCode from '../modifiers/qr-code';
 
 export default class NostrConnectComponent extends Component {
   @service nostrAuth;
@@ -72,8 +73,16 @@ export default class NostrConnectComponent extends Component {
 
       {{#if (eq this.nostrAuth.connectStatus "waiting")}}
         <div class="alert alert-info nostr-connect-status">
-          <p>Waiting for you to approve the connection in your mobile signer
-            app...</p>
+          {{#if this.nostrAuth.isMobile}}
+            <p>Waiting for you to approve the connection in your mobile signer
+              app...</p>
+          {{else}}
+            <p>Scan this QR code with a compatible Nostr signer app (like
+              Amber):</p>
+            <div class="qr-code-container">
+              <canvas {{qrCode this.nostrAuth.connectUri}}></canvas>
+            </div>
+          {{/if}}
         </div>
       {{/if}}
     </div>
