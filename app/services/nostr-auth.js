@@ -6,13 +6,33 @@ const STORAGE_KEY = 'marco:nostr_pubkey';
 
 export default class NostrAuthService extends Service {
   @tracked pubkey = null;
-  signer = null;
 
   constructor() {
     super(...arguments);
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       this.pubkey = saved;
+      this._verifyPubkey();
+    }
+  }
+
+  async _verifyPubkey() {
+    if (typeof window.nostr === 'undefined') {
+      this.logout();
+      return;
+    }
+
+    try {
+      const signer = new ExtensionSigner();
+      const extensionPubkey = await signer.getPublicKey();
+
+      if (extensionPubkey !== this.pubkey) {
+        this.pubkey = extensionPubkey;
+        localStorage.setItem(STORAGE_KEY, this.pubkey);
+      }
+    } catch (e) {
+      console.warn('Failed to verify nostr pubkey, logging out', e);
+      this.logout();
     }
   }
 
@@ -20,13 +40,16 @@ export default class NostrAuthService extends Service {
     return !!this.pubkey;
   }
 
+  get signer() {
+    if (typeof window.nostr !== 'undefined') {
+      return new ExtensionSigner();
+    }
+    return null;
+  }
+
   async login() {
     if (typeof window.nostr === 'undefined') {
       throw new Error('No NIP-07 Nostr extension found (e.g., Alby, nos2x).');
-    }
-
-    if (!this.signer) {
-      this.signer = new ExtensionSigner();
     }
 
     try {
@@ -41,20 +64,15 @@ export default class NostrAuthService extends Service {
 
   async signEvent(event) {
     if (!this.signer) {
-      if (this.pubkey && typeof window.nostr !== 'undefined') {
-        this.signer = new ExtensionSigner();
-      } else {
-        throw new Error(
-          'Not connected or extension missing. Please connect Nostr again.'
-        );
-      }
+      throw new Error(
+        'Not connected or extension missing. Please connect Nostr again.'
+      );
     }
     return await this.signer.signEvent(event);
   }
 
   logout() {
     this.pubkey = null;
-    this.signer = null;
     localStorage.removeItem(STORAGE_KEY);
   }
 }
