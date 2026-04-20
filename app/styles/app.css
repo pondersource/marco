@@ -200,6 +200,10 @@ body {
   object-fit: cover;
   flex-shrink: 0;
 }
+
+.photo-preview-img {
+  max-width: 100%;
+  height: auto;
 }
 
 /* User Menu Popover */
