@@ -2,30 +2,16 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { inject as service } from '@ember/service';
 import { task } from 'ember-concurrency';
-import { EventFactory } from 'applesauce-core';
 import Icon from '#components/icon';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 
-const DEFAULT_BLOSSOM_SERVER = 'https://blossom.nostr.build';
-
-function bufferToHex(buffer) {
-  return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
 export default class PlacePhotoItem extends Component {
-  @service nostrAuth;
-  @service nostrData;
+  @service blossom;
 
   @tracked thumbnailUrl = '';
   @tracked error = '';
   @tracked isUploaded = false;
-
-  get blossomServer() {
-    return this.nostrData.blossomServers[0] || DEFAULT_BLOSSOM_SERVER;
-  }
 
   constructor() {
     super(...arguments);
@@ -45,8 +31,6 @@ export default class PlacePhotoItem extends Component {
   uploadTask = task(async (file) => {
     this.error = '';
     try {
-      if (!this.nostrAuth.isConnected) throw new Error('Not connected');
-
       const dim = await new Promise((resolve) => {
         const img = new Image();
         img.onload = () => resolve(`${img.width}x${img.height}`);
@@ -54,65 +38,17 @@ export default class PlacePhotoItem extends Component {
         img.src = this.thumbnailUrl;
       });
 
-      const buffer = await file.arrayBuffer();
-      const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-      const payloadHash = bufferToHex(hashBuffer);
-
-      let serverUrl = this.blossomServer;
-      if (serverUrl.endsWith('/')) {
-        serverUrl = serverUrl.slice(0, -1);
-      }
-      const uploadUrl = `${serverUrl}/upload`;
-
-      const factory = new EventFactory({ signer: this.nostrAuth.signer });
-      const now = Math.floor(Date.now() / 1000);
-      const serverHostname = new URL(serverUrl).hostname;
-
-      const authTemplate = {
-        kind: 24242,
-        created_at: now,
-        content: 'Upload photo for place',
-        tags: [
-          ['t', 'upload'],
-          ['x', payloadHash],
-          ['expiration', String(now + 3600)],
-          ['server', serverHostname],
-        ],
-      };
-
-      const authEvent = await factory.sign(authTemplate);
-      const base64 = btoa(JSON.stringify(authEvent));
-      const base64url = base64
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-      const authHeader = `Nostr ${base64url}`;
-
-      // eslint-disable-next-line warp-drive/no-external-request-patterns
-      const response = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          Authorization: authHeader,
-          'X-SHA-256': payloadHash,
-        },
-        body: file,
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Upload failed (${response.status}): ${text}`);
-      }
-
-      const result = await response.json();
+      const result = await this.blossom.upload(file);
       this.isUploaded = true;
 
       if (this.args.onSuccess) {
         this.args.onSuccess({
           file,
           url: result.url,
-          type: file.type,
+          fallbackUrls: result.fallbackUrls,
+          type: result.type,
           dim,
-          hash: payloadHash,
+          hash: result.hash,
         });
       }
     } catch (e) {

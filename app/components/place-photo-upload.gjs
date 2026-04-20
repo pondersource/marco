@@ -4,6 +4,7 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { EventFactory } from 'applesauce-core';
+import { task } from 'ember-concurrency';
 import Geohash from 'latlon-geohash';
 import PlacePhotoItem from './place-photo-item';
 import Icon from '#components/icon';
@@ -12,6 +13,8 @@ import { or, not } from 'ember-truth-helpers';
 export default class PlacePhotoUpload extends Component {
   @service nostrAuth;
   @service nostrRelay;
+  @service blossom;
+  @service toast;
 
   @tracked files = [];
   @tracked uploadedPhotos = [];
@@ -74,11 +77,25 @@ export default class PlacePhotoUpload extends Component {
 
   @action
   removeFile(fileToRemove) {
+    const photoData = this.uploadedPhotos.find((p) => p.file === fileToRemove);
     this.files = this.files.filter((f) => f !== fileToRemove);
     this.uploadedPhotos = this.uploadedPhotos.filter(
       (p) => p.file !== fileToRemove
     );
+
+    if (photoData && photoData.hash && photoData.url) {
+      this.deletePhotoTask.perform(photoData);
+    }
   }
+
+  deletePhotoTask = task(async (photoData) => {
+    try {
+      if (!photoData.hash) return;
+      await this.blossom.delete(photoData.hash);
+    } catch (e) {
+      this.toast.show(`Failed to delete photo from server: ${e.message}`, 5000);
+    }
+  });
 
   @action
   async publish() {
@@ -117,17 +134,21 @@ export default class PlacePhotoUpload extends Component {
       }
 
       for (const photo of this.uploadedPhotos) {
-        const imeta = [
-          'imeta',
-          `url ${photo.url}`,
-          `m ${photo.type}`,
-          'alt A photo of a place',
-        ];
+        const imeta = ['imeta', `url ${photo.url}`];
 
-        if (photo.dim) {
-          imeta.splice(3, 0, `dim ${photo.dim}`);
+        if (photo.fallbackUrls && photo.fallbackUrls.length > 0) {
+          for (const fallbackUrl of photo.fallbackUrls) {
+            imeta.push(`url ${fallbackUrl}`);
+          }
         }
 
+        imeta.push(`m ${photo.type}`);
+
+        if (photo.dim) {
+          imeta.push(`dim ${photo.dim}`);
+        }
+
+        imeta.push('alt A photo of a place');
         tags.push(imeta);
       }
 
