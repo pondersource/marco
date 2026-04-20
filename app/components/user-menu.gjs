@@ -48,7 +48,7 @@ export default class UserMenuComponent extends Component {
 
   @action
   disconnectNostr() {
-    this.nostrAuth.logout();
+    this.nostrAuth.disconnect();
   }
 
   <template>

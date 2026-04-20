@@ -15,7 +15,7 @@ export default class NostrConnectComponent extends Component {
   @action
   async connectExtension() {
     try {
-      await this.nostrAuth.login('extension');
+      await this.nostrAuth.connectWithExtension();
       if (this.args.onConnect) {
         this.args.onConnect();
       }
@@ -28,7 +28,7 @@ export default class NostrConnectComponent extends Component {
   @action
   async connectApp() {
     try {
-      await this.nostrAuth.login('connect');
+      await this.nostrAuth.connectWithApp();
       if (this.args.onConnect) {
         this.args.onConnect();
       }
