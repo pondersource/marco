@@ -102,6 +102,7 @@
     "edition": "octane"
   },
   "dependencies": {
+    "@noble/hashes": "^2.2.0",
     "@waysidemapping/pinhead": "^15.20.0",
     "applesauce-core": "^5.2.0",
     "applesauce-factory": "^4.0.0",

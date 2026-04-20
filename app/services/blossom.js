@@ -1,5 +1,6 @@
 import Service, { service } from '@ember/service';
 import { EventFactory } from 'applesauce-core';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 export const DEFAULT_BLOSSOM_SERVER = 'https://blossom.nostr.build';
 
@@ -78,7 +79,18 @@ export default class BlossomService extends Service {
     if (!this.nostrAuth.isConnected) throw new Error('Not connected');
 
     const buffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    let hashBuffer;
+
+    if (
+      typeof crypto !== 'undefined' &&
+      crypto.subtle &&
+      crypto.subtle.digest
+    ) {
+      hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    } else {
+      hashBuffer = sha256(new Uint8Array(buffer));
+    }
+
     const payloadHash = bufferToHex(hashBuffer);
 
     const servers = this.servers;

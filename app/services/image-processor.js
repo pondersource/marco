@@ -51,24 +51,71 @@ export default class ImageProcessorService extends Service {
     this._initWorker();
   }
 
+  _getImageDimensions(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+
+      img.onload = () => {
+        const dimensions = { width: img.width, height: img.height };
+        URL.revokeObjectURL(url);
+        resolve(dimensions);
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Could not read image dimensions'));
+      };
+
+      img.src = url;
+    });
+  }
+
   async process(file, maxDimension, quality, computeBlurhash = false) {
     if (!this._worker) {
       // Fallback if worker initialization failed (e.g. incredibly old browsers)
       throw new Error('Image processor worker is not available.');
     }
 
-    return new Promise((resolve, reject) => {
-      const id = ++this._msgId;
-      this._callbacks.set(id, { resolve, reject });
+    try {
+      // 1. Get dimensions safely on the main thread
+      const { width: origWidth, height: origHeight } =
+        await this._getImageDimensions(file);
 
-      this._worker.postMessage({
-        id,
-        file,
-        maxDimension,
-        quality,
-        computeBlurhash,
+      // 2. Calculate aspect-ratio preserving dimensions
+      let targetWidth = origWidth;
+      let targetHeight = origHeight;
+
+      if (origWidth > origHeight) {
+        if (origWidth > maxDimension) {
+          targetHeight = Math.round(origHeight * (maxDimension / origWidth));
+          targetWidth = maxDimension;
+        }
+      } else {
+        if (origHeight > maxDimension) {
+          targetWidth = Math.round(origWidth * (maxDimension / origHeight));
+          targetHeight = maxDimension;
+        }
+      }
+
+      // 3. Send to worker for processing
+      return new Promise((resolve, reject) => {
+        const id = ++this._msgId;
+        this._callbacks.set(id, { resolve, reject });
+
+        this._worker.postMessage({
+          type: 'PROCESS_IMAGE',
+          id,
+          file,
+          targetWidth,
+          targetHeight,
+          quality,
+          computeBlurhash,
+        });
       });
-    });
+    } catch (e) {
+      throw new Error(`Failed to process image: ${e.message}`);
+    }
   }
 
   willDestroy() {

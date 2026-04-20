@@ -1,6 +1,7 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
+import { action } from '@ember/object';
 import { task } from 'ember-concurrency';
 import Icon from '#components/icon';
 import { on } from '@ember/modifier';
@@ -14,6 +15,7 @@ const THUMBNAIL_QUALITY = 0.9;
 export default class PlacePhotoItem extends Component {
   @service blossom;
   @service imageProcessor;
+  @service toast;
 
   @tracked thumbnailUrl = '';
   @tracked error = '';
@@ -31,6 +33,13 @@ export default class PlacePhotoItem extends Component {
     super.willDestroy(...arguments);
     if (this.thumbnailUrl) {
       URL.revokeObjectURL(this.thumbnailUrl);
+    }
+  }
+
+  @action
+  showErrorToast() {
+    if (this.error) {
+      this.toast.show(this.error);
     }
   }
 
@@ -105,9 +114,14 @@ export default class PlacePhotoItem extends Component {
       {{/if}}
 
       {{#if this.error}}
-        <div class="photo-item-overlay error-overlay" title={{this.error}}>
+        <button
+          type="button"
+          class="photo-item-overlay error-overlay"
+          title={{this.error}}
+          {{on "click" this.showErrorToast}}
+        >
           <Icon @name="alert-circle" @size={{24}} @color="white" />
-        </div>
+        </button>
       {{/if}}
 
       {{#if this.isUploaded}}
