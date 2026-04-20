@@ -107,6 +107,7 @@
     "applesauce-factory": "^4.0.0",
     "applesauce-relay": "^5.2.0",
     "applesauce-signers": "^5.2.0",
+    "blurhash": "^2.0.5",
     "ember-concurrency": "^5.2.0",
     "ember-lifeline": "^7.0.0",
     "oauth2-pkce": "^2.1.3",

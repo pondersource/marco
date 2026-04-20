@@ -6,8 +6,14 @@ import Icon from '#components/icon';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 
+const MAX_IMAGE_DIMENSION = 1920;
+const IMAGE_QUALITY = 0.94;
+const MAX_THUMBNAIL_DIMENSION = 350;
+const THUMBNAIL_QUALITY = 0.9;
+
 export default class PlacePhotoItem extends Component {
   @service blossom;
+  @service imageProcessor;
 
   @tracked thumbnailUrl = '';
   @tracked error = '';
@@ -31,24 +37,50 @@ export default class PlacePhotoItem extends Component {
   uploadTask = task(async (file) => {
     this.error = '';
     try {
-      const dim = await new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve(`${img.width}x${img.height}`);
-        img.onerror = () => resolve('');
-        img.src = this.thumbnailUrl;
-      });
+      // 1. Process main image
+      const mainData = await this.imageProcessor.process(
+        file,
+        MAX_IMAGE_DIMENSION,
+        IMAGE_QUALITY
+      );
 
-      const result = await this.blossom.upload(file);
+      // 2. Generate blurhash from main image data
+      const blurhash = await this.imageProcessor.generateBlurhash(
+        mainData.imageData
+      );
+
+      // 3. Process thumbnail
+      const thumbData = await this.imageProcessor.process(
+        file,
+        MAX_THUMBNAIL_DIMENSION,
+        THUMBNAIL_QUALITY
+      );
+
+      // 4. Upload main image (to all servers concurrently)
+      const mainUploadPromise = this.blossom.upload(mainData.blob);
+
+      // 5. Upload thumbnail (to all servers concurrently)
+      const thumbUploadPromise = this.blossom.upload(thumbData.blob);
+
+      // Await both uploads
+      const [mainResult, thumbResult] = await Promise.all([
+        mainUploadPromise,
+        thumbUploadPromise,
+      ]);
+
       this.isUploaded = true;
 
       if (this.args.onSuccess) {
         this.args.onSuccess({
           file,
-          url: result.url,
-          fallbackUrls: result.fallbackUrls,
-          type: result.type,
-          dim,
-          hash: result.hash,
+          url: mainResult.url,
+          fallbackUrls: mainResult.fallbackUrls,
+          thumbUrl: thumbResult.url,
+          blurhash,
+          type: 'image/jpeg',
+          dim: mainData.dim,
+          hash: mainResult.hash,
+          thumbHash: thumbResult.hash,
         });
       }
     } catch (e) {

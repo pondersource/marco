@@ -90,8 +90,12 @@ export default class PlacePhotoUpload extends Component {
 
   deletePhotoTask = task(async (photoData) => {
     try {
-      if (!photoData.hash) return;
-      await this.blossom.delete(photoData.hash);
+      if (photoData.hash) {
+        await this.blossom.delete(photoData.hash);
+      }
+      if (photoData.thumbHash) {
+        await this.blossom.delete(photoData.thumbHash);
+      }
     } catch (e) {
       this.toast.show(`Failed to delete photo from server: ${e.message}`, 5000);
     }
@@ -136,12 +140,6 @@ export default class PlacePhotoUpload extends Component {
       for (const photo of this.uploadedPhotos) {
         const imeta = ['imeta', `url ${photo.url}`];
 
-        if (photo.fallbackUrls && photo.fallbackUrls.length > 0) {
-          for (const fallbackUrl of photo.fallbackUrls) {
-            imeta.push(`url ${fallbackUrl}`);
-          }
-        }
-
         imeta.push(`m ${photo.type}`);
 
         if (photo.dim) {
@@ -149,6 +147,21 @@ export default class PlacePhotoUpload extends Component {
         }
 
         imeta.push('alt A photo of a place');
+
+        if (photo.fallbackUrls && photo.fallbackUrls.length > 0) {
+          for (const fallbackUrl of photo.fallbackUrls) {
+            imeta.push(`fallback ${fallbackUrl}`);
+          }
+        }
+
+        if (photo.thumbUrl) {
+          imeta.push(`thumb ${photo.thumbUrl}`);
+        }
+
+        if (photo.blurhash) {
+          imeta.push(`blurhash ${photo.blurhash}`);
+        }
+
         tags.push(imeta);
       }
 
