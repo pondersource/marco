@@ -37,29 +37,26 @@ export default class PlacePhotoItem extends Component {
   uploadTask = task(async (file) => {
     this.error = '';
     try {
-      // 1. Process main image
+      // 1. Process main image and generate blurhash in worker
       const mainData = await this.imageProcessor.process(
         file,
         MAX_IMAGE_DIMENSION,
-        IMAGE_QUALITY
+        IMAGE_QUALITY,
+        true // computeBlurhash
       );
 
-      // 2. Generate blurhash from main image data
-      const blurhash = await this.imageProcessor.generateBlurhash(
-        mainData.imageData
-      );
-
-      // 3. Process thumbnail
+      // 2. Process thumbnail (no blurhash needed)
       const thumbData = await this.imageProcessor.process(
         file,
         MAX_THUMBNAIL_DIMENSION,
-        THUMBNAIL_QUALITY
+        THUMBNAIL_QUALITY,
+        false
       );
 
-      // 4. Upload main image (to all servers concurrently)
+      // 3. Upload main image (to all servers concurrently)
       const mainUploadPromise = this.blossom.upload(mainData.blob);
 
-      // 5. Upload thumbnail (to all servers concurrently)
+      // 4. Upload thumbnail (to all servers concurrently)
       const thumbUploadPromise = this.blossom.upload(thumbData.blob);
 
       // Await both uploads
@@ -76,7 +73,7 @@ export default class PlacePhotoItem extends Component {
           url: mainResult.url,
           fallbackUrls: mainResult.fallbackUrls,
           thumbUrl: thumbResult.url,
-          blurhash,
+          blurhash: mainData.blurhash,
           type: 'image/jpeg',
           dim: mainData.dim,
           hash: mainResult.hash,

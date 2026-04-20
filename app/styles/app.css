@@ -216,7 +216,7 @@ body {
   padding: 2rem 1.5rem;
   text-align: center;
   transition: all 0.2s ease;
-  margin: 1.5rem 0 1rem 0;
+  margin: 1.5rem 0 1rem;
   background-color: rgb(255 255 255 / 2%);
   cursor: pointer;
 }

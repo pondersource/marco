@@ -1,74 +1,82 @@
 import Service from '@ember/service';
-import { encode } from 'blurhash';
+// We use the special Vite query parameter to load this as a web worker
+import Worker from '../workers/image-processor?worker';
 
 export default class ImageProcessorService extends Service {
-  async process(file, maxDimension, quality) {
+  _worker = null;
+  _callbacks = new Map();
+  _msgId = 0;
+
+  constructor() {
+    super(...arguments);
+    this._initWorker();
+  }
+
+  _initWorker() {
+    if (!this._worker && typeof Worker !== 'undefined') {
+      try {
+        this._worker = new Worker();
+        this._worker.onmessage = this._handleMessage.bind(this);
+        this._worker.onerror = this._handleError.bind(this);
+      } catch (e) {
+        console.warn('Failed to initialize image-processor worker:', e);
+      }
+    }
+  }
+
+  _handleMessage(e) {
+    const { id, success, blob, dim, blurhash, error } = e.data;
+    const resolver = this._callbacks.get(id);
+
+    if (resolver) {
+      this._callbacks.delete(id);
+      if (success) {
+        resolver.resolve({ blob, dim, blurhash });
+      } else {
+        resolver.reject(new Error(error));
+      }
+    }
+  }
+
+  _handleError(error) {
+    console.error('Image Processor Worker Error:', error);
+    // Reject all pending jobs
+    for (const [, resolver] of this._callbacks.entries()) {
+      resolver.reject(new Error('Worker crashed'));
+    }
+    this._callbacks.clear();
+    // Restart the worker for future jobs
+    this._worker.terminate();
+    this._worker = null;
+    this._initWorker();
+  }
+
+  async process(file, maxDimension, quality, computeBlurhash = false) {
+    if (!this._worker) {
+      // Fallback if worker initialization failed (e.g. incredibly old browsers)
+      throw new Error('Image processor worker is not available.');
+    }
+
     return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file);
-      const img = new Image();
+      const id = ++this._msgId;
+      this._callbacks.set(id, { resolve, reject });
 
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxDimension) {
-            height = Math.round(height * (maxDimension / width));
-            width = maxDimension;
-          }
-        } else {
-          if (height > maxDimension) {
-            width = Math.round(width * (maxDimension / height));
-            height = maxDimension;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          return reject(new Error('Failed to get canvas context'));
-        }
-
-        // Draw image on canvas, this inherently strips EXIF/metadata
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const imageData = ctx.getImageData(0, 0, width, height);
-        const dim = `${width}x${height}`;
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve({ blob, dim, imageData });
-            } else {
-              reject(new Error('Canvas toBlob failed'));
-            }
-          },
-          'image/jpeg',
-          quality
-        );
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error('Failed to load image for processing'));
-      };
-
-      img.src = url;
+      this._worker.postMessage({
+        id,
+        file,
+        maxDimension,
+        quality,
+        computeBlurhash,
+      });
     });
   }
 
-  async generateBlurhash(imageData, componentX = 4, componentY = 3) {
-    return encode(
-      imageData.data,
-      imageData.width,
-      imageData.height,
-      componentX,
-      componentY
-    );
+  willDestroy() {
+    super.willDestroy(...arguments);
+    if (this._worker) {
+      this._worker.terminate();
+      this._worker = null;
+    }
+    this._callbacks.clear();
   }
 }
