@@ -6,6 +6,7 @@ import { task } from 'ember-concurrency';
 import Icon from '#components/icon';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { isMobile } from '../utils/device';
 
 const MAX_IMAGE_DIMENSION = 1920;
 const IMAGE_QUALITY = 0.94;
@@ -62,17 +63,29 @@ export default class PlacePhotoItem extends Component {
         false
       );
 
-      // 3. Upload main image (to all servers concurrently)
-      const mainUploadPromise = this.blossom.upload(mainData.blob);
+      // 3. Upload main image
+      // 4. Upload thumbnail
+      let mainResult, thumbResult;
+      const isMobileDevice = isMobile();
 
-      // 4. Upload thumbnail (to all servers concurrently)
-      const thumbUploadPromise = this.blossom.upload(thumbData.blob);
+      if (isMobileDevice) {
+        // Mobile: sequential uploads to preserve bandwidth and memory
+        mainResult = await this.blossom.upload(mainData.blob, {
+          sequential: true,
+        });
+        thumbResult = await this.blossom.upload(thumbData.blob, {
+          sequential: true,
+        });
+      } else {
+        // Desktop: concurrent uploads
+        const mainUploadPromise = this.blossom.upload(mainData.blob);
+        const thumbUploadPromise = this.blossom.upload(thumbData.blob);
 
-      // Await both uploads
-      const [mainResult, thumbResult] = await Promise.all([
-        mainUploadPromise,
-        thumbUploadPromise,
-      ]);
+        [mainResult, thumbResult] = await Promise.all([
+          mainUploadPromise,
+          thumbUploadPromise,
+        ]);
+      }
 
       this.isUploaded = true;
 

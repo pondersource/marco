@@ -75,7 +75,7 @@ export default class BlossomService extends Service {
     return response.json();
   }
 
-  async upload(file) {
+  async upload(file, options = { sequential: false }) {
     if (!this.nostrAuth.isConnected) throw new Error('Not connected');
 
     const buffer = await file.arrayBuffer();
@@ -97,28 +97,48 @@ export default class BlossomService extends Service {
     const mainServer = servers[0];
     const fallbackServers = servers.slice(1);
 
-    // Start all uploads concurrently
-    const mainPromise = this._uploadToServer(file, payloadHash, mainServer);
-    const fallbackPromises = fallbackServers.map((serverUrl) =>
-      this._uploadToServer(file, payloadHash, serverUrl)
-    );
-
-    // Main server MUST succeed
-    const mainResult = await mainPromise;
-
-    // Fallback servers can fail, but we log the warnings
-    const fallbackResults = await Promise.allSettled(fallbackPromises);
     const fallbackUrls = [];
+    let mainResult;
 
-    for (let i = 0; i < fallbackResults.length; i++) {
-      const result = fallbackResults[i];
-      if (result.status === 'fulfilled') {
-        fallbackUrls.push(result.value.url);
-      } else {
-        console.warn(
-          `Fallback upload to ${fallbackServers[i]} failed:`,
-          result.reason
-        );
+    if (options.sequential) {
+      // Sequential upload logic
+      mainResult = await this._uploadToServer(file, payloadHash, mainServer);
+
+      for (const serverUrl of fallbackServers) {
+        try {
+          const result = await this._uploadToServer(
+            file,
+            payloadHash,
+            serverUrl
+          );
+          fallbackUrls.push(result.url);
+        } catch (error) {
+          console.warn(`Fallback upload to ${serverUrl} failed:`, error);
+        }
+      }
+    } else {
+      // Concurrent upload logic
+      const mainPromise = this._uploadToServer(file, payloadHash, mainServer);
+      const fallbackPromises = fallbackServers.map((serverUrl) =>
+        this._uploadToServer(file, payloadHash, serverUrl)
+      );
+
+      // Main server MUST succeed
+      mainResult = await mainPromise;
+
+      // Fallback servers can fail, but we log the warnings
+      const fallbackResults = await Promise.allSettled(fallbackPromises);
+
+      for (let i = 0; i < fallbackResults.length; i++) {
+        const result = fallbackResults[i];
+        if (result.status === 'fulfilled') {
+          fallbackUrls.push(result.value.url);
+        } else {
+          console.warn(
+            `Fallback upload to ${fallbackServers[i]} failed:`,
+            result.reason
+          );
+        }
       }
     }
 

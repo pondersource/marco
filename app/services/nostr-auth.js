@@ -14,6 +14,8 @@ const STORAGE_KEY_CONNECT_RELAY = 'marco:nostr_connect_relay';
 
 const DEFAULT_CONNECT_RELAY = 'wss://relay.nsec.app';
 
+import { isMobile } from '../utils/device';
+
 export default class NostrAuthService extends Service {
   @service nostrRelay;
   @service nostrData;
@@ -73,7 +75,7 @@ export default class NostrAuthService extends Service {
   }
 
   get isMobile() {
-    return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    return isMobile();
   }
 
   get isConnected() {
