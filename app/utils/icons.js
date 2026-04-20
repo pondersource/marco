@@ -26,8 +26,12 @@ import search from 'feather-icons/dist/icons/search.svg?raw';
 import server from 'feather-icons/dist/icons/server.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
 import target from 'feather-icons/dist/icons/target.svg?raw';
+import trash2 from 'feather-icons/dist/icons/trash-2.svg?raw';
+import uploadCloud from 'feather-icons/dist/icons/upload-cloud.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
+import check from 'feather-icons/dist/icons/check.svg?raw';
+import alertCircle from 'feather-icons/dist/icons/alert-circle.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
 
 import angelfish from '@waysidemapping/pinhead/dist/icons/angelfish.svg?raw';
@@ -130,6 +134,8 @@ const ICONS = {
   'check-square': checkSquare,
   'cigarette-with-smoke-curl': cigaretteWithSmokeCurl,
   climbing_wall: climbingWall,
+  check,
+  'alert-circle': alertCircle,
   'classical-building': classicalBuilding,
   'classical-building-with-dome-and-flag': classicalBuildingWithDomeAndFlag,
   'classical-building-with-flag': classicalBuildingWithFlag,
@@ -214,6 +220,8 @@ const ICONS = {
   'tattoo-machine': tattooMachine,
   toolbox,
   target,
+  'trash-2': trash2,
+  'upload-cloud': uploadCloud,
   'tree-and-bench-with-backrest': treeAndBenchWithBackrest,
   user,
   'village-buildings': villageBuildings,
