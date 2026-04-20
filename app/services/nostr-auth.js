@@ -26,6 +26,12 @@ export default class NostrAuthService extends Service {
 
   constructor() {
     super(...arguments);
+
+    // Enable debug logging for applesauce packages
+    if (typeof localStorage !== 'undefined') {
+      localStorage.debug = 'applesauce:*';
+    }
+
     const saved = localStorage.getItem(STORAGE_KEY);
     const type = localStorage.getItem(STORAGE_KEY_TYPE);
     if (saved) {
@@ -132,6 +138,9 @@ export default class NostrAuthService extends Service {
         const relay = 'wss://relay.nsec.app';
         localStorage.setItem(STORAGE_KEY_CONNECT_RELAY, relay);
 
+        // Override aggressive 10s EOSE timeout to allow time for QR scanning
+        this.nostrRelay.pool.relay(relay).eoseTimeout = 180000; // 3 minutes
+
         this._signerInstance = new NostrConnectSigner({
           pool: this.nostrRelay.pool,
           relays: [relay],
@@ -153,20 +162,30 @@ export default class NostrAuthService extends Service {
         this.connectUri = this._signerInstance.getNostrConnectURI({
           name: 'Marco',
           url: window.location.origin,
-          description: 'A privacy-respecting maps application.',
+          description: 'An unhosted maps application.',
           icons: [],
         });
 
         // Trigger the deep link intent immediately for the user if on mobile
         if (this.isMobile) {
+          console.debug('Mobile detected, triggering deep link intent.');
           window.location.href = this.connectUri;
         }
 
         // Start listening to the relay
+        console.debug('Opening signer connection to relay...');
         await this._signerInstance.open();
+        console.debug('Signer connection opened successfully.');
 
         // Wait for the remote signer to reply with their pubkey
-        await this._signerInstance.waitForSigner();
+        console.debug('Waiting for remote signer to ack via relay...');
+        try {
+          await this._signerInstance.waitForSigner();
+          console.debug('Remote signer ack received!');
+        } catch (waitErr) {
+          console.error('Error while waiting for remote signer ack:', waitErr);
+          throw waitErr;
+        }
 
         // Once connected, get the actual user pubkey
         this.pubkey = await this._signerInstance.getPublicKey();
@@ -203,6 +222,9 @@ export default class NostrAuthService extends Service {
     }
 
     const localSigner = PrivateKeySigner.fromKey(localKeyHex);
+
+    // Override aggressive 10s EOSE timeout to allow time for QR scanning
+    this.nostrRelay.pool.relay(relay).eoseTimeout = 180000; // 3 minutes
 
     this._signerInstance = new NostrConnectSigner({
       pool: this.nostrRelay.pool,
