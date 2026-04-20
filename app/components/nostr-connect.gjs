@@ -7,6 +7,7 @@ import qrCode from '../modifiers/qr-code';
 
 export default class NostrConnectComponent extends Component {
   @service nostrAuth;
+  @service toast;
 
   get hasExtension() {
     return typeof window !== 'undefined' && typeof window.nostr !== 'undefined';
@@ -16,6 +17,7 @@ export default class NostrConnectComponent extends Component {
   async connectExtension() {
     try {
       await this.nostrAuth.connectWithExtension();
+      this.toast.show('Nostr connected successfully');
       if (this.args.onConnect) {
         this.args.onConnect();
       }
@@ -29,6 +31,7 @@ export default class NostrConnectComponent extends Component {
   async connectApp() {
     try {
       await this.nostrAuth.connectWithApp();
+      this.toast.show('Nostr connected successfully');
       if (this.args.onConnect) {
         this.args.onConnect();
       }
@@ -53,7 +56,7 @@ export default class NostrConnectComponent extends Component {
           </button>
         {{else}}
           <button
-            class="btn btn-secondary"
+            class="btn btn-outline"
             type="button"
             disabled
             title="No Nostr extension found in your browser."
@@ -72,7 +75,7 @@ export default class NostrConnectComponent extends Component {
       </div>
 
       {{#if (eq this.nostrAuth.connectStatus "waiting")}}
-        <div class="alert alert-info nostr-connect-status">
+        <div class="nostr-connect-status">
           {{#if this.nostrAuth.isMobile}}
             <p>Waiting for you to approve the connection in your mobile signer
               app...</p>
