@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import { action } from '@ember/object';
-import { inject as service } from '@ember/service';
+import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { eq } from 'ember-truth-helpers';
 import qrCode from '../modifiers/qr-code';

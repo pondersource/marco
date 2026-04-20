@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import { action } from '@ember/object';
-import { inject as service } from '@ember/service';
+import { service } from '@ember/service';
 import Icon from '#components/icon';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
