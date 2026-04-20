@@ -211,12 +211,12 @@ body {
 }
 
 .dropzone {
-  border: 2px dashed #3a4b5c;
+  border: 2px dashed #ccc;
   border-radius: 8px;
-  padding: 30px 20px;
+  padding: 2rem 1.5rem;
   text-align: center;
   transition: all 0.2s ease;
-  margin-bottom: 20px;
+  margin: 1.5rem 0 1rem 0;
   background-color: rgb(255 255 255 / 2%);
   cursor: pointer;
 }
@@ -230,14 +230,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 1rem;
   cursor: pointer;
-  color: #a0aec0;
+  color: #898989;
 }
 
 .dropzone-label p {
   margin: 0;
-  font-size: 1.1rem;
 }
 
 .file-input-hidden {
@@ -1563,9 +1562,9 @@ button.create-place {
   cursor: pointer;
 }
 
-/* Place Photo Upload */
 .place-photo-upload h2 {
   margin-top: 0;
+  font-size: 1.2rem;
 }
 
 .alert {

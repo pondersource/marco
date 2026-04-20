@@ -215,7 +215,7 @@ export default class PlacePhotoUpload extends Component {
         {{on "drop" this.handleDrop}}
       >
         <label for="photo-upload-input" class="dropzone-label">
-          <Icon @name="upload-cloud" @size={{48}} />
+          <Icon @name="upload-cloud" @size={{48}} @color="#ccc" />
           <p>Drag and drop photos here, or click to browse</p>
         </label>
         <input
