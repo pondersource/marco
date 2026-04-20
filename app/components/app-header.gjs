@@ -7,10 +7,13 @@ import Icon from '#components/icon';
 import UserMenu from '#components/user-menu';
 import SearchBox from '#components/search-box';
 import CategoryChips from '#components/category-chips';
+import { and } from 'ember-truth-helpers';
 
 export default class AppHeaderComponent extends Component {
   @service storage;
   @service settings;
+  @service nostrAuth;
+  @service nostrData;
   @tracked isUserMenuOpen = false;
   @tracked searchQuery = '';
 
@@ -64,9 +67,19 @@ export default class AppHeaderComponent extends Component {
             aria-label="User Menu"
             {{on "click" this.toggleUserMenu}}
           >
-            <div class="user-avatar-placeholder">
-              <Icon @name="user" @size={{20}} @color="white" />
-            </div>
+            {{#if
+              (and this.nostrAuth.isConnected this.nostrData.profile.picture)
+            }}
+              <img
+                src={{this.nostrData.profile.picture}}
+                class="user-avatar"
+                alt="User Avatar"
+              />
+            {{else}}
+              <div class="user-avatar-placeholder">
+                <Icon @name="user" @size={{20}} @color="white" />
+              </div>
+            {{/if}}
           </button>
 
           {{#if this.isUserMenuOpen}}

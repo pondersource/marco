@@ -11,6 +11,7 @@ export default class UserMenuComponent extends Component {
   @service storage;
   @service osmAuth;
   @service nostrAuth;
+  @service nostrData;
 
   @tracked isNostrConnectModalOpen = false;
 
@@ -135,7 +136,7 @@ export default class UserMenuComponent extends Component {
           <div class="account-status">
             {{#if this.nostrAuth.isConnected}}
               <strong title={{this.nostrAuth.pubkey}}>
-                {{this.nostrAuth.pubkey}}
+                {{this.nostrData.userDisplayName}}
               </strong>
             {{else}}
               Not connected

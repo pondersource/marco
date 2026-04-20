@@ -16,6 +16,7 @@ const DEFAULT_CONNECT_RELAY = 'wss://relay.nsec.app';
 
 export default class NostrAuthService extends Service {
   @service nostrRelay;
+  @service nostrData;
 
   @tracked pubkey = null;
   @tracked signerType = null; // 'extension' or 'connect'
@@ -56,6 +57,7 @@ export default class NostrAuthService extends Service {
           this.pubkey = extensionPubkey;
           localStorage.setItem(STORAGE_KEY, this.pubkey);
         }
+        this.nostrData.loadProfile(this.pubkey);
       } catch (e) {
         console.warn('Failed to verify extension nostr pubkey, logging out', e);
         this.disconnect();
@@ -112,6 +114,7 @@ export default class NostrAuthService extends Service {
       this.signerType = 'extension';
       localStorage.setItem(STORAGE_KEY, this.pubkey);
       localStorage.setItem(STORAGE_KEY_TYPE, 'extension');
+      this.nostrData.loadProfile(this.pubkey);
       return this.pubkey;
     } catch (error) {
       console.error('Failed to get public key from extension:', error);
@@ -207,6 +210,8 @@ export default class NostrAuthService extends Service {
         this._signerInstance.remote
       );
 
+      this.nostrData.loadProfile(this.pubkey);
+
       return this.pubkey;
     } catch (error) {
       this.connectStatus = null;
@@ -253,6 +258,7 @@ export default class NostrAuthService extends Service {
     if (pubkey !== this.pubkey) {
       throw new Error('Remote signer pubkey mismatch');
     }
+    this.nostrData.loadProfile(this.pubkey);
   }
 
   async signEvent(event) {
@@ -266,6 +272,7 @@ export default class NostrAuthService extends Service {
 
   async disconnect() {
     this.pubkey = null;
+    this.nostrData?.loadProfile(null);
     this.signerType = null;
     this.connectStatus = null;
     this.connectUri = null;
