@@ -6,6 +6,8 @@ import { on } from '@ember/modifier';
 import { EventFactory } from 'applesauce-core';
 import Geohash from 'latlon-geohash';
 
+const DEFAULT_BLOSSOM_SERVER = 'https://blossom.nostr.build';
+
 function bufferToHex(buffer) {
   return Array.from(new Uint8Array(buffer))
     .map((b) => b.toString(16).padStart(2, '0'))
@@ -33,7 +35,7 @@ export default class PlacePhotoUpload extends Component {
   }
 
   get blossomServer() {
-    return this.nostrData.blossomServers[0] || 'https://nostr.build';
+    return this.nostrData.blossomServers[0] || DEFAULT_BLOSSOM_SERVER;
   }
 
   @action
