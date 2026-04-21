@@ -13,6 +13,7 @@ import { or, not } from 'ember-truth-helpers';
 export default class PlacePhotoUpload extends Component {
   @service nostrAuth;
   @service nostrRelay;
+  @service nostrData;
   @service blossom;
   @service toast;
 
@@ -181,7 +182,7 @@ export default class PlacePhotoUpload extends Component {
       }
 
       const event = await factory.sign(template);
-      await this.nostrRelay.publish(event);
+      await this.nostrRelay.publish(this.nostrData.activeWriteRelays, event);
 
       this.toast.show('Photos published successfully');
       this.status = '';

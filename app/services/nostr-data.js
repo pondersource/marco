@@ -6,16 +6,21 @@ import { MailboxesModel } from 'applesauce-core/models/mailboxes';
 import { npubEncode } from 'applesauce-core/helpers/pointers';
 import { persistEventsToCache } from 'applesauce-core/helpers/event-cache';
 import { NostrIDB, openDB } from 'nostr-idb';
+import { normalizeRelayUrl } from '../utils/nostr';
 
-const BOOTSTRAP_RELAYS = [
+const DIRECTORY_RELAYS = [
   'wss://purplepag.es',
   'wss://relay.damus.io',
   'wss://nos.lol',
 ];
 
+const DEFAULT_READ_RELAYS = ['wss://nostr.kosmos.org'];
+const DEFAULT_WRITE_RELAYS = [];
+
 export default class NostrDataService extends Service {
   @service nostrRelay;
   @service nostrAuth;
+  @service settings;
 
   store = new EventStore();
 
@@ -69,6 +74,45 @@ export default class NostrDataService extends Service {
     });
   }
 
+  get defaultReadRelays() {
+    const mailboxes = (this.mailboxes?.inboxes || [])
+      .map(normalizeRelayUrl)
+      .filter(Boolean);
+    const defaults = DEFAULT_READ_RELAYS.map(normalizeRelayUrl).filter(Boolean);
+    return Array.from(new Set([...defaults, ...mailboxes]));
+  }
+
+  get defaultWriteRelays() {
+    const mailboxes = (this.mailboxes?.outboxes || [])
+      .map(normalizeRelayUrl)
+      .filter(Boolean);
+    const defaults =
+      DEFAULT_WRITE_RELAYS.map(normalizeRelayUrl).filter(Boolean);
+    return Array.from(new Set([...defaults, ...mailboxes]));
+  }
+
+  get activeReadRelays() {
+    if (this.settings.nostrReadRelays) {
+      return Array.from(
+        new Set(
+          this.settings.nostrReadRelays.map(normalizeRelayUrl).filter(Boolean)
+        )
+      );
+    }
+    return this.defaultReadRelays;
+  }
+
+  get activeWriteRelays() {
+    if (this.settings.nostrWriteRelays) {
+      return Array.from(
+        new Set(
+          this.settings.nostrWriteRelays.map(normalizeRelayUrl).filter(Boolean)
+        )
+      );
+    }
+    return this.defaultWriteRelays;
+  }
+
   async loadProfile(pubkey) {
     if (!pubkey) return;
 
@@ -78,22 +122,6 @@ export default class NostrDataService extends Service {
     this.blossomServers = [];
 
     this._cleanupSubscriptions();
-
-    const relays = new Set(BOOTSTRAP_RELAYS);
-
-    // Try to get extension relays
-    if (typeof window.nostr !== 'undefined' && window.nostr.getRelays) {
-      try {
-        const extRelays = await window.nostr.getRelays();
-        for (const url of Object.keys(extRelays)) {
-          relays.add(url);
-        }
-      } catch {
-        console.warn('Failed to get NIP-07 relays');
-      }
-    }
-
-    const relayList = Array.from(relays);
 
     // Setup models to track state reactively FIRST
     // This way, if cached events populate the store, the UI updates instantly.
@@ -142,8 +170,11 @@ export default class NostrDataService extends Service {
     }
 
     // 2. Request new events from the network in the background and dump them into the store
+    const profileRelays = Array.from(
+      new Set([...DIRECTORY_RELAYS, ...this.activeWriteRelays])
+    );
     this._requestSub = this.nostrRelay.pool
-      .request(relayList, [
+      .request(profileRelays, [
         {
           authors: [pubkey],
           kinds: [0, 10002, 10063],

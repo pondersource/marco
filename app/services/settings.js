@@ -7,6 +7,8 @@ const DEFAULT_SETTINGS = {
   photonApi: 'https://photon.komoot.io/api/',
   showQuickSearchButtons: true,
   nostrPhotoFallbackUploads: false,
+  nostrReadRelays: null,
+  nostrWriteRelays: null,
 };
 
 export default class SettingsService extends Service {
@@ -16,6 +18,8 @@ export default class SettingsService extends Service {
   @tracked showQuickSearchButtons = DEFAULT_SETTINGS.showQuickSearchButtons;
   @tracked nostrPhotoFallbackUploads =
     DEFAULT_SETTINGS.nostrPhotoFallbackUploads;
+  @tracked nostrReadRelays = DEFAULT_SETTINGS.nostrReadRelays;
+  @tracked nostrWriteRelays = DEFAULT_SETTINGS.nostrWriteRelays;
 
   overpassApis = [
     {
@@ -102,6 +106,8 @@ export default class SettingsService extends Service {
     this.photonApi = finalSettings.photonApi;
     this.showQuickSearchButtons = finalSettings.showQuickSearchButtons;
     this.nostrPhotoFallbackUploads = finalSettings.nostrPhotoFallbackUploads;
+    this.nostrReadRelays = finalSettings.nostrReadRelays;
+    this.nostrWriteRelays = finalSettings.nostrWriteRelays;
 
     // Save to ensure migrated settings are stored in the new format
     this.saveSettings();
@@ -114,6 +120,8 @@ export default class SettingsService extends Service {
       photonApi: this.photonApi,
       showQuickSearchButtons: this.showQuickSearchButtons,
       nostrPhotoFallbackUploads: this.nostrPhotoFallbackUploads,
+      nostrReadRelays: this.nostrReadRelays,
+      nostrWriteRelays: this.nostrWriteRelays,
     };
     localStorage.setItem('marco:settings', JSON.stringify(settings));
   }
