@@ -37,6 +37,10 @@ export default class PlacePhotoUpload extends Component {
     );
   }
 
+  get photoWord() {
+    return this.files.length === 1 ? 'Photo' : 'Photos';
+  }
+
   @action
   handleFileSelect(event) {
     this.addFiles(event.target.files);
@@ -251,7 +255,7 @@ export default class PlacePhotoUpload extends Component {
           {{else}}
             Publish
             {{this.files.length}}
-            Photo(s)
+            {{this.photoWord}}
           {{/if}}
         </button>
       {{/if}}
