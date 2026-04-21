@@ -6,7 +6,7 @@ import { on } from '@ember/modifier';
 import { EventFactory } from 'applesauce-core';
 import { task } from 'ember-concurrency';
 import Geohash from 'latlon-geohash';
-import PlacePhotoItem from './place-photo-item';
+import PlacePhotoUploadItem from './place-photo-upload-item';
 import Icon from '#components/icon';
 import { or, not } from 'ember-truth-helpers';
 
@@ -232,7 +232,7 @@ export default class PlacePhotoUpload extends Component {
       {{#if this.files.length}}
         <div class="photo-grid">
           {{#each this.files as |file|}}
-            <PlacePhotoItem
+            <PlacePhotoUploadItem
               @file={{file}}
               @onSuccess={{this.handleUploadSuccess}}
               @onRemove={{this.removeFile}}

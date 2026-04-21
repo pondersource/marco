@@ -13,7 +13,7 @@ const IMAGE_QUALITY = 0.94;
 const MAX_THUMBNAIL_DIMENSION = 350;
 const THUMBNAIL_QUALITY = 0.9;
 
-export default class PlacePhotoItem extends Component {
+export default class PlacePhotoUploadItem extends Component {
   @service blossom;
   @service imageProcessor;
   @service toast;
@@ -106,14 +106,14 @@ export default class PlacePhotoItem extends Component {
 
   <template>
     <div
-      class="photo-item
+      class="photo-upload-item
         {{if this.uploadTask.isRunning 'is-uploading'}}
         {{if this.error 'has-error'}}"
     >
-      <img src={{this.thumbnailUrl}} alt="thumbnail" class="photo-item-img" />
+      <img src={{this.thumbnailUrl}} alt="thumbnail" />
 
       {{#if this.uploadTask.isRunning}}
-        <div class="photo-item-overlay">
+        <div class="overlay">
           <Icon
             @name="loading-ring"
             @size={{24}}
@@ -126,7 +126,7 @@ export default class PlacePhotoItem extends Component {
       {{#if this.error}}
         <button
           type="button"
-          class="photo-item-overlay error-overlay"
+          class="overlay error-overlay"
           title={{this.error}}
           {{on "click" this.showErrorToast}}
         >
