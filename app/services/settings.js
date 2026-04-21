@@ -6,6 +6,7 @@ export default class SettingsService extends Service {
   @tracked mapKinetic = true;
   @tracked photonApi = 'https://photon.komoot.io/api/';
   @tracked showQuickSearchButtons = true;
+  @tracked nostrPhotoFallbackUploads = false;
 
   overpassApis = [
     {
@@ -64,6 +65,14 @@ export default class SettingsService extends Service {
     if (savedShowQuickSearch !== null) {
       this.showQuickSearchButtons = savedShowQuickSearch === 'true';
     }
+
+    const savedNostrPhotoFallbackUploads = localStorage.getItem(
+      'marco:nostr-photo-fallback-uploads'
+    );
+    if (savedNostrPhotoFallbackUploads !== null) {
+      this.nostrPhotoFallbackUploads =
+        savedNostrPhotoFallbackUploads === 'true';
+    }
   }
 
   updateOverpassApi(url) {
@@ -83,5 +92,10 @@ export default class SettingsService extends Service {
 
   updatePhotonApi(url) {
     this.photonApi = url;
+  }
+
+  updateNostrPhotoFallbackUploads(enabled) {
+    this.nostrPhotoFallbackUploads = enabled;
+    localStorage.setItem('marco:nostr-photo-fallback-uploads', String(enabled));
   }
 }

@@ -21,10 +21,17 @@ function getBlossomUrl(serverUrl, path) {
 export default class BlossomService extends Service {
   @service nostrAuth;
   @service nostrData;
+  @service settings;
 
   get servers() {
     const servers = this.nostrData.blossomServers;
-    return servers.length ? servers : [DEFAULT_BLOSSOM_SERVER];
+    const allServers = servers.length ? servers : [DEFAULT_BLOSSOM_SERVER];
+
+    if (!this.settings.nostrPhotoFallbackUploads) {
+      return [allServers[0]];
+    }
+
+    return allServers;
   }
 
   async _getAuthHeader(action, hash, serverUrl) {
