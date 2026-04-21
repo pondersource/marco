@@ -1,22 +1,12 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
-import { action } from '@ember/object';
+import { fn } from '@ember/helper';
 import Icon from '#components/icon';
 import eq from 'ember-truth-helpers/helpers/eq';
 
 export default class AppMenuSettingsApis extends Component {
   @service settings;
-
-  @action
-  updateApi(event) {
-    this.settings.updateOverpassApi(event.target.value);
-  }
-
-  @action
-  updatePhotonApi(event) {
-    this.settings.updatePhotonApi(event.target.value);
-  }
 
   <template>
     {{! template-lint-disable no-nested-interactive }}
@@ -31,7 +21,7 @@ export default class AppMenuSettingsApis extends Component {
           <select
             id="overpass-api"
             class="form-control"
-            {{on "change" this.updateApi}}
+            {{on "change" (fn @onChange "overpassApi")}}
           >
             {{#each this.settings.overpassApis as |api|}}
               <option
@@ -51,7 +41,7 @@ export default class AppMenuSettingsApis extends Component {
           <select
             id="photon-api"
             class="form-control"
-            {{on "change" this.updatePhotonApi}}
+            {{on "change" (fn @onChange "photonApi")}}
           >
             {{#each this.settings.photonApis as |api|}}
               <option

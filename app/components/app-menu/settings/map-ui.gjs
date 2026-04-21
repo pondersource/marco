@@ -1,21 +1,11 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
-import { action } from '@ember/object';
+import { fn } from '@ember/helper';
 import Icon from '#components/icon';
 
 export default class AppMenuSettingsMapUi extends Component {
   @service settings;
-
-  @action
-  toggleKinetic(event) {
-    this.settings.updateMapKinetic(event.target.value === 'true');
-  }
-
-  @action
-  toggleQuickSearchButtons(event) {
-    this.settings.updateShowQuickSearchButtons(event.target.value === 'true');
-  }
 
   <template>
     {{! template-lint-disable no-nested-interactive }}
@@ -30,7 +20,7 @@ export default class AppMenuSettingsMapUi extends Component {
           <select
             id="show-quick-search"
             class="form-control"
-            {{on "change" this.toggleQuickSearchButtons}}
+            {{on "change" (fn @onChange "showQuickSearchButtons")}}
           >
             <option
               value="true"
@@ -54,7 +44,7 @@ export default class AppMenuSettingsMapUi extends Component {
           <select
             id="map-kinetic"
             class="form-control"
-            {{on "change" this.toggleKinetic}}
+            {{on "change" (fn @onChange "mapKinetic")}}
           >
             <option
               value="true"

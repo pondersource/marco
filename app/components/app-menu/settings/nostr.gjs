@@ -1,18 +1,11 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { service } from '@ember/service';
-import { action } from '@ember/object';
+import { fn } from '@ember/helper';
 import Icon from '#components/icon';
 
 export default class AppMenuSettingsNostr extends Component {
   @service settings;
-
-  @action
-  togglePhotoFallbackUploads(event) {
-    this.settings.updateNostrPhotoFallbackUploads(
-      event.target.value === 'true'
-    );
-  }
 
   <template>
     {{! template-lint-disable no-nested-interactive }}
@@ -28,7 +21,7 @@ export default class AppMenuSettingsNostr extends Component {
           <select
             id="nostr-photo-fallback-uploads"
             class="form-control"
-            {{on "change" this.togglePhotoFallbackUploads}}
+            {{on "change" (fn @onChange "nostrPhotoFallbackUploads")}}
           >
             <option
               value="true"
