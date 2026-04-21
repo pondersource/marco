@@ -551,7 +551,10 @@ export default class PlaceDetails extends Component {
 
     {{#if this.isPhotoUploadModalOpen}}
       <Modal @onClose={{this.closePhotoUploadModal}}>
-        <PlacePhotoUpload @place={{this.saveablePlace}} />
+        <PlacePhotoUpload
+          @place={{this.saveablePlace}}
+          @onClose={{this.closePhotoUploadModal}}
+        />
       </Modal>
     {{/if}}
 

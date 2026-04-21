@@ -183,11 +183,16 @@ export default class PlacePhotoUpload extends Component {
       const event = await factory.sign(template);
       await this.nostrRelay.publish(event);
 
-      this.status = 'Published successfully!';
+      this.toast.show('Photos published successfully');
+      this.status = '';
 
       // Clear out the files so user can upload more or be done
       this.files = [];
       this.uploadedPhotos = [];
+
+      if (this.args.onClose) {
+        this.args.onClose();
+      }
     } catch (e) {
       this.error = 'Failed to publish: ' + e.message;
       this.status = '';
