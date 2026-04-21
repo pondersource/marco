@@ -967,6 +967,7 @@ abbr[title] {
   display: inline-flex;
   width: 32px;
   height: 32px;
+  margin: -6px 0;
 }
 
 .app-logo-icon svg {
