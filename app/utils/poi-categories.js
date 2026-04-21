@@ -55,7 +55,7 @@ export const POI_CATEGORIES = [
     id: 'accommodation',
     label: 'Hotels',
     icon: 'person-sleeping-in-bed',
-    filter: ['["tourism"~"^(hotel|hostel|motel)$"]'],
+    filter: ['["tourism"~"^(hotel|hostel|motel|chalet)$"]'],
     types: ['node', 'way', 'relation'],
   },
 ];

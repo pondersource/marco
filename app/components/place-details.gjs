@@ -12,6 +12,8 @@ import PlaceListsManager from './place-lists-manager';
 import PlacePhotoUpload from './place-photo-upload';
 import NostrConnect from './nostr-connect';
 import Modal from './modal';
+import Blurhash from './blurhash';
+import fadeInImage from '../modifiers/fade-in-image';
 
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
@@ -19,6 +21,7 @@ import { action } from '@ember/object';
 export default class PlaceDetails extends Component {
   @service storage;
   @service nostrAuth;
+  @service nostrData;
   @tracked isEditing = false;
   @tracked showLists = false;
   @tracked isPhotoUploadModalOpen = false;
@@ -74,6 +77,53 @@ export default class PlaceDetails extends Component {
 
   get name() {
     return this.place.title || getLocalizedName(this.tags) || 'Unnamed Place';
+  }
+
+  get headerPhoto() {
+    const photos = this.nostrData.placePhotos;
+    if (!photos || photos.length === 0) return null;
+
+    // Sort by created_at ascending (oldest first)
+    const sortedEvents = [...photos].sort(
+      (a, b) => a.created_at - b.created_at
+    );
+
+    let firstPortrait = null;
+
+    for (const event of sortedEvents) {
+      // Find all imeta tags
+      const imetas = event.tags.filter((t) => t[0] === 'imeta');
+      for (const imeta of imetas) {
+        let url = null;
+        let blurhash = null;
+        let isLandscape = false;
+
+        for (const tag of imeta.slice(1)) {
+          if (tag.startsWith('url ')) {
+            url = tag.substring(4);
+          } else if (tag.startsWith('blurhash ')) {
+            blurhash = tag.substring(9);
+          } else if (tag.startsWith('dim ')) {
+            const dimStr = tag.substring(4);
+            const [width, height] = dimStr.split('x').map(Number);
+            if (width && height && width > height) {
+              isLandscape = true;
+            }
+          }
+        }
+
+        if (url) {
+          const photoData = { url, blurhash };
+          if (isLandscape) {
+            return photoData; // Return the first landscape photo found
+          } else if (!firstPortrait) {
+            firstPortrait = photoData; // Save the first portrait as fallback
+          }
+        }
+      }
+    }
+
+    return firstPortrait;
   }
 
   @action
@@ -339,6 +389,24 @@ export default class PlaceDetails extends Component {
           @onCancel={{this.cancelEditing}}
         />
       {{else}}
+        {{#if this.headerPhoto}}
+          <div class="place-header-photo-wrapper">
+            {{#if this.headerPhoto.blurhash}}
+              <Blurhash
+                @hash={{this.headerPhoto.blurhash}}
+                @width={{32}}
+                @height={{18}}
+                class="place-header-photo-blur"
+              />
+            {{/if}}
+            <img
+              src={{this.headerPhoto.url}}
+              class="place-header-photo"
+              alt={{this.name}}
+              {{fadeInImage this.headerPhoto.url}}
+            />
+          </div>
+        {{/if}}
         <h3>{{this.name}}</h3>
         <p class="place-type">
           {{this.type}}

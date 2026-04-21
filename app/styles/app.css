@@ -462,6 +462,10 @@ body {
   align-items: center;
 }
 
+.sidebar-header.no-border {
+  border-bottom-color: transparent;
+}
+
 .sidebar-header h2 {
   margin: 0;
   font-size: 1.2rem;
@@ -854,6 +858,45 @@ abbr[title] {
 
 .place-details {
   padding-bottom: 2rem;
+}
+
+.place-header-photo-wrapper {
+  margin: -1rem -1rem 1rem;
+  background-color: var(--hover-bg);
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+}
+
+.place-header-photo-blur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.place-header-photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.place-header-photo.loaded {
+  opacity: 1;
+}
+
+.place-header-photo.loaded-instant {
+  opacity: 1;
+  transition: none;
 }
 
 .place-details h3 {
