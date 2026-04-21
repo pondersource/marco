@@ -20,7 +20,6 @@ export default class PlacePhotoItem extends Component {
 
   @tracked thumbnailUrl = '';
   @tracked error = '';
-  @tracked isUploaded = false;
 
   constructor() {
     super(...arguments);
@@ -87,8 +86,6 @@ export default class PlacePhotoItem extends Component {
         ]);
       }
 
-      this.isUploaded = true;
-
       if (this.args.onSuccess) {
         this.args.onSuccess({
           file,
@@ -135,12 +132,6 @@ export default class PlacePhotoItem extends Component {
         >
           <Icon @name="alert-circle" @size={{24}} @color="white" />
         </button>
-      {{/if}}
-
-      {{#if this.isUploaded}}
-        <div class="photo-item-overlay success-overlay">
-          <Icon @name="check" @size={{24}} @color="white" />
-        </div>
       {{/if}}
 
       <button

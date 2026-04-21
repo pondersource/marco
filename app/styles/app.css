@@ -283,10 +283,6 @@ body {
   width: 100%;
 }
 
-.success-overlay {
-  background: rgb(152 195 121 / 60%);
-}
-
 .btn-remove-photo {
   position: absolute;
   top: 4px;
@@ -305,7 +301,7 @@ body {
 }
 
 .btn-remove-photo:hover {
-  background: rgb(224 108 117 / 90%);
+  background: var(--marker-color-primary);
 }
 
 .spin-animation {
@@ -1586,12 +1582,6 @@ button.create-place {
 .alert-info {
   background: #eef;
   color: #00c;
-}
-
-.connected-status {
-  margin-bottom: 1rem;
-  color: #080;
-  word-break: break-all;
 }
 
 .preview-group {
