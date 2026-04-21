@@ -8,6 +8,7 @@ import UserMenu from '#components/user-menu';
 import SearchBox from '#components/search-box';
 import CategoryChips from '#components/category-chips';
 import { and } from 'ember-truth-helpers';
+import cachedImage from '../modifiers/cached-image';
 
 export default class AppHeaderComponent extends Component {
   @service storage;
@@ -71,7 +72,7 @@ export default class AppHeaderComponent extends Component {
               (and this.nostrAuth.isConnected this.nostrData.profile.picture)
             }}
               <img
-                src={{this.nostrData.profile.picture}}
+                {{cachedImage this.nostrData.profile.picture}}
                 class="user-avatar"
                 alt="User Avatar"
               />
