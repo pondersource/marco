@@ -183,6 +183,7 @@ export default class PlacePhotoUpload extends Component {
 
       const event = await factory.sign(template);
       await this.nostrRelay.publish(this.nostrData.activeWriteRelays, event);
+      this.nostrData.store.add(event);
 
       this.toast.show('Photos published successfully');
       this.status = '';

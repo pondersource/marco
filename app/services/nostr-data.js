@@ -7,6 +7,7 @@ import { npubEncode } from 'applesauce-core/helpers/pointers';
 import { persistEventsToCache } from 'applesauce-core/helpers/event-cache';
 import { NostrIDB, openDB } from 'nostr-idb';
 import { normalizeRelayUrl } from '../utils/nostr';
+import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
 
 const DIRECTORY_RELAYS = [
   'wss://purplepag.es',
@@ -27,13 +28,16 @@ export default class NostrDataService extends Service {
   @tracked profile = null;
   @tracked mailboxes = null;
   @tracked blossomServers = [];
+  @tracked placePhotos = [];
 
   _profileSub = null;
   _mailboxesSub = null;
   _blossomSub = null;
+  _photosSub = null;
 
   _requestSub = null;
   _cachePromise = null;
+  loadedGeohashPrefixes = new Set();
 
   constructor() {
     super(...arguments);
@@ -51,9 +55,13 @@ export default class NostrDataService extends Service {
       this._stopPersisting = persistEventsToCache(
         this.store,
         async (events) => {
-          // Only cache profiles, mailboxes, and blossom servers
+          // Only cache profiles, mailboxes, blossom servers, and place photos
           const toCache = events.filter(
-            (e) => e.kind === 0 || e.kind === 10002 || e.kind === 10063
+            (e) =>
+              e.kind === 0 ||
+              e.kind === 10002 ||
+              e.kind === 10063 ||
+              e.kind === 360
           );
 
           if (toCache.length > 0) {
@@ -111,6 +119,138 @@ export default class NostrDataService extends Service {
       );
     }
     return this.defaultWriteRelays;
+  }
+
+  async loadPlacesInBounds(bbox) {
+    const requiredPrefixes = getGeohashPrefixesInBbox(bbox);
+
+    const missingPrefixes = requiredPrefixes.filter(
+      (p) => !this.loadedGeohashPrefixes.has(p)
+    );
+
+    if (missingPrefixes.length === 0) {
+      return;
+    }
+
+    console.debug(
+      '[nostr-data] Loading place photos for prefixes:',
+      missingPrefixes
+    );
+
+    try {
+      await this._cachePromise;
+
+      const cachedEvents = await this.cache.query([
+        {
+          kinds: [360],
+          '#g': missingPrefixes,
+        },
+      ]);
+
+      if (cachedEvents && cachedEvents.length > 0) {
+        for (const event of cachedEvents) {
+          this.store.add(event);
+        }
+      }
+    } catch (e) {
+      console.warn(
+        '[nostr-data] Failed to read photos from local Nostr IDB cache',
+        e
+      );
+    }
+
+    // Fire network request for new prefixes
+    this.nostrRelay.pool
+      .request(this.activeReadRelays, [
+        {
+          kinds: [360],
+          '#g': missingPrefixes,
+        },
+      ])
+      .subscribe({
+        next: (event) => {
+          this.store.add(event);
+        },
+        error: (err) => {
+          console.error(
+            '[nostr-data] Error fetching place photos by geohash:',
+            err
+          );
+        },
+      });
+
+    for (const p of missingPrefixes) {
+      this.loadedGeohashPrefixes.add(p);
+    }
+  }
+
+  async loadPhotosForPlace(place) {
+    if (this._photosSub) {
+      this._photosSub.unsubscribe();
+      this._photosSub = null;
+    }
+
+    this.placePhotos = [];
+
+    if (!place || !place.osmId || !place.osmType) {
+      return;
+    }
+
+    const entityId = `osm:${place.osmType}:${place.osmId}`;
+
+    // Setup reactive store query
+    this._photosSub = this.store
+      .timeline([
+        {
+          kinds: [360],
+          '#i': [entityId],
+        },
+      ])
+      .subscribe((events) => {
+        this.placePhotos = events;
+      });
+
+    try {
+      await this._cachePromise;
+
+      const cachedEvents = await this.cache.query([
+        {
+          kinds: [360],
+          '#i': [entityId],
+        },
+      ]);
+
+      if (cachedEvents && cachedEvents.length > 0) {
+        for (const event of cachedEvents) {
+          this.store.add(event);
+        }
+      }
+    } catch (e) {
+      console.warn(
+        '[nostr-data] Failed to read photos for place from local Nostr IDB cache',
+        e
+      );
+    }
+
+    // Fire network request specifically for this place
+    this.nostrRelay.pool
+      .request(this.activeReadRelays, [
+        {
+          kinds: [360],
+          '#i': [entityId],
+        },
+      ])
+      .subscribe({
+        next: (event) => {
+          this.store.add(event);
+        },
+        error: (err) => {
+          console.error(
+            '[nostr-data] Error fetching place photos for place:',
+            err
+          );
+        },
+      });
   }
 
   async loadProfile(pubkey) {
@@ -232,6 +372,10 @@ export default class NostrDataService extends Service {
     if (this._blossomSub) {
       this._blossomSub.unsubscribe();
       this._blossomSub = null;
+    }
+    if (this._photosSub) {
+      this._photosSub.unsubscribe();
+      this._photosSub = null;
     }
   }
 

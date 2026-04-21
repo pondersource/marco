@@ -27,6 +27,7 @@ export default class MapComponent extends Component {
   @service mapUi;
   @service router;
   @service settings;
+  @service nostrData;
 
   mapInstance;
   bookmarkSource;
@@ -1078,6 +1079,7 @@ export default class MapComponent extends Component {
     const bbox = { minLat, minLon, maxLat, maxLon };
     this.mapUi.updateBounds(bbox);
     await this.storage.loadPlacesInBounds(bbox);
+    this.nostrData.loadPlacesInBounds(bbox);
     this.loadBookmarks(this.storage.placesInView);
 
     // Persist view to localStorage
