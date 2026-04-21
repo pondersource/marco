@@ -4,6 +4,8 @@ import { EventStore } from 'applesauce-core/event-store';
 import { ProfileModel } from 'applesauce-core/models/profile';
 import { MailboxesModel } from 'applesauce-core/models/mailboxes';
 import { npubEncode } from 'applesauce-core/helpers/pointers';
+import { persistEventsToCache } from 'applesauce-core/helpers/event-cache';
+import { NostrIDB, openDB } from 'nostr-idb';
 
 const BOOTSTRAP_RELAYS = [
   'wss://purplepag.es',
@@ -26,9 +28,39 @@ export default class NostrDataService extends Service {
   _blossomSub = null;
 
   _requestSub = null;
+  _cachePromise = null;
 
   constructor() {
     super(...arguments);
+
+    // Initialize the IndexedDB cache
+    this._cachePromise = openDB('applesauce-events').then(async (db) => {
+      this.cache = new NostrIDB(db, {
+        cacheIndexes: 1000,
+        maxEvents: 10000,
+      });
+
+      await this.cache.start();
+
+      // Automatically persist new events to the cache
+      this._stopPersisting = persistEventsToCache(
+        this.store,
+        async (events) => {
+          // Only cache profiles, mailboxes, and blossom servers
+          const toCache = events.filter(
+            (e) => e.kind === 0 || e.kind === 10002 || e.kind === 10063
+          );
+
+          if (toCache.length > 0) {
+            await Promise.all(toCache.map((event) => this.cache.add(event)));
+          }
+        },
+        {
+          batchTime: 1000, // Batch writes every 1 second
+          maxBatchSize: 100,
+        }
+      );
+    });
 
     // Feed events from the relay pool into the event store
     this.nostrRelay.pool.relays$.subscribe(() => {
@@ -63,24 +95,8 @@ export default class NostrDataService extends Service {
 
     const relayList = Array.from(relays);
 
-    // Request events and dump them into the store
-    this._requestSub = this.nostrRelay.pool
-      .request(relayList, [
-        {
-          authors: [pubkey],
-          kinds: [0, 10002, 10063],
-        },
-      ])
-      .subscribe({
-        next: (event) => {
-          this.store.add(event);
-        },
-        error: (err) => {
-          console.error('Error fetching profile events:', err);
-        },
-      });
-
-    // Setup models to track state reactively
+    // Setup models to track state reactively FIRST
+    // This way, if cached events populate the store, the UI updates instantly.
     this._profileSub = this.store
       .model(ProfileModel, pubkey)
       .subscribe((profileContent) => {
@@ -103,6 +119,43 @@ export default class NostrDataService extends Service {
         } else {
           this.blossomServers = [];
         }
+      });
+
+    // 1. Await cache initialization and populate the EventStore with local data
+    try {
+      await this._cachePromise;
+
+      const cachedEvents = await this.cache.query([
+        {
+          authors: [pubkey],
+          kinds: [0, 10002, 10063],
+        },
+      ]);
+
+      if (cachedEvents && cachedEvents.length > 0) {
+        for (const event of cachedEvents) {
+          this.store.add(event);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to read from local Nostr IDB cache', e);
+    }
+
+    // 2. Request new events from the network in the background and dump them into the store
+    this._requestSub = this.nostrRelay.pool
+      .request(relayList, [
+        {
+          authors: [pubkey],
+          kinds: [0, 10002, 10063],
+        },
+      ])
+      .subscribe({
+        next: (event) => {
+          this.store.add(event);
+        },
+        error: (err) => {
+          console.error('Error fetching profile events:', err);
+        },
       });
   }
 
@@ -154,5 +207,13 @@ export default class NostrDataService extends Service {
   willDestroy() {
     super.willDestroy(...arguments);
     this._cleanupSubscriptions();
+
+    if (this._stopPersisting) {
+      this._stopPersisting();
+    }
+
+    if (this.cache) {
+      this.cache.stop();
+    }
   }
 }

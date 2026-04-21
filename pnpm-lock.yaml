@@ -35,6 +35,9 @@ importers:
       ember-lifeline:
         specifier: ^7.0.0
         version: 7.0.0(@ember/test-helpers@5.4.1(@babel/core@7.28.6))
+      nostr-idb:
+        specifier: ^5.0.0
+        version: 5.0.0
       oauth2-pkce:
         specifier: ^2.1.3
         version: 2.1.3
@@ -3709,6 +3712,9 @@ packages:
     resolution: {integrity: sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==}
     engines: {node: '>=0.10.0'}
 
+  idb@8.0.3:
+    resolution: {integrity: sha512-LtwtVyVYO5BqRvcsKuB2iUMnHwPVByPCXFXOpuU96IZPPoPN6xjOGxZQ74pgSVVLQWtUOYgyeL4GE98BY5D3wg==}
+
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
@@ -4404,6 +4410,9 @@ packages:
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
+
+  nostr-idb@5.0.0:
+    resolution: {integrity: sha512-w5y4AnHefZIwCCL11NryfM2xp3U0Ka4qVNQEYAjnQbPwyoV+bZTdwuPXHCdRDWvhOFP2bZr1WBegcsAmkBjrxQ==}
 
   nostr-signer-capacitor-plugin@0.0.5:
     resolution: {integrity: sha512-/EvqWz71HZ5cWmzvfXWTm48AWZtbeZDbOg3vLwXyXPjnIp1DR7Wurww/Mo41ORNu1DNPlqH20l7kIXKO6vR5og==}
@@ -10286,6 +10295,8 @@ snapshots:
     dependencies:
       safer-buffer: 2.1.2
 
+  idb@8.0.3: {}
+
   ignore@5.3.2: {}
 
   ignore@7.0.5: {}
@@ -11020,6 +11031,13 @@ snapshots:
       abbrev: 1.1.1
 
   normalize-path@3.0.0: {}
+
+  nostr-idb@5.0.0:
+    dependencies:
+      debug: 4.4.3
+      idb: 8.0.3
+    transitivePeerDependencies:
+      - supports-color
 
   nostr-signer-capacitor-plugin@0.0.5(@capacitor/core@7.6.2):
     dependencies:
