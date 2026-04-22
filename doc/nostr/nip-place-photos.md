@@ -14,7 +14,7 @@ While NIP-68 (Picture-first feeds) caters to general visual feeds, this NIP spec
 
 ## Content
 
-The `.content` of the event SHOULD generally be empty. If a user wishes to provide a detailed description, summary, or caption for a place, clients SHOULD encourage them to create a Place Review event (`kind: 30360`) instead.
+The `.content` of the event SHOULD generally be empty. If a user wishes to provide a detailed description for a place, clients SHOULD encourage them to create a Place Review event (`kind: 30360`) instead.
 
 ## Tags
 
@@ -45,17 +45,19 @@ Used for spatial indexing and discovery. Events MUST include at least one high-p
 
 #### 3. `imeta` — Inline Media Metadata
 
-An event MUST contain exactly one `imeta` tag representing a single media item. The primary `url` SHOULD also be appended to the event's `.content` for backwards compatibility with clients that do not parse `imeta` tags.
+An event MUST contain exactly one `imeta` tag representing a single media item. The primary `url` MAY also be appended to the event's `.content` for backwards compatibility with clients that do not parse `imeta` tags.
 
-Clients SHOULD include `alt` (accessibility descriptions), `dim` (dimensions), `m` (MIME type), and `blurhash` where possible.
+Clients SHOULD include `alt` (accessibility descriptions), `dim` (dimensions), `m` (MIME type), `thumb` (URL to a smaller thumbnail image), and `blurhash` where possible. Clients MAY also include `fallback` URLs if the media is hosted on multiple servers.
 
 ```json
 [
   "imeta",
-  "url https://example.com/photo.jpg",
+  "url https://blossom.example.com/8e2e28a503fa37482de5b0959ee38b2bb4de4e0a752db24c568981c2ab410260.jpg",
   "m image/jpeg",
-  "dim 3024x4032",
+  "dim 1440x1920",
   "alt A steaming bowl of ramen on a wooden table at the restaurant.",
+  "fallback https://mirror.example.com/8e2e28a503fa37482de5b0959ee38b2bb4de4e0a752db24c568981c2ab410260.jpg",
+  "thumb https://example.com/7a1f592f6ea8e932b1de9568285b01851e4cf708466b0a03010b91e92c6c8135.jpg",
   "blurhash eVF$^OI:${M{o#*0-nNFxakD-?xVM}WEWB%iNKxvR-oetmo#R-aen$"
 ]
 ```
@@ -83,10 +85,12 @@ Clients SHOULD include `alt` (accessibility descriptions), `dim` (dimensions), `
 
     [
       "imeta",
-      "url https://example.com/ramen.jpg",
+      "url https://blossom.example.com/a9c84e183789a74288b8e05d04cc61230e74f386925a953e6b29f957e8cc3a61.jpg",
       "m image/jpeg",
-      "dim 1080x1080",
+      "dim 1920x1920",
       "alt A close-up of spicy miso ramen with chashu pork, soft boiled egg, and scallions.",
+      "fallback https://mirror.example.com/a9c84e183789a74288b8e05d04cc61230e74f386925a953e6b29f957e8cc3a61.jpg",
+      "thumb https://example.com/c5a528e20235e16cc1c18090b8f04179de76288ea4e410b0fcb8d1487e416a2d.jpg",
       "blurhash UHI=0o~q4T-o~q%MozM{x]t7RjRPt7oKkCWB"
     ],
 
