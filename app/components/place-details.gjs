@@ -6,6 +6,7 @@ import { humanizeOsmTag } from '../utils/format-text';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
 import { mapToStorageSchema } from '../utils/place-mapping';
 import { getSocialInfo } from '../utils/social-links';
+import { parsePlacePhotos } from '../utils/nostr';
 import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
 import PlaceListsManager from './place-lists-manager';
@@ -80,69 +81,12 @@ export default class PlaceDetails extends Component {
 
   get photos() {
     const rawPhotos = this.nostrData.placePhotos;
-    if (!rawPhotos || rawPhotos.length === 0) return [];
+    const parsedPhotos = parsePlacePhotos(rawPhotos);
 
-    // Sort by created_at ascending (oldest first)
-    const sortedEvents = [...rawPhotos].sort(
-      (a, b) => a.created_at - b.created_at
-    );
-
-    const allPhotos = [];
-
-    for (const event of sortedEvents) {
-      // Find all imeta tags
-      const imetas = event.tags.filter((t) => t[0] === 'imeta');
-      for (const imeta of imetas) {
-        let url = null;
-        let thumbUrl = null;
-        let blurhash = null;
-        let isLandscape = false;
-        let aspectRatio = 16 / 9; // default
-
-        for (const tag of imeta.slice(1)) {
-          if (tag.startsWith('url ')) {
-            url = tag.substring(4);
-          } else if (tag.startsWith('thumb ')) {
-            thumbUrl = tag.substring(6);
-          } else if (tag.startsWith('blurhash ')) {
-            blurhash = tag.substring(9);
-          } else if (tag.startsWith('dim ')) {
-            const dimStr = tag.substring(4);
-            const [width, height] = dimStr.split('x').map(Number);
-            if (width && height) {
-              aspectRatio = width / height;
-              if (width > height) {
-                isLandscape = true;
-              }
-            }
-          }
-        }
-
-        if (url) {
-          allPhotos.push({
-            url,
-            thumbUrl,
-            blurhash,
-            isLandscape,
-            aspectRatio,
-            style: htmlSafe(`--slide-ratio: ${aspectRatio};`),
-          });
-        }
-      }
-    }
-
-    if (allPhotos.length === 0) return [];
-
-    // Find the first landscape photo
-    const firstLandscapeIndex = allPhotos.findIndex((p) => p.isLandscape);
-
-    if (firstLandscapeIndex > 0) {
-      // Move the first landscape photo to the front
-      const [firstLandscape] = allPhotos.splice(firstLandscapeIndex, 1);
-      allPhotos.unshift(firstLandscape);
-    }
-
-    return allPhotos;
+    return parsedPhotos.map((photo) => ({
+      ...photo,
+      style: htmlSafe(`--slide-ratio: ${photo.aspectRatio};`),
+    }));
   }
 
   @action
