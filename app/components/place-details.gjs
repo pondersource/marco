@@ -12,8 +12,7 @@ import PlaceListsManager from './place-lists-manager';
 import PlacePhotoUpload from './place-photo-upload';
 import NostrConnect from './nostr-connect';
 import Modal from './modal';
-import Blurhash from './blurhash';
-import fadeInImage from '../modifiers/fade-in-image';
+import PlacePhotosCarousel from './place-photos-carousel';
 
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
@@ -79,51 +78,71 @@ export default class PlaceDetails extends Component {
     return this.place.title || getLocalizedName(this.tags) || 'Unnamed Place';
   }
 
-  get headerPhoto() {
-    const photos = this.nostrData.placePhotos;
-    if (!photos || photos.length === 0) return null;
+  get photos() {
+    const rawPhotos = this.nostrData.placePhotos;
+    if (!rawPhotos || rawPhotos.length === 0) return [];
 
     // Sort by created_at ascending (oldest first)
-    const sortedEvents = [...photos].sort(
+    const sortedEvents = [...rawPhotos].sort(
       (a, b) => a.created_at - b.created_at
     );
 
-    let firstPortrait = null;
+    const allPhotos = [];
 
     for (const event of sortedEvents) {
       // Find all imeta tags
       const imetas = event.tags.filter((t) => t[0] === 'imeta');
       for (const imeta of imetas) {
         let url = null;
+        let thumbUrl = null;
         let blurhash = null;
         let isLandscape = false;
+        let aspectRatio = 16 / 9; // default
 
         for (const tag of imeta.slice(1)) {
           if (tag.startsWith('url ')) {
             url = tag.substring(4);
+          } else if (tag.startsWith('thumb ')) {
+            thumbUrl = tag.substring(6);
           } else if (tag.startsWith('blurhash ')) {
             blurhash = tag.substring(9);
           } else if (tag.startsWith('dim ')) {
             const dimStr = tag.substring(4);
             const [width, height] = dimStr.split('x').map(Number);
-            if (width && height && width > height) {
-              isLandscape = true;
+            if (width && height) {
+              aspectRatio = width / height;
+              if (width > height) {
+                isLandscape = true;
+              }
             }
           }
         }
 
         if (url) {
-          const photoData = { url, blurhash };
-          if (isLandscape) {
-            return photoData; // Return the first landscape photo found
-          } else if (!firstPortrait) {
-            firstPortrait = photoData; // Save the first portrait as fallback
-          }
+          allPhotos.push({
+            url,
+            thumbUrl,
+            blurhash,
+            isLandscape,
+            aspectRatio,
+            style: htmlSafe(`--slide-ratio: ${aspectRatio};`),
+          });
         }
       }
     }
 
-    return firstPortrait;
+    if (allPhotos.length === 0) return [];
+
+    // Find the first landscape photo
+    const firstLandscapeIndex = allPhotos.findIndex((p) => p.isLandscape);
+
+    if (firstLandscapeIndex > 0) {
+      // Move the first landscape photo to the front
+      const [firstLandscape] = allPhotos.splice(firstLandscapeIndex, 1);
+      allPhotos.unshift(firstLandscape);
+    }
+
+    return allPhotos;
   }
 
   @action
@@ -389,24 +408,7 @@ export default class PlaceDetails extends Component {
           @onCancel={{this.cancelEditing}}
         />
       {{else}}
-        {{#if this.headerPhoto}}
-          <div class="place-header-photo-wrapper">
-            {{#if this.headerPhoto.blurhash}}
-              <Blurhash
-                @hash={{this.headerPhoto.blurhash}}
-                @width={{32}}
-                @height={{18}}
-                class="place-header-photo-blur"
-              />
-            {{/if}}
-            <img
-              src={{this.headerPhoto.url}}
-              class="place-header-photo"
-              alt={{this.name}}
-              {{fadeInImage this.headerPhoto.url}}
-            />
-          </div>
-        {{/if}}
+        <PlacePhotosCarousel @photos={{this.photos}} @name={{this.name}} />
         <h3>{{this.name}}</h3>
         <p class="place-type">
           {{this.type}}

@@ -860,12 +860,33 @@ abbr[title] {
   padding-bottom: 2rem;
 }
 
-.place-header-photo-wrapper {
-  margin: -1rem -1rem 1rem;
-  background-color: var(--hover-bg);
+.place-photos-carousel-wrapper {
   position: relative;
-  overflow: hidden;
+  margin: -1rem -1rem 1rem;
+}
+
+.place-photos-carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Firefox */
+  background-color: var(--hover-bg);
+}
+
+.place-photos-carousel-track::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+.carousel-slide {
+  position: relative;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
   aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .place-header-photo-blur {
@@ -884,10 +905,18 @@ abbr[title] {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   display: block;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
+  z-index: 1; /* Stay above blurhash */
+}
+
+.place-header-photo.landscape {
+  object-fit: cover;
+}
+
+.place-header-photo.portrait {
+  object-fit: contain;
 }
 
 .place-header-photo.loaded {
@@ -897,6 +926,75 @@ abbr[title] {
 .place-header-photo.loaded-instant {
   opacity: 1;
   transition: none;
+}
+
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgb(0 0 0 / 50%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s;
+  padding: 0;
+}
+
+.place-photos-carousel-wrapper:hover .carousel-nav-btn {
+  opacity: 1;
+}
+
+.carousel-nav-btn:hover {
+  background: rgb(0 0 0 / 80%);
+}
+
+.carousel-nav-btn.disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.carousel-nav-btn.prev {
+  left: 0.5rem;
+}
+
+.carousel-nav-btn.next {
+  right: 0.5rem;
+}
+
+@media (width <= 768px) {
+  .place-photos-carousel-track {
+    scroll-snap-type: none; /* No snapping on mobile */
+    gap: 0.25rem;
+    padding-bottom: 0.5rem; /* Space for the scrollbar if visible, but we hid it */
+  }
+
+  .carousel-slide {
+    flex: 0 0 auto;
+    height: 100px;
+    width: calc(100px * var(--slide-ratio, 1.7778));
+    aspect-ratio: auto;
+    scroll-snap-align: none;
+  }
+
+  .place-header-photo.landscape,
+  .place-header-photo.portrait {
+    /* On mobile, all images use cover inside their precise ratio container */
+    object-fit: cover;
+  }
+
+  .carousel-nav-btn {
+    display: none;
+  }
 }
 
 .place-details h3 {

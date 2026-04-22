@@ -4,6 +4,8 @@ import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
 import camera from 'feather-icons/dist/icons/camera.svg?raw';
 import checkSquare from 'feather-icons/dist/icons/check-square.svg?raw';
+import chevronLeft from 'feather-icons/dist/icons/chevron-left.svg?raw';
+import chevronRight from 'feather-icons/dist/icons/chevron-right.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
 import edit from 'feather-icons/dist/icons/edit.svg?raw';
 import facebook from 'feather-icons/dist/icons/facebook.svg?raw';
@@ -132,6 +134,8 @@ const ICONS = {
   bus,
   camera,
   'check-square': checkSquare,
+  'chevron-left': chevronLeft,
+  'chevron-right': chevronRight,
   'cigarette-with-smoke-curl': cigaretteWithSmokeCurl,
   climbing_wall: climbingWall,
   check,
