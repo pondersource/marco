@@ -43,7 +43,7 @@ module('Integration | Component | place-photos-carousel', function (hooks) {
     assert.dom('.carousel-slide').exists({ count: 1 }, 'it renders one slide');
     assert
       .dom('img.place-header-photo')
-      .hasAttribute('src', 'photo1.jpg', 'it renders the photo');
+      .hasAttribute('data-src', 'photo1.jpg', 'it sets the data-src correctly');
 
     // There should be no chevrons when there's only 1 photo
     assert

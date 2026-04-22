@@ -123,11 +123,11 @@ export default class PlacePhotosCarousel extends Component {
                   {{#if photo.thumbUrl}}
                     <source
                       media="(max-width: 768px)"
-                      srcset={{photo.thumbUrl}}
+                      data-srcset={{photo.thumbUrl}}
                     />
                   {{/if}}
                   <img
-                    src={{photo.url}}
+                    data-src={{photo.url}}
                     class="place-header-photo landscape"
                     alt={{@name}}
                     {{fadeInImage photo.url}}
@@ -136,7 +136,7 @@ export default class PlacePhotosCarousel extends Component {
               {{else}}
                 {{! Portrait uses thumb everywhere if available }}
                 <img
-                  src={{if photo.thumbUrl photo.thumbUrl photo.url}}
+                  data-src={{if photo.thumbUrl photo.thumbUrl photo.url}}
                   class="place-header-photo portrait"
                   alt={{@name}}
                   {{fadeInImage (if photo.thumbUrl photo.thumbUrl photo.url)}}
