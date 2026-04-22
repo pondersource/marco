@@ -2,7 +2,10 @@
 import activity from 'feather-icons/dist/icons/activity.svg?raw';
 import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
+import camera from 'feather-icons/dist/icons/camera.svg?raw';
 import checkSquare from 'feather-icons/dist/icons/check-square.svg?raw';
+import chevronLeft from 'feather-icons/dist/icons/chevron-left.svg?raw';
+import chevronRight from 'feather-icons/dist/icons/chevron-right.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
 import edit from 'feather-icons/dist/icons/edit.svg?raw';
 import facebook from 'feather-icons/dist/icons/facebook.svg?raw';
@@ -25,8 +28,12 @@ import search from 'feather-icons/dist/icons/search.svg?raw';
 import server from 'feather-icons/dist/icons/server.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
 import target from 'feather-icons/dist/icons/target.svg?raw';
+import trash2 from 'feather-icons/dist/icons/trash-2.svg?raw';
+import uploadCloud from 'feather-icons/dist/icons/upload-cloud.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
+import check from 'feather-icons/dist/icons/check.svg?raw';
+import alertCircle from 'feather-icons/dist/icons/alert-circle.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
 
 import angelfish from '@waysidemapping/pinhead/dist/icons/angelfish.svg?raw';
@@ -39,7 +46,6 @@ import beerMugWithFoam from '@waysidemapping/pinhead/dist/icons/beer_mug_with_fo
 import burgerAndDrinkCupWithStraw from '@waysidemapping/pinhead/dist/icons/burger_and_drink_cup_with_straw.svg?raw';
 import bus from '@waysidemapping/pinhead/dist/icons/bus.svg?raw';
 import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.svg?raw';
-import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
 import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
 import cigaretteWithSmokeCurl from '@waysidemapping/pinhead/dist/icons/cigarette_with_smoke_curl.svg?raw';
 import classicalBuilding from '@waysidemapping/pinhead/dist/icons/classical_building.svg?raw';
@@ -128,8 +134,12 @@ const ICONS = {
   bus,
   camera,
   'check-square': checkSquare,
+  'chevron-left': chevronLeft,
+  'chevron-right': chevronRight,
   'cigarette-with-smoke-curl': cigaretteWithSmokeCurl,
   climbing_wall: climbingWall,
+  check,
+  'alert-circle': alertCircle,
   'classical-building': classicalBuilding,
   'classical-building-with-dome-and-flag': classicalBuildingWithDomeAndFlag,
   'classical-building-with-flag': classicalBuildingWithFlag,
@@ -214,6 +224,8 @@ const ICONS = {
   'tattoo-machine': tattooMachine,
   toolbox,
   target,
+  'trash-2': trash2,
+  'upload-cloud': uploadCloud,
   'tree-and-bench-with-backrest': treeAndBenchWithBackrest,
   user,
   'village-buildings': villageBuildings,
@@ -235,7 +247,6 @@ const FILLED_ICONS = [
   'cup-and-saucer',
   'coffee-bean',
   'shopping-basket',
-  'camera',
   'person-sleeping-in-bed',
   'loading-ring',
   'nostrich',

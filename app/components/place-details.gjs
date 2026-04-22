@@ -6,17 +6,66 @@ import { humanizeOsmTag } from '../utils/format-text';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
 import { mapToStorageSchema } from '../utils/place-mapping';
 import { getSocialInfo } from '../utils/social-links';
+import { parsePlacePhotos } from '../utils/nostr';
 import Icon from '../components/icon';
 import PlaceEditForm from './place-edit-form';
 import PlaceListsManager from './place-lists-manager';
+import PlacePhotoUpload from './place-photo-upload';
+import NostrConnect from './nostr-connect';
+import Modal from './modal';
+import PlacePhotosCarousel from './place-photos-carousel';
 
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 
 export default class PlaceDetails extends Component {
   @service storage;
+  @service nostrAuth;
+  @service nostrData;
   @tracked isEditing = false;
   @tracked showLists = false;
+  @tracked isPhotoUploadModalOpen = false;
+  @tracked isNostrConnectModalOpen = false;
+  @tracked newlyUploadedPhotoId = null;
+
+  @action
+  openPhotoUploadModal(e) {
+    if (e) {
+      e.preventDefault();
+    }
+    if (!this.nostrAuth.isConnected) {
+      this.isNostrConnectModalOpen = true;
+    } else {
+      this.isPhotoUploadModalOpen = true;
+    }
+  }
+
+  @action
+  closePhotoUploadModal(eventId) {
+    this.isPhotoUploadModalOpen = false;
+    if (typeof eventId === 'string') {
+      this.newlyUploadedPhotoId = eventId;
+
+      // Allow DOM to update first, then scroll to the top to show the new photo in the carousel
+      setTimeout(() => {
+        const sidebar = document.querySelector('.sidebar-content');
+        if (sidebar) {
+          sidebar.scrollTop = 0;
+        }
+      }, 50);
+    }
+  }
+
+  @action
+  closeNostrConnectModal() {
+    this.isNostrConnectModalOpen = false;
+  }
+
+  @action
+  onNostrConnected() {
+    this.isNostrConnectModalOpen = false;
+    this.isPhotoUploadModalOpen = true;
+  }
 
   get isSaved() {
     return this.storage.isPlaceSaved(this.place.id || this.place.osmId);
@@ -40,6 +89,16 @@ export default class PlaceDetails extends Component {
 
   get name() {
     return this.place.title || getLocalizedName(this.tags) || 'Unnamed Place';
+  }
+
+  get photos() {
+    const rawPhotos = this.nostrData.placePhotos;
+    const parsedPhotos = parsePlacePhotos(rawPhotos);
+
+    return parsedPhotos.map((photo) => ({
+      ...photo,
+      style: htmlSafe(`--slide-ratio: ${photo.aspectRatio};`),
+    }));
   }
 
   @action
@@ -305,6 +364,12 @@ export default class PlaceDetails extends Component {
           @onCancel={{this.cancelEditing}}
         />
       {{else}}
+        <PlacePhotosCarousel
+          @photos={{this.photos}}
+          @name={{this.name}}
+          @resetKey={{this.place.osmId}}
+          @scrollToEventId={{this.newlyUploadedPhotoId}}
+        />
         <h3>{{this.name}}</h3>
         <p class="place-type">
           {{this.type}}
@@ -500,6 +565,38 @@ export default class PlaceDetails extends Component {
         {{/if}}
 
       </div>
+
+      {{#if this.osmUrl}}
+        <div class="meta-info">
+          <p class="content-with-icon">
+            <Icon @name="camera" />
+            <span>
+              <button
+                type="button"
+                class="btn-link"
+                {{on "click" this.openPhotoUploadModal}}
+              >
+                Add a photo
+              </button>
+            </span>
+          </p>
+        </div>
+      {{/if}}
     </div>
+
+    {{#if this.isPhotoUploadModalOpen}}
+      <Modal @onClose={{this.closePhotoUploadModal}}>
+        <PlacePhotoUpload
+          @place={{this.saveablePlace}}
+          @onClose={{this.closePhotoUploadModal}}
+        />
+      </Modal>
+    {{/if}}
+
+    {{#if this.isNostrConnectModalOpen}}
+      <Modal @onClose={{this.closeNostrConnectModal}}>
+        <NostrConnect @onConnect={{this.onNostrConnected}} />
+      </Modal>
+    {{/if}}
   </template>
 }

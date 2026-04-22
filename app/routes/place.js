@@ -9,23 +9,45 @@ export default class PlaceRoute extends Route {
   async model(params) {
     const id = params.place_id;
 
+    let type, osmId;
+    let isExplicitOsm = false;
+
     if (
       id.startsWith('osm:node:') ||
       id.startsWith('osm:way:') ||
       id.startsWith('osm:relation:')
     ) {
-      const [, type, osmId] = id.split(':');
+      isExplicitOsm = true;
+      [, type, osmId] = id.split(':');
       console.debug(`Fetching explicit OSM ${type}:`, osmId);
-      return this.loadOsmPlace(osmId, type);
+    }
+
+    let backgroundFetchPromise = null;
+    if (isExplicitOsm) {
+      backgroundFetchPromise = this.loadOsmPlace(osmId, type);
     }
 
     await this.waitForSync();
 
-    let bookmark = this.storage.findPlaceById(id);
+    let lookupId = isExplicitOsm ? osmId : id;
+    let bookmark = this.storage.findPlaceById(lookupId);
+
+    // Ensure type matches if we are looking up by osmId
+    if (bookmark && isExplicitOsm && bookmark.osmType !== type) {
+      bookmark = null; // Type mismatch, not the same OSM object
+    }
 
     if (bookmark) {
       console.debug('Found in bookmarks:', bookmark.title);
       return bookmark;
+    }
+
+    if (isExplicitOsm) {
+      console.debug(
+        `Not in bookmarks, using explicitly fetched OSM ${type}:`,
+        osmId
+      );
+      return await backgroundFetchPromise;
     }
 
     console.warn('Not in bookmarks:', id);
@@ -119,13 +141,13 @@ export default class PlaceRoute extends Route {
   }
 
   serialize(model) {
-    // If the model is a saved bookmark, use its ID
-    if (model.id) {
-      return { place_id: model.id };
-    }
-    // If it's an OSM POI, use the explicit format
+    // If it's an OSM POI, use the explicit format first
     if (model.osmId && model.osmType) {
       return { place_id: `osm:${model.osmType}:${model.osmId}` };
+    }
+    // If the model is a saved bookmark (and not OSM, e.g. custom place), use its ID
+    if (model.id) {
+      return { place_id: model.id };
     }
     // Fallback
     return { place_id: model.osmId };

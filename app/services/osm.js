@@ -8,6 +8,7 @@ export default class OsmService extends Service {
   controller = null;
   cachedResults = null;
   lastQueryKey = null;
+  cachedPlaces = new Map();
 
   cancelAll() {
     if (this.controller) {
@@ -232,6 +233,13 @@ out center;
   async fetchOsmObject(osmId, osmType) {
     if (!osmId || !osmType) return null;
 
+    const cacheKey = `${osmType}:${osmId}`;
+    const cached = this.cachedPlaces.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 10000) {
+      console.debug(`Using in-memory cached OSM object for ${cacheKey}`);
+      return cached.data;
+    }
+
     let url;
     if (osmType === 'node') {
       url = `https://www.openstreetmap.org/api/0.6/node/${osmId}.json`;
@@ -253,8 +261,25 @@ out center;
         }
         throw new Error(`OSM API request failed: ${res.status}`);
       }
+
       const data = await res.json();
-      return this.normalizeOsmApiData(data.elements, osmId, osmType);
+      const normalizedData = this.normalizeOsmApiData(
+        data.elements,
+        osmId,
+        osmType
+      );
+
+      this.cachedPlaces.set(cacheKey, {
+        data: normalizedData,
+        timestamp: Date.now(),
+      });
+
+      // Cleanup cache entry automatically after 10 seconds
+      setTimeout(() => {
+        this.cachedPlaces.delete(cacheKey);
+      }, 10000);
+
+      return normalizedData;
     } catch (e) {
       console.error('Failed to fetch OSM object:', e);
       return null;

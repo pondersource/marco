@@ -1,11 +1,25 @@
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
+const DEFAULT_SETTINGS = {
+  overpassApi: 'https://overpass-api.de/api/interpreter',
+  mapKinetic: true,
+  photonApi: 'https://photon.komoot.io/api/',
+  showQuickSearchButtons: true,
+  nostrPhotoFallbackUploads: false,
+  nostrReadRelays: null,
+  nostrWriteRelays: null,
+};
+
 export default class SettingsService extends Service {
-  @tracked overpassApi = 'https://overpass-api.de/api/interpreter';
-  @tracked mapKinetic = true;
-  @tracked photonApi = 'https://photon.komoot.io/api/';
-  @tracked showQuickSearchButtons = true;
+  @tracked overpassApi = DEFAULT_SETTINGS.overpassApi;
+  @tracked mapKinetic = DEFAULT_SETTINGS.mapKinetic;
+  @tracked photonApi = DEFAULT_SETTINGS.photonApi;
+  @tracked showQuickSearchButtons = DEFAULT_SETTINGS.showQuickSearchButtons;
+  @tracked nostrPhotoFallbackUploads =
+    DEFAULT_SETTINGS.nostrPhotoFallbackUploads;
+  @tracked nostrReadRelays = DEFAULT_SETTINGS.nostrReadRelays;
+  @tracked nostrWriteRelays = DEFAULT_SETTINGS.nostrWriteRelays;
 
   overpassApis = [
     {
@@ -39,49 +53,83 @@ export default class SettingsService extends Service {
   }
 
   loadSettings() {
-    const savedApi = localStorage.getItem('marco:overpass-api');
-    if (savedApi) {
-      // Check if saved API is still in the allowed list
-      const isValid = this.overpassApis.some((api) => api.url === savedApi);
-      if (isValid) {
-        this.overpassApi = savedApi;
-      } else {
-        // If not valid, revert to default
-        this.overpassApi = 'https://overpass-api.de/api/interpreter';
-        localStorage.setItem('marco:overpass-api', this.overpassApi);
+    let settings = {};
+    const savedSettings = localStorage.getItem('marco:settings');
+
+    if (savedSettings) {
+      try {
+        settings = JSON.parse(savedSettings);
+      } catch (e) {
+        console.error('Failed to parse settings from localStorage', e);
       }
+    } else {
+      // Migration from old individual keys
+      const savedApi = localStorage.getItem('marco:overpass-api');
+      if (savedApi) settings.overpassApi = savedApi;
+
+      const savedKinetic = localStorage.getItem('marco:map-kinetic');
+      if (savedKinetic !== null) settings.mapKinetic = savedKinetic === 'true';
+
+      const savedShowQuickSearch = localStorage.getItem(
+        'marco:show-quick-search'
+      );
+      if (savedShowQuickSearch !== null) {
+        settings.showQuickSearchButtons = savedShowQuickSearch === 'true';
+      }
+
+      const savedNostrPhotoFallbackUploads = localStorage.getItem(
+        'marco:nostr-photo-fallback-uploads'
+      );
+      if (savedNostrPhotoFallbackUploads !== null) {
+        settings.nostrPhotoFallbackUploads =
+          savedNostrPhotoFallbackUploads === 'true';
+      }
+
+      const savedPhotonApi = localStorage.getItem('marco:photon-api');
+      if (savedPhotonApi) settings.photonApi = savedPhotonApi;
     }
 
-    const savedKinetic = localStorage.getItem('marco:map-kinetic');
-    if (savedKinetic !== null) {
-      this.mapKinetic = savedKinetic === 'true';
-    }
-    // Default is true (initialized in class field)
+    // Merge with defaults
+    const finalSettings = { ...DEFAULT_SETTINGS, ...settings };
 
-    const savedShowQuickSearch = localStorage.getItem(
-      'marco:show-quick-search'
+    // Validate overpass API
+    const isValid = this.overpassApis.some(
+      (api) => api.url === finalSettings.overpassApi
     );
-    if (savedShowQuickSearch !== null) {
-      this.showQuickSearchButtons = savedShowQuickSearch === 'true';
+    if (!isValid) {
+      finalSettings.overpassApi = DEFAULT_SETTINGS.overpassApi;
     }
+
+    // Apply to tracked properties
+    this.overpassApi = finalSettings.overpassApi;
+    this.mapKinetic = finalSettings.mapKinetic;
+    this.photonApi = finalSettings.photonApi;
+    this.showQuickSearchButtons = finalSettings.showQuickSearchButtons;
+    this.nostrPhotoFallbackUploads = finalSettings.nostrPhotoFallbackUploads;
+    this.nostrReadRelays = finalSettings.nostrReadRelays;
+    this.nostrWriteRelays = finalSettings.nostrWriteRelays;
+
+    // Save to ensure migrated settings are stored in the new format
+    this.saveSettings();
   }
 
-  updateOverpassApi(url) {
-    this.overpassApi = url;
-    localStorage.setItem('marco:overpass-api', url);
+  saveSettings() {
+    const settings = {
+      overpassApi: this.overpassApi,
+      mapKinetic: this.mapKinetic,
+      photonApi: this.photonApi,
+      showQuickSearchButtons: this.showQuickSearchButtons,
+      nostrPhotoFallbackUploads: this.nostrPhotoFallbackUploads,
+      nostrReadRelays: this.nostrReadRelays,
+      nostrWriteRelays: this.nostrWriteRelays,
+    };
+    localStorage.setItem('marco:settings', JSON.stringify(settings));
   }
 
-  updateMapKinetic(enabled) {
-    this.mapKinetic = enabled;
-    localStorage.setItem('marco:map-kinetic', String(enabled));
-  }
-
-  updateShowQuickSearchButtons(enabled) {
-    this.showQuickSearchButtons = enabled;
-    localStorage.setItem('marco:show-quick-search', String(enabled));
-  }
-
-  updatePhotonApi(url) {
-    this.photonApi = url;
+  update(key, value) {
+    if (key in DEFAULT_SETTINGS) {
+      this[key] = value;
+      this.saveSettings();
+    }
   }
 }

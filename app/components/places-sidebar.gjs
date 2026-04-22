@@ -14,6 +14,7 @@ export default class PlacesSidebar extends Component {
   @service storage;
   @service router;
   @service mapUi;
+  @service nostrData;
 
   @action
   createNewPlace() {
@@ -149,9 +150,17 @@ export default class PlacesSidebar extends Component {
     return !qp.q && !qp.category && qp.lat && qp.lon;
   }
 
+  get hasHeaderPhoto() {
+    return (
+      this.args.selectedPlace &&
+      this.nostrData.placePhotos &&
+      this.nostrData.placePhotos.length > 0
+    );
+  }
+
   <template>
     <div class="sidebar">
-      <div class="sidebar-header">
+      <div class="sidebar-header {{if this.hasHeaderPhoto 'no-border'}}">
         {{#if @selectedPlace}}
           <button
             type="button"

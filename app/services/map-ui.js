@@ -1,7 +1,9 @@
-import Service from '@ember/service';
+import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
 export default class MapUiService extends Service {
+  @service nostrData;
+
   @tracked selectedPlace = null;
   @tracked isSearching = false;
   @tracked isCreating = false;
@@ -19,12 +21,14 @@ export default class MapUiService extends Service {
   selectPlace(place, options = {}) {
     this.selectedPlace = place;
     this.selectionOptions = options;
+    this.nostrData.loadPhotosForPlace(place);
   }
 
   clearSelection() {
     this.selectedPlace = null;
     this.selectionOptions = {};
     this.preventNextZoom = false;
+    this.nostrData.loadPhotosForPlace(null);
   }
 
   setSearchResults(results) {

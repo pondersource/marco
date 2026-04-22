@@ -3,10 +3,17 @@ import { action } from '@ember/object';
 import { service } from '@ember/service';
 import Icon from '#components/icon';
 import { on } from '@ember/modifier';
+import { tracked } from '@glimmer/tracking';
+import Modal from './modal';
+import NostrConnect from './nostr-connect';
 
 export default class UserMenuComponent extends Component {
   @service storage;
   @service osmAuth;
+  @service nostrAuth;
+  @service nostrData;
+
+  @tracked isNostrConnectModalOpen = false;
 
   @action
   connectRS() {
@@ -28,6 +35,21 @@ export default class UserMenuComponent extends Component {
   @action
   disconnectOsm() {
     this.osmAuth.logout();
+  }
+
+  @action
+  openNostrConnectModal() {
+    this.isNostrConnectModalOpen = true;
+  }
+
+  @action
+  closeNostrConnectModal() {
+    this.isNostrConnectModalOpen = false;
+  }
+
+  @action
+  disconnectNostr() {
+    this.nostrAuth.disconnect();
   }
 
   <template>
@@ -91,18 +113,43 @@ export default class UserMenuComponent extends Component {
           </div>
         </li>
 
-        <li class="account-item disabled">
+        <li class="account-item">
           <div class="account-header">
             <div class="account-info">
               <Icon @name="zap" @size={{18}} />
               <span>Nostr</span>
             </div>
+            {{#if this.nostrAuth.isConnected}}
+              <button
+                class="btn-text text-danger"
+                type="button"
+                {{on "click" this.disconnectNostr}}
+              >Disconnect</button>
+            {{else}}
+              <button
+                class="btn-text text-primary"
+                type="button"
+                {{on "click" this.openNostrConnectModal}}
+              >Connect</button>
+            {{/if}}
           </div>
           <div class="account-status">
-            Coming soon
+            {{#if this.nostrAuth.isConnected}}
+              <strong title={{this.nostrAuth.pubkey}}>
+                {{this.nostrData.userDisplayName}}
+              </strong>
+            {{else}}
+              Not connected
+            {{/if}}
           </div>
         </li>
       </ul>
     </div>
+
+    {{#if this.isNostrConnectModalOpen}}
+      <Modal @onClose={{this.closeNostrConnectModal}}>
+        <NostrConnect @onConnect={{this.closeNostrConnectModal}} />
+      </Modal>
+    {{/if}}
   </template>
 }

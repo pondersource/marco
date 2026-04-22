@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/place-review.json",
+  "title": "Decentralized Place Review (Nostr/Event Content)",
+  "type": "object",
+  "required": ["version", "place", "ratings"],
+  "additionalProperties": false,
+
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+
+    "ratings": {
+      "type": "object",
+      "required": ["quality"],
+      "additionalProperties": false,
+      "properties": {
+        "quality": { "$ref": "#/$defs/score" },
+        "value": { "$ref": "#/$defs/score" },
+        "experience": { "$ref": "#/$defs/score" },
+        "accessibility": { "$ref": "#/$defs/score" },
+
+        "aspects": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 20,
+          "additionalProperties": { "$ref": "#/$defs/score" },
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]{1,31}$"
+          }
+        }
+      }
+    },
+
+    "recommend": {
+      "type": "boolean",
+      "description": "Whether the user recommends this place to others"
+    },
+
+    "familiarity": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "User familiarity with the place. Suggested interpretation: 'low' = first visit or very limited experience; 'medium' = visited a few times or moderate familiarity; 'high' = frequent visitor or strong familiarity."
+    },
+
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "visited_at": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duration_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1440
+        },
+        "party_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "language": {
+          "type": "string",
+          "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "score": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    }
+  }
+}
