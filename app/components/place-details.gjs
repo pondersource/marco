@@ -367,6 +367,7 @@ export default class PlaceDetails extends Component {
         <PlacePhotosCarousel
           @photos={{this.photos}}
           @name={{this.name}}
+          @resetKey={{this.place.osmId}}
           @scrollToEventId={{this.newlyUploadedPhotoId}}
         />
         <h3>{{this.name}}</h3>

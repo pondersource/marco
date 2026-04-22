@@ -29,6 +29,16 @@ export default class PlacePhotosCarousel extends Component {
     return !this.canScrollRight;
   }
 
+  lastResetKey = null;
+
+  resetScrollPosition = modifier((element, [resetKey]) => {
+    if (resetKey !== undefined && resetKey !== this.lastResetKey) {
+      this.lastResetKey = resetKey;
+      element.scrollLeft = 0;
+      setTimeout(() => this.updateScrollState(), 50);
+    }
+  });
+
   scrollToNewPhoto = modifier((element, [eventId]) => {
     if (eventId && eventId !== this.lastEventId) {
       this.lastEventId = eventId;
@@ -99,6 +109,7 @@ export default class PlacePhotosCarousel extends Component {
         <div
           class="place-photos-carousel-track"
           {{this.setupCarousel}}
+          {{this.resetScrollPosition @resetKey}}
           {{this.scrollToNewPhoto @scrollToEventId}}
           {{on "scroll" this.updateScrollState}}
         >
