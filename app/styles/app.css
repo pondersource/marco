@@ -771,12 +771,19 @@ select.form-control {
   border-top: 1px solid #eee;
 }
 
-.meta-info a {
+.meta-info a,
+.meta-info .btn-link {
   color: var(--link-color);
   text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 
-.meta-info a:hover {
+.meta-info a:hover,
+.meta-info .btn-link:hover {
   text-decoration: underline;
 }
 

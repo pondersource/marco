@@ -570,9 +570,13 @@ export default class PlaceDetails extends Component {
           <p class="content-with-icon">
             <Icon @name="camera" />
             <span>
-              <a href="#" {{on "click" this.openPhotoUploadModal}}>
+              <button
+                type="button"
+                class="btn-link"
+                {{on "click" this.openPhotoUploadModal}}
+              >
                 Add a photo
-              </a>
+              </button>
             </span>
           </p>
         </div>
