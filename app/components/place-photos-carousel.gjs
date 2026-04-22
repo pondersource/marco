@@ -38,10 +38,7 @@ export default class PlacePhotosCarousel extends Component {
           `[data-event-id="${eventId}"]`
         );
         if (targetSlide) {
-          element.scrollTo({
-            left: targetSlide.offsetLeft,
-            behavior: 'smooth',
-          });
+          element.scrollLeft = targetSlide.offsetLeft;
         }
       }, 100);
     }

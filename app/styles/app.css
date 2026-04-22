@@ -990,8 +990,8 @@ abbr[title] {
   .carousel-slide {
     flex: 0 0 auto;
     height: 100px;
-    width: calc(100px * var(--slide-ratio, 1.7778));
-    aspect-ratio: auto;
+    width: auto;
+    aspect-ratio: var(--slide-ratio, 16 / 9);
     scroll-snap-align: none;
   }
 

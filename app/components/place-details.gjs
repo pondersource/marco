@@ -45,6 +45,14 @@ export default class PlaceDetails extends Component {
     this.isPhotoUploadModalOpen = false;
     if (typeof eventId === 'string') {
       this.newlyUploadedPhotoId = eventId;
+
+      // Allow DOM to update first, then scroll to the top to show the new photo in the carousel
+      setTimeout(() => {
+        const sidebar = document.querySelector('.sidebar-content');
+        if (sidebar) {
+          sidebar.scrollTop = 0;
+        }
+      }, 50);
     }
   }
 
