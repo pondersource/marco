@@ -23,7 +23,7 @@ export default class Blurhash extends Component {
       imageData.data.set(pixels);
       ctx.putImageData(imageData, 0, 0);
     } catch (e) {
-      console.warn('Failed to decode blurhash:', e);
+      console.warn('Failed to decode blurhash:', e.message || e);
     }
   });
 

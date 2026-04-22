@@ -23,7 +23,7 @@ module('Integration | Component | place-photos-carousel', function (hooks) {
       {
         url: 'photo1.jpg',
         thumbUrl: 'thumb1.jpg',
-        blurhash: 'L0000',
+        blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
         ratio: 1.5,
         isLandscape: true,
       },
@@ -56,21 +56,21 @@ module('Integration | Component | place-photos-carousel', function (hooks) {
       {
         url: 'photo1.jpg',
         thumbUrl: 'thumb1.jpg',
-        blurhash: 'L0000',
+        blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
         ratio: 1.5,
         isLandscape: true,
       },
       {
         url: 'photo2.jpg',
         thumbUrl: 'thumb2.jpg',
-        blurhash: 'L1111',
+        blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
         ratio: 1.0,
         isLandscape: false,
       },
       {
         url: 'photo3.jpg',
         thumbUrl: 'thumb3.jpg',
-        blurhash: 'L2222',
+        blurhash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH',
         ratio: 0.8,
         isLandscape: false,
       },
