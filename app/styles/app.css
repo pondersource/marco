@@ -973,9 +973,8 @@ abbr[title] {
 
 @media (width <= 768px) {
   .place-photos-carousel-track {
-    scroll-snap-type: none; /* No snapping on mobile */
-    gap: 0.25rem;
-    padding-bottom: 0.5rem; /* Space for the scrollbar if visible, but we hid it */
+    scroll-snap-type: none;
+    gap: 2px;
   }
 
   .carousel-slide {
@@ -988,7 +987,6 @@ abbr[title] {
 
   .place-header-photo.landscape,
   .place-header-photo.portrait {
-    /* On mobile, all images use cover inside their precise ratio container */
     object-fit: cover;
   }
 
