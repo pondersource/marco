@@ -1034,7 +1034,7 @@ export default class MapComponent extends Component {
   }
 
   handleMapMove = async () => {
-    if (!this.mapInstance) return;
+    if (!this.mapInstance || this.isDestroying || this.isDestroyed) return;
 
     const view = this.mapInstance.getView();
     const center = toLonLat(view.getCenter());
