@@ -7,6 +7,7 @@ import Icon from '#components/icon';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { isMobile } from '../utils/device';
+import Blurhash from './blurhash';
 
 const MAX_IMAGE_DIMENSION = 1920;
 const IMAGE_QUALITY = 0.94;
@@ -19,6 +20,7 @@ export default class PlacePhotoUploadItem extends Component {
   @service toast;
 
   @tracked thumbnailUrl = '';
+  @tracked blurhash = '';
   @tracked error = '';
 
   constructor() {
@@ -53,6 +55,8 @@ export default class PlacePhotoUploadItem extends Component {
         IMAGE_QUALITY,
         true // computeBlurhash
       );
+
+      this.blurhash = mainData.blurhash;
 
       // 2. Process thumbnail (no blurhash needed)
       const thumbData = await this.imageProcessor.process(
@@ -110,6 +114,9 @@ export default class PlacePhotoUploadItem extends Component {
         {{if this.uploadTask.isRunning 'is-uploading'}}
         {{if this.error 'has-error'}}"
     >
+      {{#if this.blurhash}}
+        <Blurhash @hash={{this.blurhash}} class="place-header-photo-blur" />
+      {{/if}}
       <img src={{this.thumbnailUrl}} alt="thumbnail" />
 
       {{#if this.uploadTask.isRunning}}

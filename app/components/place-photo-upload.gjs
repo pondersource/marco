@@ -17,8 +17,8 @@ export default class PlacePhotoUpload extends Component {
   @service blossom;
   @service toast;
 
-  @tracked files = [];
-  @tracked uploadedPhotos = [];
+  @tracked file = null;
+  @tracked uploadedPhoto = null;
   @tracked status = '';
   @tracked error = '';
   @tracked isPublishing = false;
@@ -34,17 +34,13 @@ export default class PlacePhotoUpload extends Component {
 
   get allUploaded() {
     return (
-      this.files.length > 0 && this.files.length === this.uploadedPhotos.length
+      this.file && this.uploadedPhoto && this.file === this.uploadedPhoto.file
     );
-  }
-
-  get photoWord() {
-    return this.files.length === 1 ? 'Photo' : 'Photos';
   }
 
   @action
   handleFileSelect(event) {
-    this.addFiles(event.target.files);
+    this.addFile(event.target.files[0]);
     event.target.value = ''; // Reset input
   }
 
@@ -64,33 +60,37 @@ export default class PlacePhotoUpload extends Component {
   handleDrop(event) {
     event.preventDefault();
     this.isDragging = false;
-    this.addFiles(event.dataTransfer.files);
+    if (event.dataTransfer.files.length > 0) {
+      this.addFile(event.dataTransfer.files[0]);
+    }
   }
 
-  addFiles(fileList) {
-    if (!fileList) return;
-    const newFiles = Array.from(fileList).filter((f) =>
-      f.type.startsWith('image/')
-    );
-    this.files = [...this.files, ...newFiles];
+  addFile(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      this.error = 'Please select a valid image file.';
+      return;
+    }
+    this.error = '';
+    // If a photo was already uploaded but not published, delete it from the server
+    if (this.uploadedPhoto) {
+      this.deletePhotoTask.perform(this.uploadedPhoto);
+    }
+    this.file = file;
+    this.uploadedPhoto = null;
   }
 
   @action
   handleUploadSuccess(photoData) {
-    this.uploadedPhotos = [...this.uploadedPhotos, photoData];
+    this.uploadedPhoto = photoData;
   }
 
   @action
-  removeFile(fileToRemove) {
-    const photoData = this.uploadedPhotos.find((p) => p.file === fileToRemove);
-    this.files = this.files.filter((f) => f !== fileToRemove);
-    this.uploadedPhotos = this.uploadedPhotos.filter(
-      (p) => p.file !== fileToRemove
-    );
-
-    if (photoData && photoData.hash && photoData.url) {
-      this.deletePhotoTask.perform(photoData);
+  removeFile() {
+    if (this.uploadedPhoto) {
+      this.deletePhotoTask.perform(this.uploadedPhoto);
     }
+    this.file = null;
+    this.uploadedPhoto = null;
   }
 
   deletePhotoTask = task(async (photoData) => {
@@ -142,33 +142,32 @@ export default class PlacePhotoUpload extends Component {
         tags.push(['g', Geohash.encode(lat, lon, 9)]);
       }
 
-      for (const photo of this.uploadedPhotos) {
-        const imeta = ['imeta', `url ${photo.url}`];
+      const photo = this.uploadedPhoto;
+      const imeta = ['imeta', `url ${photo.url}`];
 
-        imeta.push(`m ${photo.type}`);
+      imeta.push(`m ${photo.type}`);
 
-        if (photo.dim) {
-          imeta.push(`dim ${photo.dim}`);
-        }
-
-        imeta.push('alt A photo of a place');
-
-        if (photo.fallbackUrls && photo.fallbackUrls.length > 0) {
-          for (const fallbackUrl of photo.fallbackUrls) {
-            imeta.push(`fallback ${fallbackUrl}`);
-          }
-        }
-
-        if (photo.thumbUrl) {
-          imeta.push(`thumb ${photo.thumbUrl}`);
-        }
-
-        if (photo.blurhash) {
-          imeta.push(`blurhash ${photo.blurhash}`);
-        }
-
-        tags.push(imeta);
+      if (photo.dim) {
+        imeta.push(`dim ${photo.dim}`);
       }
+
+      imeta.push('alt A photo of a place');
+
+      if (photo.fallbackUrls && photo.fallbackUrls.length > 0) {
+        for (const fallbackUrl of photo.fallbackUrls) {
+          imeta.push(`fallback ${fallbackUrl}`);
+        }
+      }
+
+      if (photo.thumbUrl) {
+        imeta.push(`thumb ${photo.thumbUrl}`);
+      }
+
+      if (photo.blurhash) {
+        imeta.push(`blurhash ${photo.blurhash}`);
+      }
+
+      tags.push(imeta);
 
       // NIP-XX draft Place Photo event
       const template = {
@@ -185,12 +184,12 @@ export default class PlacePhotoUpload extends Component {
       await this.nostrRelay.publish(this.nostrData.activeWriteRelays, event);
       this.nostrData.store.add(event);
 
-      this.toast.show('Photos published successfully');
+      this.toast.show('Photo published successfully');
       this.status = '';
 
-      // Clear out the files so user can upload more or be done
-      this.files = [];
-      this.uploadedPhotos = [];
+      // Clear out the file so user can upload more or be done
+      this.file = null;
+      this.uploadedPhoto = null;
 
       if (this.args.onClose) {
         this.args.onClose();
@@ -205,7 +204,7 @@ export default class PlacePhotoUpload extends Component {
 
   <template>
     <div class="place-photo-upload">
-      <h2>Add Photos for {{this.title}}</h2>
+      <h2>Add Photo for {{this.title}}</h2>
 
       {{#if this.error}}
         <div class="alert alert-error">
@@ -219,36 +218,13 @@ export default class PlacePhotoUpload extends Component {
         </div>
       {{/if}}
 
-      <div
-        class="dropzone {{if this.isDragging 'is-dragging'}}"
-        {{on "dragover" this.handleDragOver}}
-        {{on "dragleave" this.handleDragLeave}}
-        {{on "drop" this.handleDrop}}
-      >
-        <label for="photo-upload-input" class="dropzone-label">
-          <Icon @name="upload-cloud" @size={{48}} @color="#ccc" />
-          <p>Drag and drop photos here, or click to browse</p>
-        </label>
-        <input
-          id="photo-upload-input"
-          type="file"
-          accept="image/*"
-          multiple
-          class="file-input-hidden"
-          disabled={{this.isPublishing}}
-          {{on "change" this.handleFileSelect}}
-        />
-      </div>
-
-      {{#if this.files.length}}
+      {{#if this.file}}
         <div class="photo-grid">
-          {{#each this.files as |file|}}
-            <PlacePhotoUploadItem
-              @file={{file}}
-              @onSuccess={{this.handleUploadSuccess}}
-              @onRemove={{this.removeFile}}
-            />
-          {{/each}}
+          <PlacePhotoUploadItem
+            @file={{this.file}}
+            @onSuccess={{this.handleUploadSuccess}}
+            @onRemove={{this.removeFile}}
+          />
         </div>
 
         <button
@@ -260,11 +236,29 @@ export default class PlacePhotoUpload extends Component {
           {{#if this.isPublishing}}
             Publishing...
           {{else}}
-            Publish
-            {{this.files.length}}
-            {{this.photoWord}}
+            Publish Photo
           {{/if}}
         </button>
+      {{else}}
+        <div
+          class="dropzone {{if this.isDragging 'is-dragging'}}"
+          {{on "dragover" this.handleDragOver}}
+          {{on "dragleave" this.handleDragLeave}}
+          {{on "drop" this.handleDrop}}
+        >
+          <label for="photo-upload-input" class="dropzone-label">
+            <Icon @name="upload-cloud" @size={{48}} @color="#ccc" />
+            <p>Drag and drop a photo here, or click to browse</p>
+          </label>
+          <input
+            id="photo-upload-input"
+            type="file"
+            accept="image/*"
+            class="file-input-hidden"
+            disabled={{this.isPublishing}}
+            {{on "change" this.handleFileSelect}}
+          />
+        </div>
       {{/if}}
     </div>
   </template>

@@ -45,7 +45,7 @@ Used for spatial indexing and discovery. Events MUST include at least one high-p
 
 #### 3. `imeta` — Inline Media Metadata
 
-Media files MUST be attached using the `imeta` tag as defined in NIP-92. Each `imeta` tag represents one media item. The primary `url` SHOULD also be appended to the event's `.content` for backwards compatibility with clients that do not parse `imeta` tags.
+An event MUST contain exactly one `imeta` tag representing a single media item. The primary `url` SHOULD also be appended to the event's `.content` for backwards compatibility with clients that do not parse `imeta` tags.
 
 Clients SHOULD include `alt` (accessibility descriptions), `dim` (dimensions), `m` (MIME type), and `blurhash` where possible.
 
@@ -105,3 +105,7 @@ NIP-68 is designed for general-purpose social feeds (like Instagram). Place phot
 ### Separation from Place Reviews
 
 Reviews (kind 30360) and media have different lifecycles and data models. A user might upload 10 photos of a park without writing a review, or write a detailed review without attaching photos. Keeping them as separate events allows clients to query `imeta` attachments for a specific `i` tag to quickly build a photo gallery for a place, regardless of whether a review was attached.
+
+### Single Photo per Event
+
+Restricting events to a single `imeta` attachment (one photo per event) is an intentional design choice. Batching photos into a single event forces all engagement (likes, zaps) to apply to the entire batch, rendering granular tagging and sorting impossible. Single-photo events enable per-photo engagement, fine-grained categorization (e.g., tagging one photo as "food" and another as "menu"), and richer sorting algorithms based on individual photo popularity.
