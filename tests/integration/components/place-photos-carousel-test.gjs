@@ -40,7 +40,12 @@ module('Integration | Component | place-photos-carousel', function (hooks) {
     assert
       .dom('.place-photos-carousel-wrapper')
       .exists('it renders the wrapper');
-    assert.dom('.carousel-slide').exists({ count: 1 }, 'it renders one slide');
+    assert
+      .dom('.carousel-slide:not(.carousel-placeholder)')
+      .exists({ count: 1 }, 'it renders one real photo slide');
+    assert
+      .dom('.carousel-placeholder')
+      .exists({ count: 1 }, 'it renders one placeholder');
     assert
       .dom('img.place-header-photo')
       .hasAttribute('data-src', 'photo1.jpg', 'it sets the data-src correctly');

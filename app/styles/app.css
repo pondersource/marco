@@ -906,6 +906,10 @@ abbr[title] {
   overflow: hidden;
 }
 
+.carousel-placeholder {
+  display: none;
+}
+
 .place-header-photo-blur {
   position: absolute;
   top: 0;
@@ -992,6 +996,7 @@ abbr[title] {
   .place-photos-carousel-track {
     scroll-snap-type: none;
     gap: 2px;
+    background-color: #fff;
   }
 
   .carousel-slide {
@@ -1000,6 +1005,13 @@ abbr[title] {
     width: auto;
     aspect-ratio: var(--slide-ratio, 16 / 9);
     scroll-snap-align: none;
+  }
+
+  .carousel-placeholder {
+    display: block;
+    background-color: var(--hover-bg);
+    flex: 1 1 0%;
+    min-width: 0;
   }
 
   .place-header-photo.landscape,

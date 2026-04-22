@@ -144,6 +144,8 @@ export default class PlacePhotosCarousel extends Component {
               {{/if}}
             </div>
           {{/each}}
+
+          <div class="carousel-placeholder"></div>
         </div>
 
         {{#if this.showChevrons}}
