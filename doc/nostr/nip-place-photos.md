@@ -102,6 +102,10 @@ Clients SHOULD include `alt` (accessibility descriptions), `dim` (dimensions), `
 
 ## Rationale
 
+### Kind 360
+
+Easy to remember as a 360-degree view of places.
+
 ### Why not use NIP-68 (Picture-first feeds)?
 
 NIP-68 is designed for general-purpose social feeds (like Instagram). Place photos require strict guarantees about what entity is being depicted to be useful for map clients, directories, and review aggregators. By mandating the `i` tag for POI linking and the `g` tag for spatial querying, this kind ensures interoperability for geo-spatial applications without cluttering general picture feeds with mundane POI images (like photos of storefronts or menus).

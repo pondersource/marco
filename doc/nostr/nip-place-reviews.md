@@ -276,6 +276,10 @@ Content payloads SHOULD NOT include place identifiers.
 
 ## Rationale
 
+### Kind 30360
+
+Pairs with kind 360 (Place Photos). Easy to remember as a 360-degree review of all aspects of a place.
+
 ### No Place Field in Content
 
 Avoids duplication and inconsistency with tags.
