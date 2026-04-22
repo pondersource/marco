@@ -192,7 +192,7 @@ export default class PlacePhotoUpload extends Component {
       this.uploadedPhoto = null;
 
       if (this.args.onClose) {
-        this.args.onClose();
+        this.args.onClose(event.id);
       }
     } catch (e) {
       this.error = 'Failed to publish: ' + e.message;

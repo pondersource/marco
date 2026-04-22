@@ -26,6 +26,7 @@ export default class PlaceDetails extends Component {
   @tracked showLists = false;
   @tracked isPhotoUploadModalOpen = false;
   @tracked isNostrConnectModalOpen = false;
+  @tracked newlyUploadedPhotoId = null;
 
   @action
   openPhotoUploadModal(e) {
@@ -40,8 +41,11 @@ export default class PlaceDetails extends Component {
   }
 
   @action
-  closePhotoUploadModal() {
+  closePhotoUploadModal(eventId) {
     this.isPhotoUploadModalOpen = false;
+    if (typeof eventId === 'string') {
+      this.newlyUploadedPhotoId = eventId;
+    }
   }
 
   @action
@@ -352,7 +356,11 @@ export default class PlaceDetails extends Component {
           @onCancel={{this.cancelEditing}}
         />
       {{else}}
-        <PlacePhotosCarousel @photos={{this.photos}} @name={{this.name}} />
+        <PlacePhotosCarousel
+          @photos={{this.photos}}
+          @name={{this.name}}
+          @scrollToEventId={{this.newlyUploadedPhotoId}}
+        />
         <h3>{{this.name}}</h3>
         <p class="place-type">
           {{this.type}}

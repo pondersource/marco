@@ -29,6 +29,24 @@ export default class PlacePhotosCarousel extends Component {
     return !this.canScrollRight;
   }
 
+  scrollToNewPhoto = modifier((element, [eventId]) => {
+    if (eventId && eventId !== this.lastEventId) {
+      this.lastEventId = eventId;
+      // Allow DOM to update first since the photo was *just* added to the store
+      setTimeout(() => {
+        const targetSlide = element.querySelector(
+          `[data-event-id="${eventId}"]`
+        );
+        if (targetSlide) {
+          element.scrollTo({
+            left: targetSlide.offsetLeft,
+            behavior: 'smooth',
+          });
+        }
+      }, 100);
+    }
+  });
+
   setupCarousel = modifier((element) => {
     this.carouselElement = element;
 
@@ -84,11 +102,16 @@ export default class PlacePhotosCarousel extends Component {
         <div
           class="place-photos-carousel-track"
           {{this.setupCarousel}}
+          {{this.scrollToNewPhoto @scrollToEventId}}
           {{on "scroll" this.updateScrollState}}
         >
           {{#each this.photos as |photo|}}
             {{! template-lint-disable no-inline-styles }}
-            <div class="carousel-slide" style={{photo.style}}>
+            <div
+              class="carousel-slide"
+              style={{photo.style}}
+              data-event-id={{photo.eventId}}
+            >
               {{#if photo.blurhash}}
                 <Blurhash
                   @hash={{photo.blurhash}}
