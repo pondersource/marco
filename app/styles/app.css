@@ -950,11 +950,11 @@ abbr[title] {
   padding: 0;
 }
 
-.place-photos-carousel-wrapper:hover .carousel-nav-btn {
+.place-photos-carousel-wrapper:hover .carousel-nav-btn:not(.disabled) {
   opacity: 1;
 }
 
-.carousel-nav-btn:hover {
+.carousel-nav-btn:not(.disabled):hover {
   background: rgb(0 0 0 / 80%);
 }
 

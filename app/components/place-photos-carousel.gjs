@@ -135,7 +135,7 @@ export default class PlacePhotosCarousel extends Component {
             disabled={{this.cannotScrollLeft}}
             aria-label="Previous photo"
           >
-            <Icon @name="chevron-left" />
+            <Icon @name="chevron-left" @color="currentColor" />
           </button>
 
           <button
@@ -146,7 +146,7 @@ export default class PlacePhotosCarousel extends Component {
             disabled={{this.cannotScrollRight}}
             aria-label="Next photo"
           >
-            <Icon @name="chevron-right" />
+            <Icon @name="chevron-right" @color="currentColor" />
           </button>
         {{/if}}
       </div>
