@@ -7,6 +7,7 @@ import checkSquare from 'feather-icons/dist/icons/check-square.svg?raw';
 import chevronLeft from 'feather-icons/dist/icons/chevron-left.svg?raw';
 import chevronRight from 'feather-icons/dist/icons/chevron-right.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
+import database from 'feather-icons/dist/icons/database.svg?raw';
 import edit from 'feather-icons/dist/icons/edit.svg?raw';
 import facebook from 'feather-icons/dist/icons/facebook.svg?raw';
 import gift from 'feather-icons/dist/icons/gift.svg?raw';
@@ -153,6 +154,7 @@ const ICONS = {
   'comedy-mask-and-tragedy-mask': comedyMaskAndTragedyMask,
   croissant,
   'cup-and-saucer': cupAndSaucer,
+  database,
   donut,
   edit,
   eyeglasses,

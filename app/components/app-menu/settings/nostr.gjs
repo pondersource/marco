@@ -12,6 +12,7 @@ const stripProtocol = (url) => (url ? url.replace(/^wss?:\/\//, '') : '');
 export default class AppMenuSettingsNostr extends Component {
   @service settings;
   @service nostrData;
+  @service toast;
 
   @tracked newReadRelay = '';
   @tracked newWriteRelay = '';
@@ -88,6 +89,16 @@ export default class AppMenuSettingsNostr extends Component {
   @action
   resetWriteRelays() {
     this.settings.update('nostrWriteRelays', null);
+  }
+
+  @action
+  async clearCache() {
+    try {
+      await this.nostrData.clearCache();
+      this.toast.show('Nostr cache cleared');
+    } catch (e) {
+      this.toast.show(`Failed to clear Nostr cache: ${e.message}`);
+    }
   }
 
   <template>
@@ -212,6 +223,18 @@ export default class AppMenuSettingsNostr extends Component {
               Reset to Defaults
             </button>
           {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label>Cached data</label>
+          <button
+            type="button"
+            class="btn btn-outline btn-full"
+            {{on "click" this.clearCache}}
+          >
+            <Icon @name="database" @size={{18}} @color="var(--danger-color)" />
+            Clear profiles, photos, and reviews
+          </button>
         </div>
       </div>
     </details>
