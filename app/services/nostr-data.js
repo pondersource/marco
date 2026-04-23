@@ -356,6 +356,13 @@ export default class NostrDataService extends Service {
     return 'Not connected';
   }
 
+  async clearCache() {
+    await this._cachePromise;
+    if (this.cache) {
+      await this.cache.deleteAllEvents();
+    }
+  }
+
   _cleanupSubscriptions() {
     if (this._requestSub) {
       this._requestSub.unsubscribe();
