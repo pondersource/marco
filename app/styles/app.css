@@ -1006,8 +1006,15 @@ abbr[title] {
     flex: 0 0 auto;
     height: 100px;
     width: auto;
-    aspect-ratio: var(--slide-ratio, 16 / 9);
     scroll-snap-align: none;
+  }
+
+  .carousel-slide.landscape {
+    aspect-ratio: var(--slide-ratio, 16 / 9);
+  }
+
+  .carousel-slide.portrait {
+    aspect-ratio: 1 / 1;
   }
 
   .carousel-placeholder {

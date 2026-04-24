@@ -116,7 +116,8 @@ export default class PlacePhotosCarousel extends Component {
           {{#each this.photos as |photo|}}
             {{! template-lint-disable no-inline-styles }}
             <div
-              class="carousel-slide"
+              class="carousel-slide
+                {{if photo.isLandscape 'landscape' 'portrait'}}"
               style={{photo.style}}
               data-event-id={{photo.eventId}}
             >
