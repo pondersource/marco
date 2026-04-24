@@ -19,7 +19,6 @@ export default class PlacePhotoUpload extends Component {
 
   @tracked file = null;
   @tracked uploadedPhoto = null;
-  @tracked status = '';
   @tracked error = '';
   @tracked isPublishing = false;
   @tracked isDragging = false;
@@ -132,7 +131,6 @@ export default class PlacePhotoUpload extends Component {
       return;
     }
 
-    this.status = 'Publishing event...';
     this.error = '';
     this.isPublishing = true;
 
@@ -191,7 +189,6 @@ export default class PlacePhotoUpload extends Component {
       this.nostrData.store.add(event);
 
       this.toast.show('Photo published successfully');
-      this.status = '';
 
       // Clear out the file so user can upload more or be done
       this.file = null;
@@ -206,7 +203,6 @@ export default class PlacePhotoUpload extends Component {
       }
     } catch (e) {
       this.error = 'Failed to publish: ' + e.message;
-      this.status = '';
     } finally {
       this.isPublishing = false;
     }
@@ -219,12 +215,6 @@ export default class PlacePhotoUpload extends Component {
       {{#if this.error}}
         <div class="alert alert-error">
           {{this.error}}
-        </div>
-      {{/if}}
-
-      {{#if this.status}}
-        <div class="alert alert-info">
-          {{this.status}}
         </div>
       {{/if}}
 
