@@ -285,8 +285,18 @@ body {
   inset: 0;
   background: rgb(0 0 0 / 60%);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.upload-status-text {
+  color: white;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 80%);
+  text-align: center;
+  padding: 0 1rem;
 }
 
 .photo-upload-item .error-overlay {

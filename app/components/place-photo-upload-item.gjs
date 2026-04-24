@@ -22,6 +22,7 @@ export default class PlacePhotoUploadItem extends Component {
   @tracked thumbnailUrl = '';
   @tracked blurhash = '';
   @tracked error = '';
+  @tracked statusText = '';
 
   constructor() {
     super(...arguments);
@@ -47,6 +48,7 @@ export default class PlacePhotoUploadItem extends Component {
 
   uploadTask = task(async (file) => {
     this.error = '';
+    this.statusText = 'Processing';
     try {
       // 1. Process main image and generate blurhash in worker
       const mainData = await this.imageProcessor.process(
@@ -71,18 +73,34 @@ export default class PlacePhotoUploadItem extends Component {
       let mainResult, thumbResult;
       const isMobileDevice = isMobile();
 
+      const mainProgress = (status) => {
+        if (status === 'signing') this.statusText = 'Signing photo upload';
+        if (status === 'uploading') this.statusText = 'Uploading photo';
+      };
+
+      const thumbProgress = (status) => {
+        if (status === 'signing') this.statusText = 'Signing thumbnail upload';
+        if (status === 'uploading') this.statusText = 'Uploading thumbnail';
+      };
+
       if (isMobileDevice) {
         // Mobile: sequential uploads to preserve bandwidth and memory
         mainResult = await this.blossom.upload(mainData.blob, {
           sequential: true,
+          onProgress: mainProgress,
         });
         thumbResult = await this.blossom.upload(thumbData.blob, {
           sequential: true,
+          onProgress: thumbProgress,
         });
       } else {
         // Desktop: concurrent uploads
-        const mainUploadPromise = this.blossom.upload(mainData.blob);
-        const thumbUploadPromise = this.blossom.upload(thumbData.blob);
+        const mainUploadPromise = this.blossom.upload(mainData.blob, {
+          onProgress: mainProgress,
+        });
+        const thumbUploadPromise = this.blossom.upload(thumbData.blob, {
+          onProgress: thumbProgress,
+        });
 
         [mainResult, thumbResult] = await Promise.all([
           mainUploadPromise,
@@ -127,6 +145,9 @@ export default class PlacePhotoUploadItem extends Component {
             @color="white"
             class="spin-animation"
           />
+          {{#if this.statusText}}
+            <span class="upload-status-text">{{this.statusText}}</span>
+          {{/if}}
         </div>
       {{/if}}
 

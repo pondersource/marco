@@ -60,10 +60,13 @@ export default class BlossomService extends Service {
     return `Nostr ${base64url}`;
   }
 
-  async _uploadToServer(file, hash, serverUrl) {
+  async _uploadToServer(file, hash, serverUrl, onProgress) {
     const uploadUrl = getBlossomUrl(serverUrl, 'upload');
+
+    if (onProgress) onProgress('signing');
     const authHeader = await this._getAuthHeader('upload', hash, serverUrl);
 
+    if (onProgress) onProgress('uploading');
     // eslint-disable-next-line warp-drive/no-external-request-patterns
     const response = await fetch(uploadUrl, {
       method: 'PUT',
@@ -109,14 +112,20 @@ export default class BlossomService extends Service {
 
     if (options.sequential) {
       // Sequential upload logic
-      mainResult = await this._uploadToServer(file, payloadHash, mainServer);
+      mainResult = await this._uploadToServer(
+        file,
+        payloadHash,
+        mainServer,
+        options.onProgress
+      );
 
       for (const serverUrl of fallbackServers) {
         try {
           const result = await this._uploadToServer(
             file,
             payloadHash,
-            serverUrl
+            serverUrl,
+            options.onProgress
           );
           fallbackUrls.push(result.url);
         } catch (error) {
@@ -125,9 +134,14 @@ export default class BlossomService extends Service {
       }
     } else {
       // Concurrent upload logic
-      const mainPromise = this._uploadToServer(file, payloadHash, mainServer);
+      const mainPromise = this._uploadToServer(
+        file,
+        payloadHash,
+        mainServer,
+        options.onProgress
+      );
       const fallbackPromises = fallbackServers.map((serverUrl) =>
-        this._uploadToServer(file, payloadHash, serverUrl)
+        this._uploadToServer(file, payloadHash, serverUrl, options.onProgress)
       );
 
       // Main server MUST succeed
