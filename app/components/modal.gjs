@@ -11,6 +11,7 @@ export default class Modal extends Component {
 
   @action
   close() {
+    if (this.args.disableClose) return;
     if (this.args.onClose) {
       this.args.onClose();
     }
@@ -31,10 +32,11 @@ export default class Modal extends Component {
       >
         <button
           type="button"
-          class="close-modal-btn btn-text"
+          class="close-modal-btn btn-text {{if @disableClose 'disabled'}}"
+          disabled={{@disableClose}}
           {{on "click" this.close}}
         >
-          <Icon @name="x" @size={{24}} />
+          <Icon @name="x" @size={{24}} @color="currentColor" />
         </button>
         {{yield}}
       </div>

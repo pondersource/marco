@@ -1815,6 +1815,12 @@ button.create-place {
   top: 1rem;
   right: 1rem;
   cursor: pointer;
+  color: #898989;
+}
+
+.close-modal-btn.disabled {
+  color: #ccc;
+  cursor: not-allowed;
 }
 
 .place-photo-upload h2 {

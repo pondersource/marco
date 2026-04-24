@@ -77,6 +77,9 @@ export default class PlacePhotoUpload extends Component {
     }
     this.file = file;
     this.uploadedPhoto = null;
+    if (this.args.onUploadStateChange) {
+      this.args.onUploadStateChange(true);
+    }
   }
 
   @action
@@ -91,6 +94,9 @@ export default class PlacePhotoUpload extends Component {
     }
     this.file = null;
     this.uploadedPhoto = null;
+    if (this.args.onUploadStateChange) {
+      this.args.onUploadStateChange(false);
+    }
   }
 
   deletePhotoTask = task(async (photoData) => {
@@ -190,6 +196,10 @@ export default class PlacePhotoUpload extends Component {
       // Clear out the file so user can upload more or be done
       this.file = null;
       this.uploadedPhoto = null;
+
+      if (this.args.onUploadStateChange) {
+        this.args.onUploadStateChange(false);
+      }
 
       if (this.args.onClose) {
         this.args.onClose(event.id);

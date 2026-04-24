@@ -27,6 +27,12 @@ export default class PlaceDetails extends Component {
   @tracked isPhotoUploadModalOpen = false;
   @tracked isNostrConnectModalOpen = false;
   @tracked newlyUploadedPhotoId = null;
+  @tracked isPhotoUploadActive = false;
+
+  @action
+  handleUploadStateChange(isActive) {
+    this.isPhotoUploadActive = isActive;
+  }
 
   @action
   openPhotoUploadModal(e) {
@@ -42,6 +48,7 @@ export default class PlaceDetails extends Component {
 
   @action
   closePhotoUploadModal(eventId) {
+    if (this.isPhotoUploadActive) return;
     this.isPhotoUploadModalOpen = false;
     if (typeof eventId === 'string') {
       this.newlyUploadedPhotoId = eventId;
@@ -585,10 +592,14 @@ export default class PlaceDetails extends Component {
     </div>
 
     {{#if this.isPhotoUploadModalOpen}}
-      <Modal @onClose={{this.closePhotoUploadModal}}>
+      <Modal
+        @onClose={{this.closePhotoUploadModal}}
+        @disableClose={{this.isPhotoUploadActive}}
+      >
         <PlacePhotoUpload
           @place={{this.saveablePlace}}
           @onClose={{this.closePhotoUploadModal}}
+          @onUploadStateChange={{this.handleUploadStateChange}}
         />
       </Modal>
     {{/if}}
