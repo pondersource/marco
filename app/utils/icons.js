@@ -45,6 +45,7 @@ import badgeShieldWithFire from '@waysidemapping/pinhead/dist/icons/badge_shield
 import beachUmbrellaInGround from '@waysidemapping/pinhead/dist/icons/beach_umbrella_in_ground.svg?raw';
 import beerMugWithFoam from '@waysidemapping/pinhead/dist/icons/beer_mug_with_foam.svg?raw';
 import burgerAndDrinkCupWithStraw from '@waysidemapping/pinhead/dist/icons/burger_and_drink_cup_with_straw.svg?raw';
+import bridge from '@waysidemapping/pinhead/dist/icons/bridge.svg?raw';
 import bus from '@waysidemapping/pinhead/dist/icons/bus.svg?raw';
 import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
 import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.svg?raw';
@@ -77,6 +78,7 @@ import gravestone from '@waysidemapping/pinhead/dist/icons/gravestone.svg?raw';
 import grecianVase from '@waysidemapping/pinhead/dist/icons/grecian_vase.svg?raw';
 import greekCross from '@waysidemapping/pinhead/dist/icons/greek_cross.svg?raw';
 import iceCreamOnCone from '@waysidemapping/pinhead/dist/icons/ice_cream_on_cone.svg?raw';
+import industrialBuilding from '@waysidemapping/pinhead/dist/icons/industrial_building.svg?raw';
 import jewel from '@waysidemapping/pinhead/dist/icons/jewel.svg?raw';
 import lowriseBuilding from '@waysidemapping/pinhead/dist/icons/lowrise_building.svg?raw';
 import marketStall from '@waysidemapping/pinhead/dist/icons/market_stall.svg?raw';
@@ -104,6 +106,7 @@ import roundStructureWithFlag from '@waysidemapping/pinhead/dist/icons/round_str
 import sailingShipInWater from '@waysidemapping/pinhead/dist/icons/sailing_ship_in_water.svg?raw';
 import scissorsOpen from '@waysidemapping/pinhead/dist/icons/scissors_open.svg?raw';
 import shipwreckInWater from '@waysidemapping/pinhead/dist/icons/shipwreck_in_water.svg?raw';
+import steamTrainOnRailwayTrack from '@waysidemapping/pinhead/dist/icons/steam_train_on_railway_track.svg?raw';
 import shoppingBag from '@waysidemapping/pinhead/dist/icons/shopping_bag.svg?raw';
 import shoppingBasket from '@waysidemapping/pinhead/dist/icons/shopping_basket.svg?raw';
 import shoppingCart from '@waysidemapping/pinhead/dist/icons/shopping_cart.svg?raw';
@@ -133,6 +136,7 @@ const ICONS = {
   bookmark,
   'boxing-glove-up': boxingGloveUp,
   'burger-and-drink-cup-with-straw': burgerAndDrinkCupWithStraw,
+  bridge,
   bus,
   camera,
   'feather-camera': featherCamera,
@@ -178,6 +182,7 @@ const ICONS = {
   heart,
   home,
   'ice-cream-on-cone': iceCreamOnCone,
+  'industrial-building': industrialBuilding,
   info,
   instagram,
   jewel,
@@ -218,6 +223,7 @@ const ICONS = {
   'sailing-ship-in-water': sailingShipInWater,
   'scissors-open': scissorsOpen,
   'shipwreck-in-water': shipwreckInWater,
+  'steam-train-on-railway-track': steamTrainOnRailwayTrack,
   'shopping-bag': shoppingBag,
   search,
   server,

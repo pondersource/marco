@@ -109,6 +109,7 @@ export const POI_ICON_RULES = [
   { tags: { amenity: 'arts_center' }, icon: 'comedy-mask-and-tragedy-mask' },
 
   // Historic
+  { tags: { historic: 'bridge' }, icon: 'bridge' },
   { tags: { historic: 'fort' }, icon: 'fort' },
   { tags: { historic: 'castle' }, icon: 'palace' },
   { tags: { historic: 'building' }, icon: 'classical-building-with-flag' },
@@ -118,6 +119,12 @@ export const POI_ICON_RULES = [
   {
     tags: { historic: 'monument' },
     icon: 'classical-building-with-dome-and-flag',
+  },
+  { tags: { historic: 'folly' }, icon: 'classical-building' },
+  { tags: { historic: 'industrial' }, icon: 'industrial-building' },
+  {
+    tags: { historic: 'railway_station' },
+    icon: 'steam-train-on-railway-track',
   },
   { tags: { historic: 'ship' }, icon: 'sailing-ship-in-water' },
   { tags: { historic: 'wreck' }, icon: 'shipwreck-in-water' },
