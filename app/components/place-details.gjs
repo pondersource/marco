@@ -576,7 +576,7 @@ export default class PlaceDetails extends Component {
       {{#if this.osmUrl}}
         <div class="meta-info">
           <p class="content-with-icon">
-            <Icon @name="camera" />
+            <Icon @name="feather-camera" />
             <span>
               <button
                 type="button"

@@ -2,7 +2,7 @@
 import activity from 'feather-icons/dist/icons/activity.svg?raw';
 import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
-import camera from 'feather-icons/dist/icons/camera.svg?raw';
+import featherCamera from 'feather-icons/dist/icons/camera.svg?raw';
 import checkSquare from 'feather-icons/dist/icons/check-square.svg?raw';
 import chevronLeft from 'feather-icons/dist/icons/chevron-left.svg?raw';
 import chevronRight from 'feather-icons/dist/icons/chevron-right.svg?raw';
@@ -46,6 +46,7 @@ import beachUmbrellaInGround from '@waysidemapping/pinhead/dist/icons/beach_umbr
 import beerMugWithFoam from '@waysidemapping/pinhead/dist/icons/beer_mug_with_foam.svg?raw';
 import burgerAndDrinkCupWithStraw from '@waysidemapping/pinhead/dist/icons/burger_and_drink_cup_with_straw.svg?raw';
 import bus from '@waysidemapping/pinhead/dist/icons/bus.svg?raw';
+import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
 import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.svg?raw';
 import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
 import cigaretteWithSmokeCurl from '@waysidemapping/pinhead/dist/icons/cigarette_with_smoke_curl.svg?raw';
@@ -134,6 +135,7 @@ const ICONS = {
   'burger-and-drink-cup-with-straw': burgerAndDrinkCupWithStraw,
   bus,
   camera,
+  'feather-camera': featherCamera,
   'check-square': checkSquare,
   'chevron-left': chevronLeft,
   'chevron-right': chevronRight,
