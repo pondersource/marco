@@ -2,7 +2,7 @@ import Service from '@ember/service';
 import { RelayPool } from 'applesauce-relay';
 
 export default class NostrRelayService extends Service {
-  pool = new RelayPool();
+  pool = new RelayPool({ enablePing: true });
 
   async publish(relays, event) {
     if (!relays || relays.length === 0) {
