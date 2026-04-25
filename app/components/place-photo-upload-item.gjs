@@ -10,7 +10,7 @@ import { isMobile } from '../utils/device';
 import Blurhash from './blurhash';
 
 const MAX_IMAGE_DIMENSION = 1920;
-const IMAGE_QUALITY = 0.94;
+const IMAGE_QUALITY = 0.9;
 const MAX_THUMBNAIL_DIMENSION = 350;
 const THUMBNAIL_QUALITY = 0.9;
 
