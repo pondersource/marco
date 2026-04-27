@@ -88,7 +88,7 @@
     "qunit": "^2.25.0",
     "qunit-dom": "^3.5.0",
     "remotestorage-widget": "^1.8.1",
-    "remotestoragejs": "2.0.0-beta.8",
+    "remotestoragejs": "2.0.0-beta.9",
     "sinon": "^21.0.1",
     "stylelint": "^16.26.1",
     "stylelint-config-standard": "^38.0.0",
