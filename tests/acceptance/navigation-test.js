@@ -95,8 +95,8 @@ module('Acceptance | navigation', function (hooks) {
     // Click the Close (X) button
     await click('.close-btn');
 
-    assert.strictEqual(currentURL(), '/', 'Returned to index');
-    assert.false(mapUi.returnToSearch, 'Flag is reset after closing sidebar');
+    assert.dom('.sidebar').doesNotExist('Sidebar should be closed');
+    assert.ok(currentURL().includes('/place/'), 'Remains on place route');
   });
 
   test('navigating directly to place and back closes sidebar', async function (assert) {

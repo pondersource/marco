@@ -56,28 +56,30 @@ export default class PlaceNewTemplate extends Component {
   }
 
   <template>
-    <div class="sidebar">
-      <div class="sidebar-header">
-        <h2><Icon @name="plus-circle" @size={{20}} @color="#ea4335" />
-          New Place</h2>
-        <button type="button" class="close-btn" {{on "click" this.close}}><Icon
-            @name="x"
-            @size={{20}}
-            @color="#333"
-          /></button>
-      </div>
+    {{#if this.mapUi.isSidebarVisible}}
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h2><Icon @name="plus-circle" @size={{20}} @color="#ea4335" />
+            New Place</h2>
+          <button
+            type="button"
+            class="close-btn"
+            {{on "click" this.close}}
+          ><Icon @name="x" @size={{20}} @color="#333" /></button>
+        </div>
 
-      <div class="sidebar-content">
-        <p class="helper-text">
-          Drag the map to position the crosshair.
-        </p>
+        <div class="sidebar-content">
+          <p class="helper-text">
+            Drag the map to position the crosshair.
+          </p>
 
-        <PlaceEditForm
-          @place={{this.initialPlace}}
-          @onSave={{this.savePlace}}
-          @onCancel={{this.close}}
-        />
+          <PlaceEditForm
+            @place={{this.initialPlace}}
+            @onSave={{this.savePlace}}
+            @onCancel={{this.close}}
+          />
+        </div>
       </div>
-    </div>
+    {{/if}}
   </template>
 }

@@ -79,6 +79,7 @@ export default class PlaceTemplate extends Component {
     if (place === null) {
       // If we have an active search context, return to it (UP navigation)
       if (this.mapUi.returnToSearch && this.mapUi.currentSearch) {
+        this.mapUi.showSidebar();
         this.router.transitionTo('search', {
           queryParams: this.mapUi.currentSearch,
         });
@@ -88,23 +89,26 @@ export default class PlaceTemplate extends Component {
       }
     } else {
       // If a place is selected (unlikely in this view, but possible if we add related links)
+      this.mapUi.showSidebar();
       this.router.transitionTo('place', place);
     }
   }
 
   @action
   close() {
-    // Clear search results so we don't fall back to the list
-    this.router.transitionTo('index');
+    this.mapUi.clearSelection();
+    this.mapUi.hideSidebar();
   }
 
   <template>
-    <PlacesSidebar
-      @selectedPlace={{this.place}}
-      @onClose={{this.close}}
-      @onSelect={{this.navigateBack}}
-      @onBookmarkChange={{this.refreshMap}}
-      @onUpdate={{this.handleUpdate}}
-    />
+    {{#if this.mapUi.isSidebarVisible}}
+      <PlacesSidebar
+        @selectedPlace={{this.place}}
+        @onClose={{this.close}}
+        @onSelect={{this.navigateBack}}
+        @onBookmarkChange={{this.refreshMap}}
+        @onUpdate={{this.handleUpdate}}
+      />
+    {{/if}}
   </template>
 }

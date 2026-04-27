@@ -140,12 +140,14 @@ module('Acceptance | map search reset', function (hooks) {
         bubbles: true,
       });
 
-      // Wait for transition to index
+      // Wait for transition or UI update
       await new Promise((r) => setTimeout(r, 500));
-      assert.strictEqual(
-        currentURL(),
-        '/',
-        'Should have transitioned to index (closed sidebar)'
+
+      // Sidebar should be hidden, but we should stay on the search route
+      assert.dom('.sidebar').doesNotExist('Sidebar should be closed');
+      assert.ok(
+        currentURL().includes('category=coffee'),
+        'Should have stayed on the search route with markers intact'
       );
 
       // Second Click (Start new search)

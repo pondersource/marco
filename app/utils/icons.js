@@ -116,6 +116,7 @@ import toolbox from '@waysidemapping/pinhead/dist/icons/toolbox.svg?raw';
 import treeAndBenchWithBackrest from '@waysidemapping/pinhead/dist/icons/tree_and_bench_with_backrest.svg?raw';
 import villageBuildings from '@waysidemapping/pinhead/dist/icons/village_buildings.svg?raw';
 import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/wall_hanging_with_mountains_and_sun.svg?raw';
+import windingWayWide from '@waysidemapping/pinhead/dist/icons/winding_way_wide.svg?raw';
 import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/womens_and_mens_restroom_symbol.svg?raw';
 
 import loadingRing from '../icons/270-ring.svg?raw';
@@ -243,6 +244,7 @@ const ICONS = {
   'womens-and-mens-restroom-symbol': womensAndMensRestroomSymbol,
   whatsapp,
   wikipedia,
+  winding_way_wide: windingWayWide,
   parking_p: parkingP,
   car,
   x,

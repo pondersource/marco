@@ -1365,10 +1365,10 @@ span.icon {
 @media (width <= 768px) {
   /* Sidebar/Bottom Sheet is open (Mobile: Bottom 50%) */
 
-  /* Center Y = (height/2) / 2 = height/4 = 25% */
+  /* Center Y = (height/2) / 2 = height/4 = 25% + half header height */
   .map-container.sidebar-open .map-crosshair {
     left: 50%; /* Reset desktop shift */
-    top: 25%;
+    top: calc(25% + 30px); /* 30px approx half header height */
   }
 }
 

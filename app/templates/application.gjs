@@ -18,12 +18,13 @@ export default class ApplicationComponent extends Component {
   @tracked isAppMenuOpen = false;
 
   get isSidebarOpen() {
-    // We consider the sidebar "open" if we are in search or place routes.
+    // We consider the sidebar "open" if we are in search or place routes AND it's visible.
     // This helps the map know if it should shift the center or adjust view.
     return (
-      this.router.currentRouteName === 'place' ||
-      this.router.currentRouteName === 'place.new' ||
-      this.router.currentRouteName === 'search'
+      this.mapUi.isSidebarVisible &&
+      (this.router.currentRouteName === 'place' ||
+        this.router.currentRouteName === 'place.new' ||
+        this.router.currentRouteName === 'search')
     );
   }
 
@@ -48,13 +49,12 @@ export default class ApplicationComponent extends Component {
   handleOutsideClick() {
     if (this.isAppMenuOpen) {
       this.closeAppMenu();
-    } else if (this.router.currentRouteName === 'search') {
-      this.router.transitionTo('index');
-    } else if (this.router.currentRouteName === 'place') {
-      // If in place route, decide if we want to go back to search or index
-      // For now, let's go to index or maybe back to search if search params exist?
-      // Simplest behavior: clear selection
-      this.router.transitionTo('index');
+    } else if (
+      this.router.currentRouteName === 'search' ||
+      this.router.currentRouteName === 'place'
+    ) {
+      this.mapUi.clearSelection();
+      this.mapUi.hideSidebar();
     }
   }
 

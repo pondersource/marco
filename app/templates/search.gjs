@@ -11,6 +11,8 @@ export default class SearchTemplate extends Component {
   selectPlace(place) {
     if (place) {
       this.mapUi.returnToSearch = true;
+      this.mapUi.showSidebar();
+      this.mapUi.preventNextZoom = true;
       // We don't need to manually set currentSearch here because
       // it was already set in the route's setupController
       this.router.transitionTo('place', place);
@@ -19,14 +21,16 @@ export default class SearchTemplate extends Component {
 
   @action
   close() {
-    this.router.transitionTo('index');
+    this.mapUi.hideSidebar();
   }
 
   <template>
-    <PlacesSidebar
-      @places={{@model}}
-      @onSelect={{this.selectPlace}}
-      @onClose={{this.close}}
-    />
+    {{#if this.mapUi.isSidebarVisible}}
+      <PlacesSidebar
+        @places={{this.mapUi.searchResults}}
+        @onSelect={{this.selectPlace}}
+        @onClose={{this.close}}
+      />
+    {{/if}}
   </template>
 }

@@ -22,6 +22,7 @@ export default class PlaceNewRoute extends Route {
       this.mapUi.updateCreationCoordinates(model.lat, model.lon);
     }
     this.mapUi.startCreating();
+    this.mapUi.showSidebar();
   }
 
   deactivate() {

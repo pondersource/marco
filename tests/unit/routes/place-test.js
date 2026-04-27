@@ -36,6 +36,8 @@ module('Unit | Route | place', function (hooks) {
         selectPlaceCalled = true;
       }
       stopSearch() {}
+      showSidebar() {}
+      hideSidebar() {}
     }
 
     this.owner.register('service:osm', OsmStub);
@@ -76,6 +78,8 @@ module('Unit | Route | place', function (hooks) {
     class MapUiStub extends Service {
       selectPlace() {}
       stopSearch() {}
+      showSidebar() {}
+      hideSidebar() {}
     }
 
     this.owner.register('service:osm', OsmStub);
@@ -110,6 +114,8 @@ module('Unit | Route | place', function (hooks) {
     class MapUiStub extends Service {
       selectPlace() {}
       stopSearch() {}
+      showSidebar() {}
+      hideSidebar() {}
     }
 
     this.owner.register('service:osm', OsmStub);
@@ -155,6 +161,8 @@ module('Unit | Route | place', function (hooks) {
         assert.ok(options.preventZoom, 'Prevented zoom on update');
       }
       stopSearch() {}
+      showSidebar() {}
+      hideSidebar() {}
     }
 
     this.owner.register('service:storage', StorageStub);
