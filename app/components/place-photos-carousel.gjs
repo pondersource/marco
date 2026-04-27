@@ -1,8 +1,10 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
+import { fn } from '@ember/helper';
 import Blurhash from './blurhash';
 import Icon from './icon';
+import PhotoGallery from './photo-gallery';
 import fadeInImage from '../modifiers/fade-in-image';
 import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
@@ -10,6 +12,8 @@ import { modifier } from 'ember-modifier';
 export default class PlacePhotosCarousel extends Component {
   @tracked canScrollLeft = false;
   @tracked canScrollRight = false;
+  @tracked isGalleryOpen = false;
+  @tracked selectedPhoto = null;
 
   carouselElement = null;
 
@@ -103,6 +107,18 @@ export default class PlacePhotosCarousel extends Component {
     });
   }
 
+  @action
+  openGallery(photo) {
+    this.selectedPhoto = photo;
+    this.isGalleryOpen = true;
+  }
+
+  @action
+  closeGallery() {
+    this.isGalleryOpen = false;
+    this.selectedPhoto = null;
+  }
+
   <template>
     {{#if this.photos.length}}
       <div class="place-photos-carousel-wrapper">
@@ -114,12 +130,13 @@ export default class PlacePhotosCarousel extends Component {
           {{on "scroll" this.updateScrollState}}
         >
           {{#each this.photos as |photo|}}
-            {{! template-lint-disable no-inline-styles }}
+            {{! template-lint-disable no-inline-styles no-invalid-interactive }}
             <div
               class="carousel-slide
                 {{if photo.isLandscape 'landscape' 'portrait'}}"
               style={{photo.style}}
               data-event-id={{photo.eventId}}
+              {{on "click" (fn this.openGallery photo)}}
             >
               {{#if photo.blurhash}}
                 <Blurhash
@@ -184,6 +201,15 @@ export default class PlacePhotosCarousel extends Component {
           </button>
         {{/if}}
       </div>
+    {{/if}}
+
+    {{#if this.isGalleryOpen}}
+      <PhotoGallery
+        @photos={{this.photos}}
+        @selectedPhoto={{this.selectedPhoto}}
+        @placeName={{@name}}
+        @onClose={{this.closeGallery}}
+      />
     {{/if}}
   </template>
 }
