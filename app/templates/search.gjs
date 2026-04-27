@@ -12,6 +12,7 @@ export default class SearchTemplate extends Component {
     if (place) {
       this.mapUi.returnToSearch = true;
       this.mapUi.showSidebar();
+      this.mapUi.preventNextZoom = true;
       // We don't need to manually set currentSearch here because
       // it was already set in the route's setupController
       this.router.transitionTo('place', place);
