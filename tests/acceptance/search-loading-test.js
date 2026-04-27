@@ -1,17 +1,32 @@
 import { module, test } from 'qunit';
-import { visit, click, fillIn, currentURL } from '@ember/test-helpers';
+import { visit, click, fillIn, currentURL, settled } from '@ember/test-helpers';
 import { setupApplicationTest } from 'marco/tests/helpers';
 import Service from '@ember/service';
 import { Promise } from 'rsvp';
+
+let photonResolve;
+let osmResolve;
 
 class MockPhotonService extends Service {
   cancelAll() {}
 
   async search(query) {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 50));
     if (query === 'slow') {
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Return a promise that we can manually resolve in the test
+      // to avoid race conditions with native setTimeout
+      return new Promise((resolve) => {
+        photonResolve = () => {
+          resolve([
+            {
+              title: 'Test Place',
+              lat: 1,
+              lon: 1,
+              osmId: '123',
+              osmType: 'node',
+            },
+          ]);
+        };
+      });
     }
     return [
       {
@@ -29,9 +44,12 @@ class MockOsmService extends Service {
   cancelAll() {}
 
   async getCategoryPois(bounds, category) {
-    await new Promise((resolve) => setTimeout(resolve, 50));
     if (category === 'slow_category') {
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      return new Promise((resolve) => {
+        osmResolve = () => {
+          resolve([]);
+        };
+      });
     }
     return [];
   }
@@ -44,6 +62,8 @@ module('Acceptance | search loading', function (hooks) {
   setupApplicationTest(hooks);
 
   hooks.beforeEach(function () {
+    photonResolve = null;
+    osmResolve = null;
     this.owner.register('service:photon', MockPhotonService);
     this.owner.register('service:osm', MockOsmService);
   });
@@ -66,8 +86,12 @@ module('Acceptance | search loading', function (hooks) {
       'Loading state is set for text search'
     );
 
+    // Resolve the manual promise so the task can finish deterministically
+    photonResolve();
+
     await searchPromise;
-    await new Promise((r) => setTimeout(r, 250));
+    await settled(); // Wait for ember-concurrency tasks to fully settle
+
     assert.strictEqual(
       mapUi.loadingState,
       null,
@@ -84,8 +108,12 @@ module('Acceptance | search loading', function (hooks) {
       'Loading state is set for category search'
     );
 
+    // Resolve the manual promise
+    osmResolve();
+
     await catPromise;
-    await new Promise((r) => setTimeout(r, 250));
+    await settled();
+
     assert.strictEqual(
       mapUi.loadingState,
       null,
@@ -124,6 +152,7 @@ module('Acceptance | search loading', function (hooks) {
 
     // 4. Click the clear button (should be visible since input has value)
     await click('.search-clear-btn');
+    // Wait for the click and transition to settle
 
     // Verify loading state is cleared immediately
     assert.strictEqual(
@@ -131,6 +160,11 @@ module('Acceptance | search loading', function (hooks) {
       null,
       'Loading state is cleared immediately after clicking clear'
     );
+
+    // Clean up the dangling promise
+    if (photonResolve) {
+      photonResolve();
+    }
 
     // Verify we are back on index (or at least query is gone)
     assert.strictEqual(currentURL(), '/', 'Navigated to index');
