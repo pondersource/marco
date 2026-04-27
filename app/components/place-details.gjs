@@ -29,6 +29,14 @@ export default class PlaceDetails extends Component {
   @tracked isConnectingNostr = false;
   @tracked isGalleryOpen = false;
   @tracked selectedGalleryPhoto = null;
+  @tracked isPhotoUploadModalOpen = false;
+  @tracked isNostrConnectModalOpen = false;
+  @tracked newlyUploadedPhotoId = null;
+
+  @action
+  handleUploadStateChange(isActive) {
+    this.isPhotoUploadActive = isActive;
+  }
 
   @action
   openPhotoUploadModal(e) {
