@@ -27,7 +27,7 @@ export default class SearchTemplate extends Component {
   <template>
     {{#if this.mapUi.isSidebarVisible}}
       <PlacesSidebar
-        @places={{@model}}
+        @places={{this.mapUi.searchResults}}
         @onSelect={{this.selectPlace}}
         @onClose={{this.close}}
       />

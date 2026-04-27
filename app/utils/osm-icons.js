@@ -109,7 +109,9 @@ export const POI_ICON_RULES = [
   { tags: { amenity: 'arts_center' }, icon: 'comedy-mask-and-tragedy-mask' },
 
   // Historic
+  { tags: { historic: 'canal' }, icon: 'winding_way_wide' },
   { tags: { historic: 'bridge' }, icon: 'bridge' },
+  { tags: { historic: 'bridge_site' }, icon: 'bridge' },
   { tags: { historic: 'fort' }, icon: 'fort' },
   { tags: { historic: 'castle' }, icon: 'palace' },
   { tags: { historic: 'building' }, icon: 'classical-building-with-flag' },

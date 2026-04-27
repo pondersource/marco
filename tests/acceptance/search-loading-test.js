@@ -67,6 +67,7 @@ module('Acceptance | search loading', function (hooks) {
     );
 
     await searchPromise;
+    await new Promise((r) => setTimeout(r, 250));
     assert.strictEqual(
       mapUi.loadingState,
       null,
@@ -84,6 +85,7 @@ module('Acceptance | search loading', function (hooks) {
     );
 
     await catPromise;
+    await new Promise((r) => setTimeout(r, 250));
     assert.strictEqual(
       mapUi.loadingState,
       null,
