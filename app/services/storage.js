@@ -11,6 +11,7 @@ import { getLocalizedName } from '../utils/osm';
 
 export default class StorageService extends Service {
   @service osm;
+  @service toast;
   rs;
   widget;
   @tracked placesInView = [];
@@ -23,9 +24,12 @@ export default class StorageService extends Service {
   @tracked connected = false;
   @tracked userAddress = null;
   @tracked isWidgetOpen = false;
+  isNewConnection = true;
 
   constructor() {
     super(...arguments);
+
+    this.checkInitialConnectionState();
 
     this.rs = new RemoteStorage({
       modules: [Places],
@@ -57,6 +61,12 @@ export default class StorageService extends Service {
     this.rs.on('connected', () => {
       this.connected = true;
       this.userAddress = this.rs.remote.userAddress;
+
+      if (this.isNewConnection) {
+        this.toast.show('Remote storage connected', 3000);
+        this.isNewConnection = false;
+      }
+
       this.loadLists();
     });
 
@@ -72,6 +82,7 @@ export default class StorageService extends Service {
       this.loadedPrefixes = [];
       this.lists = [];
       this.initialSyncDone = false;
+      this.isNewConnection = true;
     });
 
     this.rs.on('sync-done', () => {
@@ -91,6 +102,31 @@ export default class StorageService extends Service {
         debounceTask(this, 'reloadCurrentView', 200);
       }
     });
+  }
+
+  checkInitialConnectionState() {
+    this.isNewConnection = true;
+    try {
+      if (window.localStorage) {
+        const keys = [
+          'remotestorage:wireclient',
+          'remotestorage:dropbox',
+          'remotestorage:googledrive',
+        ];
+        for (const key of keys) {
+          const data = window.localStorage.getItem(key);
+          if (data) {
+            const parsed = JSON.parse(data);
+            if (parsed && parsed.token) {
+              this.isNewConnection = false;
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to check localStorage for existing connection:', e);
+    }
   }
 
   handlePlaceChange(event) {
