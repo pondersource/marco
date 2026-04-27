@@ -1,16 +1,19 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
+import { fn } from '@ember/helper';
+import { and, eq } from 'ember-truth-helpers';
 import Blurhash from './blurhash';
 import Icon from './icon';
 import fadeInImage from '../modifiers/fade-in-image';
 import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
 
-export default class PlacePhotosCarousel extends Component {
+export default class PhotoCarousel extends Component {
   @tracked canScrollLeft = false;
   @tracked canScrollRight = false;
 
+  internalEventId = null;
   carouselElement = null;
 
   get photos() {
@@ -18,6 +21,7 @@ export default class PlacePhotosCarousel extends Component {
   }
 
   get showChevrons() {
+    // Only show chevrons if there's more than one photo
     return this.photos.length > 1;
   }
 
@@ -27,6 +31,10 @@ export default class PlacePhotosCarousel extends Component {
 
   get cannotScrollRight() {
     return !this.canScrollRight;
+  }
+
+  get variantClass() {
+    return this.args.variant || 'inline';
   }
 
   lastResetKey = null;
@@ -41,16 +49,42 @@ export default class PlacePhotosCarousel extends Component {
 
   scrollToNewPhoto = modifier((element, [eventId]) => {
     if (eventId && eventId !== this.lastEventId) {
+      const isInitial = !this.lastEventId;
       this.lastEventId = eventId;
-      // Allow DOM to update first since the photo was *just* added to the store
-      setTimeout(() => {
+
+      // Prevent feedback loop if this carousel initiated the change
+      if (this.internalEventId === eventId) {
+        return;
+      }
+
+      const scrollAction = () => {
         const targetSlide = element.querySelector(
           `[data-event-id="${eventId}"]`
         );
         if (targetSlide) {
-          element.scrollLeft = targetSlide.offsetLeft;
+          if (isInitial) {
+            const originalScrollBehavior = element.style.scrollBehavior;
+            element.style.scrollBehavior = 'auto';
+            element.scrollLeft = targetSlide.offsetLeft;
+
+            // Restore smooth scroll after the jump
+            setTimeout(() => {
+              element.style.scrollBehavior = originalScrollBehavior;
+            }, 50);
+          } else {
+            // Use native CSS smooth scrolling for subsequent clicks
+            element.scrollLeft = targetSlide.offsetLeft;
+          }
         }
-      }, 100);
+      };
+
+      if (isInitial) {
+        // Execute immediately for the first render to prevent flash
+        scrollAction();
+      } else {
+        // Allow DOM to update first for subsequent clicks
+        setTimeout(scrollAction, 100);
+      }
     }
   });
 
@@ -68,9 +102,38 @@ export default class PlacePhotosCarousel extends Component {
       resizeObserver.observe(element);
     }
 
+    let intersectionObserver;
+    if (this.args.onVisiblePhotoChange && window.IntersectionObserver) {
+      // Set up intersection observer to track which photo is currently "most" visible
+      intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          for (let entry of entries) {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+              const eventId = entry.target.dataset.eventId;
+              this.internalEventId = eventId;
+              const photo = this.photos.find((p) => p.eventId === eventId);
+              if (photo) {
+                this.args.onVisiblePhotoChange(photo);
+              }
+            }
+          }
+        },
+        {
+          root: element,
+          threshold: 0.5,
+        }
+      );
+
+      const slides = element.querySelectorAll('.carousel-slide');
+      slides.forEach((slide) => intersectionObserver.observe(slide));
+    }
+
     return () => {
       if (resizeObserver) {
         resizeObserver.unobserve(element);
+      }
+      if (intersectionObserver) {
+        intersectionObserver.disconnect();
       }
     };
   });
@@ -103,23 +166,35 @@ export default class PlacePhotosCarousel extends Component {
     });
   }
 
+  @action
+  handlePhotoClick(photo) {
+    if (this.args.onPhotoClick) {
+      this.args.onPhotoClick(photo);
+    }
+  }
+
   <template>
     {{#if this.photos.length}}
-      <div class="place-photos-carousel-wrapper">
+      <div class="photo-carousel {{this.variantClass}}">
         <div
-          class="place-photos-carousel-track"
+          class="photo-carousel-track"
           {{this.setupCarousel}}
           {{this.resetScrollPosition @resetKey}}
           {{this.scrollToNewPhoto @scrollToEventId}}
           {{on "scroll" this.updateScrollState}}
         >
           {{#each this.photos as |photo|}}
-            {{! template-lint-disable no-inline-styles }}
+            {{! template-lint-disable no-inline-styles no-invalid-interactive }}
             <div
               class="carousel-slide
-                {{if photo.isLandscape 'landscape' 'portrait'}}"
+                {{if photo.isLandscape 'landscape' 'portrait'}}
+                {{if
+                  (and @scrollToEventId (eq photo.eventId @scrollToEventId))
+                  'active'
+                }}"
               style={{photo.style}}
               data-event-id={{photo.eventId}}
+              {{on "click" (fn this.handlePhotoClick photo)}}
             >
               {{#if photo.blurhash}}
                 <Blurhash
@@ -169,7 +244,11 @@ export default class PlacePhotosCarousel extends Component {
             disabled={{this.cannotScrollLeft}}
             aria-label="Previous photo"
           >
-            <Icon @name="chevron-left" @color="currentColor" />
+            <Icon
+              @name="chevron-left"
+              @color="currentColor"
+              @size={{if (eq @variant "gallery-main") 24 16}}
+            />
           </button>
 
           <button
@@ -180,7 +259,11 @@ export default class PlacePhotosCarousel extends Component {
             disabled={{this.cannotScrollRight}}
             aria-label="Next photo"
           >
-            <Icon @name="chevron-right" @color="currentColor" />
+            <Icon
+              @name="chevron-right"
+              @color="currentColor"
+              @size={{if (eq @variant "gallery-main") 24 16}}
+            />
           </button>
         {{/if}}
       </div>

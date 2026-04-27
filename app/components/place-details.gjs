@@ -13,7 +13,8 @@ import PlaceListsManager from './place-lists-manager';
 import PlacePhotoUpload from './place-photo-upload';
 import NostrConnect from './nostr-connect';
 import Modal from './modal';
-import PlacePhotosCarousel from './place-photos-carousel';
+import PhotoCarousel from './photo-carousel';
+import PhotoGallery from './photo-gallery';
 
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
@@ -24,15 +25,10 @@ export default class PlaceDetails extends Component {
   @service nostrData;
   @tracked isEditing = false;
   @tracked showLists = false;
-  @tracked isPhotoUploadModalOpen = false;
-  @tracked isNostrConnectModalOpen = false;
-  @tracked newlyUploadedPhotoId = null;
   @tracked isPhotoUploadActive = false;
-
-  @action
-  handleUploadStateChange(isActive) {
-    this.isPhotoUploadActive = isActive;
-  }
+  @tracked isConnectingNostr = false;
+  @tracked isGalleryOpen = false;
+  @tracked selectedGalleryPhoto = null;
 
   @action
   openPhotoUploadModal(e) {
@@ -362,6 +358,18 @@ export default class PlaceDetails extends Component {
     return !!this.place.description;
   }
 
+  @action
+  openGallery(photo) {
+    this.selectedGalleryPhoto = photo;
+    this.isGalleryOpen = true;
+  }
+
+  @action
+  closeGallery() {
+    this.isGalleryOpen = false;
+    this.selectedGalleryPhoto = null;
+  }
+
   <template>
     <div class="place-details">
       {{#if this.isEditing}}
@@ -371,11 +379,13 @@ export default class PlaceDetails extends Component {
           @onCancel={{this.cancelEditing}}
         />
       {{else}}
-        <PlacePhotosCarousel
+        <PhotoCarousel
+          @variant="inline"
           @photos={{this.photos}}
           @name={{this.name}}
           @resetKey={{this.place.osmId}}
           @scrollToEventId={{this.newlyUploadedPhotoId}}
+          @onPhotoClick={{this.openGallery}}
         />
         <h3>{{this.name}}</h3>
         <p class="place-type">
@@ -608,6 +618,15 @@ export default class PlaceDetails extends Component {
       <Modal @onClose={{this.closeNostrConnectModal}}>
         <NostrConnect @onConnect={{this.onNostrConnected}} />
       </Modal>
+    {{/if}}
+
+    {{#if this.isGalleryOpen}}
+      <PhotoGallery
+        @photos={{this.photos}}
+        @selectedPhoto={{this.selectedGalleryPhoto}}
+        @placeName={{this.name}}
+        @onClose={{this.closeGallery}}
+      />
     {{/if}}
   </template>
 }

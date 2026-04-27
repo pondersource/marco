@@ -9,11 +9,28 @@ export default modifier((element, [url]) => {
 
   let observer;
 
+  const hideBlurhash = () => {
+    const parent = element.parentElement;
+    const slide =
+      parent && parent.tagName === 'PICTURE' ? parent.parentElement : parent;
+
+    // Only hide the blurhash if we're in the gallery-main view.
+    // In the inline view, we want to keep the blurhash visible behind portrait photos
+    // to fill the 16:9 container gracefully.
+    if (slide && slide.closest('.photo-carousel.gallery-main')) {
+      const blur = slide.querySelector('.place-header-photo-blur');
+      if (blur) {
+        blur.style.opacity = '0';
+      }
+    }
+  };
+
   const handleLoad = () => {
     // Only apply the fade-in animation if it wasn't already loaded instantly
     if (!element.classList.contains('loaded-instant')) {
       element.classList.add('loaded');
     }
+    hideBlurhash();
   };
 
   element.addEventListener('load', handleLoad);
@@ -33,6 +50,7 @@ export default modifier((element, [url]) => {
         if (img.complete) {
           // Already in browser cache, skip the animation
           element.classList.add('loaded-instant');
+          hideBlurhash();
         }
 
         // If this image is inside a <picture> tag, we also need to swap <source> tags
