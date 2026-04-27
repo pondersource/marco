@@ -1,20 +1,20 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'marco/tests/helpers';
 import { render, click } from '@ember/test-helpers';
-import PlacePhotosCarousel from 'marco/components/place-photos-carousel';
+import PhotoCarousel from 'marco/components/photo-carousel';
 
-module('Integration | Component | place-photos-carousel', function (hooks) {
+module('Integration | Component | photo-carousel', function (hooks) {
   setupRenderingTest(hooks);
 
   test('it renders gracefully with no photos', async function (assert) {
     this.photos = [];
 
     await render(
-      <template><PlacePhotosCarousel @photos={{this.photos}} /></template>
+      <template><PhotoCarousel @photos={{this.photos}} /></template>
     );
 
     assert
-      .dom('.place-photos-carousel-wrapper')
+      .dom('.photo-carousel')
       .doesNotExist('it does not render the wrapper when there are no photos');
   });
 
@@ -32,14 +32,12 @@ module('Integration | Component | place-photos-carousel', function (hooks) {
     await render(
       <template>
         <div class="test-container">
-          <PlacePhotosCarousel @photos={{this.photos}} />
+          <PhotoCarousel @photos={{this.photos}} />
         </div>
       </template>
     );
 
-    assert
-      .dom('.place-photos-carousel-wrapper')
-      .exists('it renders the wrapper');
+    assert.dom('.photo-carousel').exists('it renders the wrapper');
     assert
       .dom('.carousel-slide:not(.carousel-placeholder)')
       .exists({ count: 1 }, 'it renders one real photo slide');
@@ -84,7 +82,7 @@ module('Integration | Component | place-photos-carousel', function (hooks) {
     await render(
       <template>
         <div class="test-container">
-          <PlacePhotosCarousel @photos={{this.photos}} />
+          <PhotoCarousel @photos={{this.photos}} />
         </div>
       </template>
     );
