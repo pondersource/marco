@@ -96,6 +96,7 @@ export default class PlaceRoute extends Route {
     if (model) {
       const options = { preventZoom: this.mapUi.preventNextZoom };
       this.mapUi.selectPlace(model, options);
+      this.mapUi.showSidebar();
       this.mapUi.preventNextZoom = false;
     }
     // Stop the pulse animation if it was running (e.g. redirected from search)

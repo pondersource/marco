@@ -1144,6 +1144,8 @@ export default class MapComponent extends Component {
         this.mapUi.returnToSearch = true;
       }
       this.mapUi.preventNextZoom = true;
+      this.mapUi.selectPlace(place, { preventZoom: true });
+      this.mapUi.showSidebar();
       this.router.transitionTo('place', place);
     };
 

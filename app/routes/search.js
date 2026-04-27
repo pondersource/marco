@@ -193,6 +193,7 @@ export default class SearchRoute extends Route {
     // Ensure pulse is stopped if we reach here
     this.mapUi.stopSearch();
     this.mapUi.setSearchResults(model);
+    this.mapUi.showSidebar();
 
     // Store current search params to allow "Up" navigation from place details
     const { q, category, lat, lon } = this.paramsFor('search');

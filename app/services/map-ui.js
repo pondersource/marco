@@ -17,6 +17,15 @@ export default class MapUiService extends Service {
   @tracked searchResults = [];
   @tracked currentSearch = null;
   @tracked loadingState = null;
+  @tracked isSidebarVisible = false;
+
+  showSidebar() {
+    this.isSidebarVisible = true;
+  }
+
+  hideSidebar() {
+    this.isSidebarVisible = false;
+  }
 
   selectPlace(place, options = {}) {
     this.selectedPlace = place;
