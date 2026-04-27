@@ -782,14 +782,19 @@ export default class MapComponent extends Component {
     // Check if mobile (width <= 768px matches CSS)
     if (size[0] <= 768) {
       // On mobile, the bottom 50% is covered by the sheet.
-      // We want the pin to be in the center of the TOP 50% (visible area).
-      // That means the pin should be at y = height * 0.25 (25% down from top).
-      // The map center is at y = height * 0.50.
-      // So the pin is "above" the center by 25% of the height in pixels.
-      // To put the pin there, the map center needs to be "below" the pin by that amount.
+      // We want the pin to be in the center of the TOP 50% (visible area), minus the header.
 
       const height = size[1];
-      const offsetPixels = height * 0.25; // Distance from desired pin pos to map center
+      const headerEl = document.querySelector('.app-header');
+      const headerHeight = headerEl ? headerEl.offsetHeight : 60;
+
+      // Visible area is from headerHeight to height / 2 (bottom sheet covers bottom 50%)
+      const visibleCenterY = headerHeight + (height / 2 - headerHeight) / 2;
+
+      // The map center is at y = height * 0.50.
+      // So the pin is "above" the center by (height/2 - visibleCenterY) pixels.
+      // To put the pin there, the map center needs to be "below" the pin by that amount.
+      const offsetPixels = height / 2 - visibleCenterY; // Distance from desired pin pos to map center
       const offsetMapUnits = offsetPixels * resolution;
 
       // Shift center SOUTH (decrease Y).
@@ -849,6 +854,9 @@ export default class MapComponent extends Component {
     let targetPixelY = pixel[1];
     let needsPan = false;
 
+    const headerEl = document.querySelector('.app-header');
+    const headerHeight = headerEl ? headerEl.offsetHeight : 60;
+
     // 1. Mobile Bottom Sheet Logic (Screen <= 768px)
     if (size[0] <= 768) {
       const height = size[1];
@@ -856,7 +864,7 @@ export default class MapComponent extends Component {
 
       // If in bottom half
       if (pixel[1] > splitPoint) {
-        targetPixelY = height * 0.25; // Target: Center of top half
+        targetPixelY = headerHeight + (height / 2 - headerHeight) / 2; // Target: Center of visible area above bottom sheet
         needsPan = true;
       }
     }
@@ -877,11 +885,10 @@ export default class MapComponent extends Component {
 
     // 3. Header Logic (Any screen size)
     // Check if the (potentially new) target Y is under the header
-    const headerHeight = 60;
-    const minTopDistance = headerHeight + 20; // 80px
+    const minTopDistance = headerHeight + 20; // Provide some padding
 
     if (targetPixelY < minTopDistance) {
-      targetPixelY = minTopDistance + 30; // Move it to ~110px, clear of header
+      targetPixelY = minTopDistance + 30; // Move it clear of header
       needsPan = true;
     }
 
