@@ -14,7 +14,7 @@ export default class AppMenuSettingsMapUi extends Component {
         <Icon @name="map" @size={{20}} />
         <span>Map & UI</span>
       </summary>
-      <div class="details-content">
+      <div class="details-content form-layout">
         <div class="form-group">
           <label for="show-quick-search">Quick search buttons visible</label>
           <select

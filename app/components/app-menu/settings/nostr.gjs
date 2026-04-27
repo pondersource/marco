@@ -108,7 +108,7 @@ export default class AppMenuSettingsNostr extends Component {
         <Icon @name="zap" @size={{20}} />
         <span>Nostr</span>
       </summary>
-      <div class="details-content">
+      <div class="details-content form-layout">
         <div class="form-group">
           <label for="nostr-photo-fallback-uploads">Upload photos to fallback
             servers</label>

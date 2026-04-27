@@ -15,7 +15,7 @@ export default class AppMenuSettingsApis extends Component {
         <Icon @name="server" @size={{20}} />
         <span>API Providers</span>
       </summary>
-      <div class="details-content">
+      <div class="details-content form-layout">
         <div class="form-group">
           <label for="overpass-api">Overpass API Provider</label>
           <select

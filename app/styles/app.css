@@ -594,6 +594,9 @@ body {
   padding: 0 1.4rem 1rem;
   animation: details-slide-down 0.2s ease-out;
   font-size: 0.9rem;
+}
+
+.sidebar-content details .details-content.form-layout {
   display: flex;
   flex-direction: column;
   gap: 16px;
