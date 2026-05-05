@@ -80,7 +80,7 @@ export default class PhotoGallery extends Component {
               class="dropdown-item"
               type="button"
               {{on "click" (fn this.copyEventId closeMenu)}}
-            >Copy Nostr Event ID</button>
+            >Copy Photo Event ID</button>
             <button
               class="dropdown-item"
               type="button"
