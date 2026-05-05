@@ -15,11 +15,17 @@ export default class AppHeaderComponent extends Component {
   @service settings;
   @service nostrAuth;
   @service nostrData;
+  @service mapUi;
   @tracked isUserMenuOpen = false;
   @tracked searchQuery = '';
 
   get hasQuery() {
     return !!this.searchQuery;
+  }
+
+  get showQuickSearch() {
+    const zoom = this.mapUi.currentZoom ?? 13;
+    return this.settings.showQuickSearchButtons && zoom >= 12;
   }
 
   @action
@@ -54,7 +60,7 @@ export default class AppHeaderComponent extends Component {
         />
       </div>
 
-      {{#if this.settings.showQuickSearchButtons}}
+      {{#if this.showQuickSearch}}
         <div class="header-center {{if this.hasQuery 'searching'}}">
           <CategoryChips @onSelect={{this.handleChipSelect}} />
         </div>

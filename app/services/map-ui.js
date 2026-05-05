@@ -11,6 +11,7 @@ export default class MapUiService extends Service {
   @tracked returnToSearch = false;
   @tracked currentCenter = null;
   @tracked currentBounds = null;
+  @tracked currentZoom = null;
   @tracked searchBoxHasFocus = false;
   @tracked selectionOptions = {};
   @tracked preventNextZoom = false;
@@ -79,6 +80,10 @@ export default class MapUiService extends Service {
 
   updateCenter(lat, lon) {
     this.currentCenter = { lat, lon };
+  }
+
+  updateZoom(zoom) {
+    this.currentZoom = zoom;
   }
 
   updateBounds(bounds) {
