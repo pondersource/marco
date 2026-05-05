@@ -1,12 +1,15 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
+import { fn } from '@ember/helper';
 import Icon from '#components/icon';
 import PhotoCarousel from './photo-carousel';
 import DropdownMenu from '#components/dropdown-menu';
 
 export default class PhotoGallery extends Component {
+  @service toast;
   @tracked currentPhoto = this.args.selectedPhoto || this.args.photos?.[0];
 
   @action
@@ -43,6 +46,20 @@ export default class PhotoGallery extends Component {
     }
   }
 
+  @action
+  async copyEventId(closeMenu) {
+    if (this.currentPhoto?.eventId) {
+      try {
+        await navigator.clipboard.writeText(this.currentPhoto.eventId);
+        this.toast.show('Event ID copied to clipboard');
+      } catch (err) {
+        console.error('Failed to copy event ID:', err);
+        this.toast.show('Failed to copy event ID');
+      }
+    }
+    closeMenu();
+  }
+
   <template>
     <div
       class="photo-gallery-overlay"
@@ -53,12 +70,17 @@ export default class PhotoGallery extends Component {
       {{! template-lint-disable no-invalid-interactive }}
       <div class="photo-gallery-content">
         <div class="actions-btn-container">
-          <DropdownMenu @iconSize={{24}} @triggerIcon="more-horizontal" @iconColor="white" as |closeMenu|>
+          <DropdownMenu
+            @iconSize={{24}}
+            @triggerIcon="more-horizontal"
+            @iconColor="white"
+            as |closeMenu|
+          >
             <button
               class="dropdown-item"
               type="button"
-              {{on "click" closeMenu}}
-            >Copy Raw Event Data</button>
+              {{on "click" (fn this.copyEventId closeMenu)}}
+            >Copy Nostr Event ID</button>
             <button
               class="dropdown-item"
               type="button"
