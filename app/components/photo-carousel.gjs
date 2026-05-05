@@ -33,6 +33,14 @@ export default class PhotoCarousel extends Component {
     return !this.canScrollRight;
   }
 
+  get isGalleryMain() {
+    return this.args.variant === 'gallery-main';
+  }
+
+  get isGalleryThumbnails() {
+    return this.args.variant === 'gallery-thumbnails';
+  }
+
   get variantClass() {
     return this.args.variant || 'inline';
   }
@@ -205,29 +213,47 @@ export default class PhotoCarousel extends Component {
                 />
               {{/if}}
 
-              {{#if photo.isLandscape}}
-                <picture>
-                  {{#if photo.thumbUrl}}
-                    <source
-                      media="(max-width: 768px)"
-                      data-srcset={{photo.thumbUrl}}
-                    />
-                  {{/if}}
-                  <img
-                    data-src={{photo.url}}
-                    class="place-header-photo landscape"
-                    alt={{@name}}
-                    {{fadeInImage photo.url}}
-                  />
-                </picture>
-              {{else}}
-                {{! Portrait uses thumb everywhere if available }}
+              {{#if this.isGalleryMain}}
+                <img
+                  data-src={{photo.url}}
+                  class="place-header-photo
+                    {{if photo.isLandscape 'landscape' 'portrait'}}"
+                  alt={{@name}}
+                  {{fadeInImage photo.url}}
+                />
+              {{else if this.isGalleryThumbnails}}
                 <img
                   data-src={{if photo.thumbUrl photo.thumbUrl photo.url}}
-                  class="place-header-photo portrait"
+                  class="place-header-photo
+                    {{if photo.isLandscape 'landscape' 'portrait'}}"
                   alt={{@name}}
                   {{fadeInImage (if photo.thumbUrl photo.thumbUrl photo.url)}}
                 />
+              {{else}}
+                {{#if photo.isLandscape}}
+                  <picture>
+                    {{#if photo.thumbUrl}}
+                      <source
+                        media="(max-width: 768px)"
+                        data-srcset={{photo.thumbUrl}}
+                      />
+                    {{/if}}
+                    <img
+                      data-src={{photo.url}}
+                      class="place-header-photo landscape"
+                      alt={{@name}}
+                      {{fadeInImage photo.url}}
+                    />
+                  </picture>
+                {{else}}
+                  {{! Portrait uses thumb everywhere if available }}
+                  <img
+                    data-src={{if photo.thumbUrl photo.thumbUrl photo.url}}
+                    class="place-header-photo portrait"
+                    alt={{@name}}
+                    {{fadeInImage (if photo.thumbUrl photo.thumbUrl photo.url)}}
+                  />
+                {{/if}}
               {{/if}}
             </div>
           {{/each}}
