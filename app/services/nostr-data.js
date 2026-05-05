@@ -55,10 +55,11 @@ export default class NostrDataService extends Service {
       this._stopPersisting = persistEventsToCache(
         this.store,
         async (events) => {
-          // Only cache profiles, mailboxes, blossom servers, and place photos
+          // Only cache profiles, mailboxes, blossom servers, and place photos, and deletions
           const toCache = events.filter(
             (e) =>
               e.kind === 0 ||
+              e.kind === 5 ||
               e.kind === 10002 ||
               e.kind === 10063 ||
               e.kind === 360
@@ -215,7 +216,7 @@ export default class NostrDataService extends Service {
 
       const cachedEvents = await this.cache.query([
         {
-          kinds: [360],
+          kinds: [360, 5],
           '#i': [entityId],
         },
       ]);
@@ -236,7 +237,7 @@ export default class NostrDataService extends Service {
     this.nostrRelay.pool
       .request(this.activeReadRelays, [
         {
-          kinds: [360],
+          kinds: [360, 5],
           '#i': [entityId],
         },
       ])

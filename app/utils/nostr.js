@@ -38,6 +38,7 @@ export function parsePlacePhotos(events) {
       let blurhash = null;
       let isLandscape = false;
       let aspectRatio = 16 / 9; // default
+      let placeIdentifier = event.tags.find((t) => t[0] === 'i')?.[1];
 
       for (const tag of imeta.slice(1)) {
         if (tag.startsWith('url ')) {
@@ -68,6 +69,7 @@ export function parsePlacePhotos(events) {
           blurhash,
           isLandscape,
           aspectRatio,
+          placeIdentifier,
         });
       }
     }
