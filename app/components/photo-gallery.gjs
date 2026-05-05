@@ -2,8 +2,9 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
-import Icon from './icon';
+import Icon from '#components/icon';
 import PhotoCarousel from './photo-carousel';
+import DropdownMenu from '#components/dropdown-menu';
 
 export default class PhotoGallery extends Component {
   @tracked currentPhoto = this.args.selectedPhoto || this.args.photos?.[0];
@@ -21,7 +22,8 @@ export default class PhotoGallery extends Component {
     if (
       e.target.closest('.thumbnail-strip-container') ||
       e.target.closest('.carousel-nav-btn') ||
-      e.target.closest('.close-btn')
+      e.target.closest('.close-btn') ||
+      e.target.closest('.actions-btn-container')
     ) {
       return;
     }
@@ -50,6 +52,21 @@ export default class PhotoGallery extends Component {
     >
       {{! template-lint-disable no-invalid-interactive }}
       <div class="photo-gallery-content">
+        <div class="actions-btn-container">
+          <DropdownMenu @iconSize={{24}} @triggerIcon="more-horizontal" @iconColor="white" as |closeMenu|>
+            <button
+              class="dropdown-item"
+              type="button"
+              {{on "click" closeMenu}}
+            >Copy Raw Event Data</button>
+            <button
+              class="dropdown-item"
+              type="button"
+              {{on "click" closeMenu}}
+            >Report Photo</button>
+          </DropdownMenu>
+        </div>
+
         <button
           type="button"
           class="close-btn btn-text"

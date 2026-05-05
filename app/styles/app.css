@@ -2027,3 +2027,63 @@ button.create-place {
 .photo-carousel.gallery-thumbnails .carousel-nav-btn {
   display: none;
 }
+
+/* Dropdown Menu Component */
+.dropdown-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-trigger-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dropdown-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 5px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+  padding: 0.5rem 0;
+  z-index: 3001;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dropdown-item {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #333;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover {
+  background: #f0f0f0;
+}
+
+/* Actions button in photo gallery */
+.photo-gallery-overlay .actions-btn-container {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: 48px;
+  height: 48px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -22,6 +22,8 @@ import mail from 'feather-icons/dist/icons/mail.svg?raw';
 import map from 'feather-icons/dist/icons/map.svg?raw';
 import mapPin from 'feather-icons/dist/icons/map-pin.svg?raw';
 import menu from 'feather-icons/dist/icons/menu.svg?raw';
+import moreHorizontal from 'feather-icons/dist/icons/more-horizontal.svg?raw';
+import moreVertical from 'feather-icons/dist/icons/more-vertical.svg?raw';
 import navigation from 'feather-icons/dist/icons/navigation.svg?raw';
 import phone from 'feather-icons/dist/icons/phone.svg?raw';
 import plus from 'feather-icons/dist/icons/plus.svg?raw';
@@ -81,10 +83,6 @@ import iceCreamOnCone from '@waysidemapping/pinhead/dist/icons/ice_cream_on_cone
 import industrialBuilding from '@waysidemapping/pinhead/dist/icons/industrial_building.svg?raw';
 import jewel from '@waysidemapping/pinhead/dist/icons/jewel.svg?raw';
 import lowriseBuilding from '@waysidemapping/pinhead/dist/icons/lowrise_building.svg?raw';
-import marketStall from '@waysidemapping/pinhead/dist/icons/market_stall.svg?raw';
-import memorialStoneWithInscription from '@waysidemapping/pinhead/dist/icons/memorial_stone_with_inscription.svg?raw';
-import mobilePhoneWithKeypadAndAntenna from '@waysidemapping/pinhead/dist/icons/mobile_phone_with_keypad_and_antenna.svg?raw';
-import molarTooth from '@waysidemapping/pinhead/dist/icons/molar_tooth.svg?raw';
 import needleAndSpoolOfThread from '@waysidemapping/pinhead/dist/icons/needle_and_spool_of_thread.svg?raw';
 import openBook from '@waysidemapping/pinhead/dist/icons/open_book.svg?raw';
 import palace from '@waysidemapping/pinhead/dist/icons/palace.svg?raw';
@@ -193,11 +191,9 @@ const ICONS = {
   mail,
   map,
   'map-pin': mapPin,
-  'market-stall': marketStall,
-  'memorial-stone-with-inscription': memorialStoneWithInscription,
   menu,
-  'mobile-phone-with-keypad-and-antenna': mobilePhoneWithKeypadAndAntenna,
-  'molar-tooth': molarTooth,
+  'more-horizontal': moreHorizontal,
+  'more-vertical': moreVertical,
   navigation,
   'needle-and-spool-of-thread': needleAndSpoolOfThread,
   nostrich,
