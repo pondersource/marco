@@ -284,6 +284,7 @@ export default class MapComponent extends Component {
     // Initialize the UI service with the map center
     const initialCenter = toLonLat(view.getCenter());
     this.mapUi.updateCenter(initialCenter[1], initialCenter[0]);
+    this.mapUi.updateZoom(view.getZoom());
 
     apply(this.mapInstance, 'https://tiles.openfreemap.org/styles/liberty', {
       webfonts: 'data:text/css,',
@@ -1046,6 +1047,7 @@ export default class MapComponent extends Component {
     const view = this.mapInstance.getView();
     const center = toLonLat(view.getCenter());
     this.mapUi.updateCenter(center[1], center[0]);
+    this.mapUi.updateZoom(view.getZoom());
 
     // If in creation mode, update the coordinates in the service AND the URL
     if (this.mapUi.isCreating) {
