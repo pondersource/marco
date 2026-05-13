@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS = {
   nostrPhotoFallbackUploads: false,
   nostrReadRelays: null,
   nostrWriteRelays: null,
+  experimentalEnablePhotoDeletion: false,
 };
 
 export default class SettingsService extends Service {
@@ -20,6 +21,8 @@ export default class SettingsService extends Service {
     DEFAULT_SETTINGS.nostrPhotoFallbackUploads;
   @tracked nostrReadRelays = DEFAULT_SETTINGS.nostrReadRelays;
   @tracked nostrWriteRelays = DEFAULT_SETTINGS.nostrWriteRelays;
+  @tracked experimentalEnablePhotoDeletion =
+    DEFAULT_SETTINGS.experimentalEnablePhotoDeletion;
 
   overpassApis = [
     {
@@ -108,6 +111,8 @@ export default class SettingsService extends Service {
     this.nostrPhotoFallbackUploads = finalSettings.nostrPhotoFallbackUploads;
     this.nostrReadRelays = finalSettings.nostrReadRelays;
     this.nostrWriteRelays = finalSettings.nostrWriteRelays;
+    this.experimentalEnablePhotoDeletion =
+      finalSettings.experimentalEnablePhotoDeletion;
 
     // Save to ensure migrated settings are stored in the new format
     this.saveSettings();
@@ -122,6 +127,7 @@ export default class SettingsService extends Service {
       nostrPhotoFallbackUploads: this.nostrPhotoFallbackUploads,
       nostrReadRelays: this.nostrReadRelays,
       nostrWriteRelays: this.nostrWriteRelays,
+      experimentalEnablePhotoDeletion: this.experimentalEnablePhotoDeletion,
     };
     localStorage.setItem('marco:settings', JSON.stringify(settings));
   }

@@ -110,32 +110,6 @@ export default class AppMenuSettingsNostr extends Component {
       </summary>
       <div class="details-content form-layout">
         <div class="form-group">
-          <label for="nostr-photo-fallback-uploads">Upload photos to fallback
-            servers</label>
-          <select
-            id="nostr-photo-fallback-uploads"
-            class="form-control"
-            {{on "change" (fn @onChange "nostrPhotoFallbackUploads")}}
-          >
-            <option
-              value="true"
-              selected={{if this.settings.nostrPhotoFallbackUploads "selected"}}
-            >
-              Yes
-            </option>
-            <option
-              value="false"
-              selected={{unless
-                this.settings.nostrPhotoFallbackUploads
-                "selected"
-              }}
-            >
-              No
-            </option>
-          </select>
-        </div>
-
-        <div class="form-group">
           <label for="new-read-relay">Read Relays</label>
           <ul class="relay-list">
             {{#each this.nostrData.activeReadRelays as |relay|}}
@@ -223,6 +197,32 @@ export default class AppMenuSettingsNostr extends Component {
               Reset to Defaults
             </button>
           {{/if}}
+        </div>
+
+        <div class="form-group">
+          <label for="nostr-photo-fallback-uploads">Upload photos to fallback
+            servers</label>
+          <select
+            id="nostr-photo-fallback-uploads"
+            class="form-control"
+            {{on "change" (fn @onChange "nostrPhotoFallbackUploads")}}
+          >
+            <option
+              value="true"
+              selected={{if this.settings.nostrPhotoFallbackUploads "selected"}}
+            >
+              Yes
+            </option>
+            <option
+              value="false"
+              selected={{unless
+                this.settings.nostrPhotoFallbackUploads
+                "selected"
+              }}
+            >
+              No
+            </option>
+          </select>
         </div>
 
         <div class="form-group">

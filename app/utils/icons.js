@@ -6,6 +6,7 @@ import featherCamera from 'feather-icons/dist/icons/camera.svg?raw';
 import checkSquare from 'feather-icons/dist/icons/check-square.svg?raw';
 import chevronLeft from 'feather-icons/dist/icons/chevron-left.svg?raw';
 import chevronRight from 'feather-icons/dist/icons/chevron-right.svg?raw';
+import alertTriangle from 'feather-icons/dist/icons/alert-triangle.svg?raw';
 import clock from 'feather-icons/dist/icons/clock.svg?raw';
 import database from 'feather-icons/dist/icons/database.svg?raw';
 import edit from 'feather-icons/dist/icons/edit.svg?raw';
@@ -146,6 +147,7 @@ const ICONS = {
   climbing_wall: climbingWall,
   check,
   'alert-circle': alertCircle,
+  'alert-triangle': alertTriangle,
   'classical-building': classicalBuilding,
   'classical-building-with-dome-and-flag': classicalBuildingWithDomeAndFlag,
   'classical-building-with-flag': classicalBuildingWithFlag,

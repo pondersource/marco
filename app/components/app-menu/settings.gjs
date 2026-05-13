@@ -6,6 +6,7 @@ import Icon from '#components/icon';
 import AppMenuSettingsMapUi from './settings/map-ui';
 import AppMenuSettingsApis from './settings/apis';
 import AppMenuSettingsNostr from './settings/nostr';
+import AppMenuSettingsExperimental from './settings/experimental';
 
 export default class AppMenuSettings extends Component {
   @service settings;
@@ -35,6 +36,7 @@ export default class AppMenuSettings extends Component {
         <AppMenuSettingsMapUi @onChange={{this.updateSetting}} />
         <AppMenuSettingsApis @onChange={{this.updateSetting}} />
         <AppMenuSettingsNostr @onChange={{this.updateSetting}} />
+        <AppMenuSettingsExperimental @onChange={{this.updateSetting}} />
       </section>
     </div>
   </template>
