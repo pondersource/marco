@@ -95,7 +95,7 @@ export default class PhotoCarousel extends Component {
             }, 500);
           }
         } else {
-           this.isProgrammaticScroll = false;
+          this.isProgrammaticScroll = false;
         }
       };
 

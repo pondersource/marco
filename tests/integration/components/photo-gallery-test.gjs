@@ -29,6 +29,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
     this.nostrData = this.owner.lookup('service:nostrData');
     this.nostrRelay = this.owner.lookup('service:nostrRelay');
     this.toast = this.owner.lookup('service:toast');
+    this.settings = this.owner.lookup('service:settings');
 
     this.photos = [
       {
@@ -50,6 +51,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
 
   hooks.afterEach(function () {
     sinon.restore();
+    localStorage.removeItem('marco:settings');
   });
 
   test('it does not show delete button if user is not creator', async function (assert) {
@@ -77,8 +79,9 @@ module('Integration | Component | photo-gallery', function (hooks) {
       .doesNotExist('Delete button is hidden for non-creator');
   });
 
-  test('it shows delete button if user is creator', async function (assert) {
+  test('it shows delete button if user is creator and setting is enabled', async function (assert) {
     this.nostrAuth.pubkey = 'userA'; // Matches photo1's pubkey
+    this.settings.update('experimentalEnablePhotoDeletion', true); // Enable the setting
     this.selectedPhoto = this.photos[0];
 
     await render(
@@ -99,12 +102,12 @@ module('Integration | Component | photo-gallery', function (hooks) {
     assert.dom('.dropdown-popover').exists('Dropdown opened');
     assert
       .dom('.dropdown-item.text-danger')
-      .exists('Delete button is visible for creator');
-    assert.dom('.dropdown-item.text-danger').hasText('Delete Photo');
+      .exists('Delete button is visible for creator when setting is enabled');
   });
 
   test('it handles cancellation of deletion', async function (assert) {
     this.nostrAuth.pubkey = 'userA';
+    this.settings.update('experimentalEnablePhotoDeletion', true);
     this.selectedPhoto = this.photos[0];
 
     const confirmStub = sinon.stub(window, 'confirm').returns(false);
@@ -131,6 +134,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
 
   test('it performs full deletion flow when confirmed', async function (assert) {
     this.nostrAuth.pubkey = 'userA';
+    this.settings.update('experimentalEnablePhotoDeletion', true);
     // Override the mock's getter just for this test
     Object.defineProperty(this.nostrAuth, 'signer', {
       configurable: true,

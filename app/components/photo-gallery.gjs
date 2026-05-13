@@ -34,7 +34,7 @@ const GalleryContent = <template>
             type="button"
             {{on "click" (fn @copyEventId closeMenu)}}
           >Copy Photo Event ID</button>
-          {{#if @isCreator}}
+          {{#if @canDeletePhoto}}
             <button
               class="dropdown-item text-danger"
               type="button"
@@ -91,6 +91,7 @@ export default class PhotoGallery extends Component {
   @service nostrData;
   @service nostrRelay;
   @service blossom;
+  @service settings;
 
   @tracked currentPhoto = this.args.selectedPhoto || this.args.photos?.[0];
 
@@ -99,6 +100,12 @@ export default class PhotoGallery extends Component {
       this.currentPhoto?.pubkey &&
       this.nostrAuth.pubkey &&
       this.currentPhoto.pubkey === this.nostrAuth.pubkey
+    );
+  }
+
+  get canDeletePhoto() {
+    return (
+      this.isCreator && this.settings.experimentalEnablePhotoDeletion === true
     );
   }
 
@@ -254,7 +261,7 @@ export default class PhotoGallery extends Component {
         @bindKeyboard={{this.bindKeyboard}}
         @handleKeydown={{this.handleKeydown}}
         @copyEventId={{this.copyEventId}}
-        @isCreator={{this.isCreator}}
+        @canDeletePhoto={{this.canDeletePhoto}}
         @deletePhotoTask={{this.deletePhotoTask}}
         @handleClose={{this.handleClose}}
         @photos={{@photos}}
@@ -270,7 +277,7 @@ export default class PhotoGallery extends Component {
           @bindKeyboard={{this.bindKeyboard}}
           @handleKeydown={{this.handleKeydown}}
           @copyEventId={{this.copyEventId}}
-          @isCreator={{this.isCreator}}
+          @canDeletePhoto={{this.canDeletePhoto}}
           @deletePhotoTask={{this.deletePhotoTask}}
           @handleClose={{this.handleClose}}
           @photos={{@photos}}
