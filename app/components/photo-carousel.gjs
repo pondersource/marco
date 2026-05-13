@@ -68,6 +68,7 @@ export default class PhotoCarousel extends Component {
         return;
       }
 
+      this.internalEventId = eventId;
       this.isProgrammaticScroll = true;
 
       const scrollAction = () => {
