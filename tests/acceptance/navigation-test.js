@@ -38,6 +38,7 @@ class MockOsmService extends Service {
 }
 
 class MockStorageService extends Service {
+  initialSyncDone = true;
   savedPlaces = [];
   findPlaceById() {
     return null;

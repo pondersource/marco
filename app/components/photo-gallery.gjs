@@ -3,7 +3,7 @@ import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { inject as service } from '@ember/service';
+import { service } from '@ember/service';
 import { modifier } from 'ember-modifier';
 import { task } from 'ember-concurrency';
 import { EventFactory } from 'applesauce-factory';

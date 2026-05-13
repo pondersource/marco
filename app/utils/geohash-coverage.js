@@ -23,7 +23,7 @@ export function getGeohashPrefixesInBbox(bbox) {
 
   // Safety check to avoid infinite loops or massive arrays if bbox is weird
   if (Math.abs(maxLat - minLat) > 20 || Math.abs(maxLon - minLon) > 20) {
-    console.warn(
+    console.debug(
       'BBox too large for 4-char geohash scanning, aborting fine scan.'
     );
     return [];
