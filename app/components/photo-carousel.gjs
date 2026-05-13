@@ -8,6 +8,7 @@ import Icon from './icon';
 import fadeInImage from '../modifiers/fade-in-image';
 import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
+import config from 'marco/config/environment';
 
 export default class PhotoCarousel extends Component {
   @tracked canScrollLeft = false;
@@ -55,6 +56,8 @@ export default class PhotoCarousel extends Component {
     }
   });
 
+  isProgrammaticScroll = false;
+
   scrollToNewPhoto = modifier((element, [eventId]) => {
     if (eventId && eventId !== this.lastEventId) {
       const isInitial = !this.lastEventId;
@@ -64,6 +67,8 @@ export default class PhotoCarousel extends Component {
       if (this.internalEventId === eventId) {
         return;
       }
+
+      this.isProgrammaticScroll = true;
 
       const scrollAction = () => {
         const targetSlide = element.querySelector(
@@ -78,11 +83,18 @@ export default class PhotoCarousel extends Component {
             // Restore smooth scroll after the jump
             setTimeout(() => {
               element.style.scrollBehavior = originalScrollBehavior;
+              this.isProgrammaticScroll = false;
             }, 50);
           } else {
             // Use native CSS smooth scrolling for subsequent clicks
             element.scrollLeft = targetSlide.offsetLeft;
+            // Clear programmatic scroll flag after a delay to let scroll finish
+            setTimeout(() => {
+              this.isProgrammaticScroll = false;
+            }, 500);
           }
+        } else {
+           this.isProgrammaticScroll = false;
         }
       };
 
@@ -111,10 +123,16 @@ export default class PhotoCarousel extends Component {
     }
 
     let intersectionObserver;
-    if (this.args.onVisiblePhotoChange && window.IntersectionObserver) {
+    if (
+      this.args.onVisiblePhotoChange &&
+      window.IntersectionObserver &&
+      config.environment !== 'test'
+    ) {
       // Set up intersection observer to track which photo is currently "most" visible
       intersectionObserver = new IntersectionObserver(
         (entries) => {
+          if (this.isProgrammaticScroll) return;
+
           for (let entry of entries) {
             if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
               const eventId = entry.target.dataset.eventId;

@@ -59,6 +59,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
     await render(
       <template>
         <div id="test-container">
+          <div id="modal-portal"></div>
           <PhotoGallery
             @photos={{this.photos}}
             @selectedPhoto={{this.selectedPhoto}}
@@ -83,6 +84,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
     await render(
       <template>
         <div id="test-container">
+          <div id="modal-portal"></div>
           <PhotoGallery
             @photos={{this.photos}}
             @selectedPhoto={{this.selectedPhoto}}
@@ -111,6 +113,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
     await render(
       <template>
         <div id="test-container">
+          <div id="modal-portal"></div>
           <PhotoGallery
             @photos={{this.photos}}
             @selectedPhoto={{this.selectedPhoto}}
@@ -157,6 +160,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
     await render(
       <template>
         <div id="test-container">
+          <div id="modal-portal"></div>
           <PhotoGallery
             @photos={{this.photos}}
             @selectedPhoto={{this.selectedPhoto}}
@@ -230,6 +234,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
     await render(
       <template>
         <div id="test-container">
+          <div id="modal-portal"></div>
           <PhotoGallery
             @photos={{this.photos}}
             @selectedPhoto={{this.selectedPhoto}}
@@ -269,6 +274,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
     await render(
       <template>
         <div id="test-container">
+          <div id="modal-portal"></div>
           <PhotoGallery
             @photos={{this.photos}}
             @selectedPhoto={{this.selectedPhoto}}
@@ -278,9 +284,11 @@ module('Integration | Component | photo-gallery', function (hooks) {
     );
 
     // Let carousel settle
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Right Arrow
     await triggerKeyEvent(document, 'keydown', 'ArrowRight');
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Let's just assert that currentPhoto was updated internally, which trickles down.
     // The actual DOM update for the main image might be tricky if the carousel relies on scroll events.
@@ -291,6 +299,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
 
     // Right Arrow again
     await triggerKeyEvent(document, 'keydown', 'ArrowRight');
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     assert
       .dom('.thumbnail-strip-container .carousel-slide.active img')
@@ -298,6 +307,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
 
     // Left Arrow
     await triggerKeyEvent(document, 'keydown', 'ArrowLeft');
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     assert
       .dom('.thumbnail-strip-container .carousel-slide.active img')
@@ -314,6 +324,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
     await render(
       <template>
         <div id="test-container">
+          <div id="modal-portal"></div>
           <PhotoGallery
             @photos={{this.photos}}
             @selectedPhoto={{this.selectedPhoto}}

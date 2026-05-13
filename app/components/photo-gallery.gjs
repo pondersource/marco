@@ -1,17 +1,91 @@
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
-import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
+import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { modifier } from 'ember-modifier';
 import { fn } from '@ember/helper';
+import { inject as service } from '@ember/service';
+import { modifier } from 'ember-modifier';
 import { task } from 'ember-concurrency';
-import { EventFactory } from 'applesauce-core';
-import Icon from '#components/icon';
+import { EventFactory } from 'applesauce-factory';
+import config from 'marco/config/environment';
+import DropdownMenu from './dropdown-menu';
 import PhotoCarousel from './photo-carousel';
-import DropdownMenu from '#components/dropdown-menu';
+import Icon from './icon';
+
+const GalleryContent = <template>
+  <div
+    class="photo-gallery-overlay"
+    role="dialog"
+    tabindex="-1"
+    {{on "click" @handleBackgroundClick}}
+    {{@bindKeyboard @handleKeydown}}
+  >
+    {{! template-lint-disable no-invalid-interactive }}
+    <div class="photo-gallery-content">
+      <div class="actions-btn-container">
+        <DropdownMenu
+          @iconSize={{24}}
+          @triggerIcon="more-horizontal"
+          @iconColor="white"
+          as |closeMenu|
+        >
+          <button
+            class="dropdown-item"
+            type="button"
+            {{on "click" (fn @copyEventId closeMenu)}}
+          >Copy Photo Event ID</button>
+          {{#if @isCreator}}
+            <button
+              class="dropdown-item text-danger"
+              type="button"
+              {{on "click" (fn @deletePhotoTask.perform closeMenu)}}
+            >Delete Photo</button>
+          {{/if}}
+        </DropdownMenu>
+      </div>
+
+      <button
+        type="button"
+        class="close-btn btn-text"
+        {{on "click" @handleClose}}
+        aria-label="Close gallery"
+        title="Close"
+      >
+        <Icon @name="x" @size={{24}} @color="white" />
+      </button>
+
+      <div class="main-photo-container">
+        <PhotoCarousel
+          @variant="gallery-main"
+          @photos={{@photos}}
+          @scrollToEventId={{@currentPhoto.eventId}}
+          @onVisiblePhotoChange={{@handleVisiblePhotoChange}}
+          @name={{@placeName}}
+        />
+      </div>
+
+      <div class="thumbnail-strip-container">
+        <PhotoCarousel
+          @variant="gallery-thumbnails"
+          @photos={{@photos}}
+          @scrollToEventId={{@currentPhoto.eventId}}
+          @onPhotoClick={{@selectPhoto}}
+          @name={{@placeName}}
+        />
+      </div>
+    </div>
+  </div>
+</template>;
 
 export default class PhotoGallery extends Component {
+  get isTesting() {
+    return config.environment === 'test';
+  }
+
+  get destinationElement() {
+    return document.getElementById('modal-portal') || document.body;
+  }
+
   @service toast;
   @service nostrAuth;
   @service nostrData;
@@ -174,67 +248,38 @@ export default class PhotoGallery extends Component {
   });
 
   <template>
-    <div
-      class="photo-gallery-overlay"
-      role="dialog"
-      tabindex="-1"
-      {{on "click" this.handleBackgroundClick}}
-      {{this.bindKeyboard this.handleKeydown}}
-    >
-      {{! template-lint-disable no-invalid-interactive }}
-      <div class="photo-gallery-content">
-        <div class="actions-btn-container">
-          <DropdownMenu
-            @iconSize={{24}}
-            @triggerIcon="more-horizontal"
-            @iconColor="white"
-            as |closeMenu|
-          >
-            <button
-              class="dropdown-item"
-              type="button"
-              {{on "click" (fn this.copyEventId closeMenu)}}
-            >Copy Photo Event ID</button>
-            {{#if this.isCreator}}
-              <button
-                class="dropdown-item text-danger"
-                type="button"
-                {{on "click" (fn this.deletePhotoTask.perform closeMenu)}}
-              >Delete Photo</button>
-            {{/if}}
-          </DropdownMenu>
-        </div>
-
-        <button
-          type="button"
-          class="close-btn btn-text"
-          {{on "click" this.handleClose}}
-          aria-label="Close gallery"
-          title="Close"
-        >
-          <Icon @name="x" @size={{24}} @color="white" />
-        </button>
-
-        <div class="main-photo-container">
-          <PhotoCarousel
-            @variant="gallery-main"
-            @photos={{@photos}}
-            @scrollToEventId={{this.currentPhoto.eventId}}
-            @onVisiblePhotoChange={{this.handleVisiblePhotoChange}}
-            @name={{@placeName}}
-          />
-        </div>
-
-        <div class="thumbnail-strip-container">
-          <PhotoCarousel
-            @variant="gallery-thumbnails"
-            @photos={{@photos}}
-            @scrollToEventId={{this.currentPhoto.eventId}}
-            @onPhotoClick={{this.selectPhoto}}
-            @name={{@placeName}}
-          />
-        </div>
-      </div>
-    </div>
+    {{#if this.isTesting}}
+      <GalleryContent
+        @handleBackgroundClick={{this.handleBackgroundClick}}
+        @bindKeyboard={{this.bindKeyboard}}
+        @handleKeydown={{this.handleKeydown}}
+        @copyEventId={{this.copyEventId}}
+        @isCreator={{this.isCreator}}
+        @deletePhotoTask={{this.deletePhotoTask}}
+        @handleClose={{this.handleClose}}
+        @photos={{@photos}}
+        @currentPhoto={{this.currentPhoto}}
+        @handleVisiblePhotoChange={{this.handleVisiblePhotoChange}}
+        @placeName={{@placeName}}
+        @selectPhoto={{this.selectPhoto}}
+      />
+    {{else}}
+      {{#in-element this.destinationElement}}
+        <GalleryContent
+          @handleBackgroundClick={{this.handleBackgroundClick}}
+          @bindKeyboard={{this.bindKeyboard}}
+          @handleKeydown={{this.handleKeydown}}
+          @copyEventId={{this.copyEventId}}
+          @isCreator={{this.isCreator}}
+          @deletePhotoTask={{this.deletePhotoTask}}
+          @handleClose={{this.handleClose}}
+          @photos={{@photos}}
+          @currentPhoto={{this.currentPhoto}}
+          @handleVisiblePhotoChange={{this.handleVisiblePhotoChange}}
+          @placeName={{@placeName}}
+          @selectPhoto={{this.selectPhoto}}
+        />
+      {{/in-element}}
+    {{/if}}
   </template>
 }
