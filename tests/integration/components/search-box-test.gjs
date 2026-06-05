@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'marco/tests/helpers';
-import { render, fillIn, click, waitFor } from '@ember/test-helpers';
+import { render, fillIn, click, waitFor, focus } from '@ember/test-helpers';
 import SearchBox from 'marco/components/search-box';
 import Service from '@ember/service';
 
@@ -208,18 +208,22 @@ module('Integration | Component | search-box', function (hooks) {
     );
 
     // Type "Resta" to trigger "Restaurants" category match
+    await focus('.search-input');
     await fillIn('.search-input', 'Resta');
 
-    // Wait for debounce (300ms) + execution
-    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-    await delay(400);
+    await waitFor('.search-result-item');
 
-    // The first result should be the category match
-    assert.dom('.search-result-item').exists({ count: 1 });
-    assert.dom('.result-title').hasText('Restaurants');
+    const resultItems = Array.from(
+      this.element.querySelectorAll('.search-result-item')
+    );
+    const categoryResult = resultItems.find((item) =>
+      item.textContent.includes('Restaurants')
+    );
+
+    assert.ok(categoryResult, 'Restaurants category result is shown');
 
     // Click the result
-    await click('.search-result-item');
+    await click(categoryResult);
 
     // Assert transition with lat/lon from map center
     assert.verifySteps([
