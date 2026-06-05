@@ -8,6 +8,10 @@ import { task } from 'ember-concurrency';
 import Geohash from 'latlon-geohash';
 import PlacePhotoUploadItem from './place-photo-upload-item';
 import Icon from '#components/icon';
+import { getSuggestedPhotoTags } from '../utils/photo-tag-suggestions';
+import capitalize from '../helpers/capitalize';
+import includes from '../helpers/includes';
+import { fn } from '@ember/helper';
 import { or, not } from 'ember-truth-helpers';
 
 export default class PlacePhotoUpload extends Component {
@@ -22,6 +26,7 @@ export default class PlacePhotoUpload extends Component {
   @tracked error = '';
   @tracked isPublishing = false;
   @tracked isDragging = false;
+  @tracked selectedTags = [];
 
   get place() {
     return this.args.place || {};
@@ -35,6 +40,10 @@ export default class PlacePhotoUpload extends Component {
     return (
       this.file && this.uploadedPhoto && this.file === this.uploadedPhoto.file
     );
+  }
+
+  get suggestedTags() {
+    return getSuggestedPhotoTags(this.place);
   }
 
   @action
@@ -93,9 +102,20 @@ export default class PlacePhotoUpload extends Component {
     }
     this.file = null;
     this.uploadedPhoto = null;
+    this.selectedTags = [];
     if (this.args.onUploadStateChange) {
       this.args.onUploadStateChange(false);
     }
+  }
+
+  @action
+  toggleTag(tag) {
+    if (this.selectedTags.includes(tag)) {
+      this.selectedTags = [];
+      return;
+    }
+
+    this.selectedTags = [tag];
   }
 
   deletePhotoTask = task(async (photoData) => {
@@ -138,6 +158,10 @@ export default class PlacePhotoUpload extends Component {
       const factory = new EventFactory({ signer: this.nostrAuth.signer });
 
       const tags = [['i', `osm:${osmType}:${osmId}`]];
+
+      for (const tag of this.selectedTags) {
+        tags.push(['t', tag]);
+      }
 
       if (lat && lon) {
         tags.push(['g', Geohash.encode(lat, lon, 4)]);
@@ -226,6 +250,26 @@ export default class PlacePhotoUpload extends Component {
             @onRemove={{this.removeFile}}
           />
         </div>
+
+        {{#if this.suggestedTags.length}}
+          <div class="photo-tag-suggestions">
+            <p class="photo-tag-suggestions-title">
+              Choose a tag/category (optional):
+            </p>
+            <div class="photo-tag-suggestions-list">
+              {{#each this.suggestedTags as |tag|}}
+                <button
+                  type="button"
+                  class="photo-tag-chip
+                    {{if (includes this.selectedTags tag) 'is-selected'}}"
+                  {{on "click" (fn this.toggleTag tag)}}
+                >
+                  {{capitalize tag}}
+                </button>
+              {{/each}}
+            </div>
+          </div>
+        {{/if}}
 
         <button
           type="button"
