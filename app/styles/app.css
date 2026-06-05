@@ -1843,6 +1843,42 @@ button.create-place {
   font-size: 1.2rem;
 }
 
+.photo-tag-suggestions {
+  margin: 1rem 0 1.5rem;
+}
+
+.photo-tag-suggestions-title {
+  color: #898989;
+  margin: 0 0 0.75rem;
+  font-weight: normal;
+  font-size: 0.9rem;
+}
+
+.photo-tag-suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.photo-tag-chip {
+  background: #f8f9fa;
+  color: #333;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.photo-tag-chip:hover {
+  background: #eee;
+}
+
+.photo-tag-chip.is-selected {
+  background: rgb(255 204 51 / 30%);
+}
+
 .alert {
   padding: 0.5rem;
   margin-bottom: 1rem;

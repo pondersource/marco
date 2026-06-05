@@ -287,35 +287,30 @@ module('Integration | Component | photo-gallery', function (hooks) {
       </template>
     );
 
-    // Let carousel settle
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    assert
+      .dom('.photo-gallery-content')
+      .hasAttribute('data-current-event-id', 'event1');
 
     // Right Arrow
     await triggerKeyEvent(document, 'keydown', 'ArrowRight');
-    await new Promise((resolve) => setTimeout(resolve, 150));
 
-    // Let's just assert that currentPhoto was updated internally, which trickles down.
-    // The actual DOM update for the main image might be tricky if the carousel relies on scroll events.
-    // We can at least check if the thumbnail selection changed, as that is directly driven by currentPhoto
     assert
-      .dom('.thumbnail-strip-container .carousel-slide.active img')
-      .hasAttribute('data-src', 'photo2.jpg');
+      .dom('.photo-gallery-content')
+      .hasAttribute('data-current-event-id', 'event2');
 
     // Right Arrow again
     await triggerKeyEvent(document, 'keydown', 'ArrowRight');
-    await new Promise((resolve) => setTimeout(resolve, 150));
 
     assert
-      .dom('.thumbnail-strip-container .carousel-slide.active img')
-      .hasAttribute('data-src', 'photo3.jpg');
+      .dom('.photo-gallery-content')
+      .hasAttribute('data-current-event-id', 'event3');
 
     // Left Arrow
     await triggerKeyEvent(document, 'keydown', 'ArrowLeft');
-    await new Promise((resolve) => setTimeout(resolve, 150));
 
     assert
-      .dom('.thumbnail-strip-container .carousel-slide.active img')
-      .hasAttribute('data-src', 'photo2.jpg');
+      .dom('.photo-gallery-content')
+      .hasAttribute('data-current-event-id', 'event2');
   });
 
   test('escape key closes gallery', async function (assert) {

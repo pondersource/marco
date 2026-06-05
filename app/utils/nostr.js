@@ -30,6 +30,11 @@ export function parsePlacePhotos(events) {
   const allPhotos = [];
 
   for (const event of sortedEvents) {
+    const eventTagValues = event.tags
+      .filter((t) => t[0] === 't')
+      .map((t) => t[1])
+      .filter(Boolean);
+
     // Find all imeta tags
     const imetas = event.tags.filter((t) => t[0] === 'imeta');
     for (const imeta of imetas) {
@@ -70,6 +75,7 @@ export function parsePlacePhotos(events) {
           isLandscape,
           aspectRatio,
           placeIdentifier,
+          tags: eventTagValues,
         });
       }
     }

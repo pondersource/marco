@@ -21,7 +21,10 @@ const GalleryContent = <template>
     {{@bindKeyboard @handleKeydown}}
   >
     {{! template-lint-disable no-invalid-interactive }}
-    <div class="photo-gallery-content">
+    <div
+      class="photo-gallery-content"
+      data-current-event-id={{@currentPhoto.eventId}}
+    >
       <div class="actions-btn-container">
         <DropdownMenu
           @iconSize={{24}}
