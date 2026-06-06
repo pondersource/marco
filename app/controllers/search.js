@@ -78,14 +78,17 @@ export default class SearchController extends Controller {
         // Search with Photon (using lat/lon for bias if available)
         pois = await this.photon.search(params.q, lat, lon);
 
-        // Search local bookmarks by name
+        // Search local bookmarks by name (minimum 3 characters)
         const queryLower = params.q.toLowerCase();
-        const localMatches = this.storage.savedPlaces.filter((p) => {
-          return (
-            p.title?.toLowerCase().includes(queryLower) ||
-            p.description?.toLowerCase().includes(queryLower)
-          );
-        });
+        let localMatches = [];
+        if (queryLower.length >= 3) {
+          localMatches = this.storage.savedPlaces.filter((p) => {
+            return (
+              p.title?.toLowerCase().includes(queryLower) ||
+              p.description?.toLowerCase().includes(queryLower)
+            );
+          });
+        }
 
         // Merge local matches
         localMatches.forEach((local) => {
