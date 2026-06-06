@@ -51,6 +51,29 @@ export default class SearchBoxComponent extends Component {
     this.searchTask.perform(value);
   }
 
+  formatSavedPlace(place) {
+    const listNames = (place._listIds || [])
+      .map((id) => this.storage.lists?.find((l) => l.id === id)?.title)
+      .filter(Boolean)
+      .join(', ');
+
+    const description = listNames
+      ? `Saved place (${listNames})`
+      : 'Saved place';
+
+    return {
+      source: 'saved',
+      id: place.id,
+      title: place.title,
+      icon: 'bookmark',
+      description,
+      osmId: place.osmId,
+      osmType: place.osmType,
+      lat: place.lat,
+      lon: place.lon,
+    };
+  }
+
   searchTask = task({ restartable: true }, async (term) => {
     await timeout(300);
 
@@ -82,17 +105,7 @@ export default class SearchBoxComponent extends Component {
       if (q.length >= 3) {
         savedMatches = this.storage.savedPlaces
           .filter((p) => p.title && p.title.toLowerCase().includes(q))
-          .map((p) => ({
-            source: 'saved',
-            id: p.id,
-            title: p.title,
-            icon: 'bookmark',
-            description: 'Saved place',
-            osmId: p.osmId,
-            osmType: p.osmType,
-            lat: p.lat,
-            lon: p.lon,
-          }));
+          .map((p) => this.formatSavedPlace(p));
       }
 
       const results = await this.photon.search(query, lat, lon);

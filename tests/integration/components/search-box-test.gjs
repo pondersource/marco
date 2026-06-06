@@ -249,6 +249,7 @@ module('Integration | Component | search-box', function (hooks) {
 
     // Mock Storage Service
     class MockStorageService extends Service {
+      lists = [{ id: 'favs', title: 'Favorites' }];
       savedPlaces = [
         {
           title: 'Awesome Coffee',
@@ -256,6 +257,7 @@ module('Integration | Component | search-box', function (hooks) {
           lon: 13.4,
           osmId: '999',
           osmType: 'node',
+          _listIds: ['favs'],
         },
       ];
     }
@@ -355,6 +357,7 @@ module('Integration | Component | search-box', function (hooks) {
 
     // Mock Storage Service
     class MockStorageService extends Service {
+      lists = [{ id: 'favs', title: 'Favorites' }];
       savedPlaces = [
         {
           title: 'Awesome Coffee',
@@ -362,6 +365,7 @@ module('Integration | Component | search-box', function (hooks) {
           lon: 13.4,
           osmId: '999',
           osmType: 'node',
+          _listIds: ['favs'],
         },
       ];
     }
@@ -429,6 +433,12 @@ module('Integration | Component | search-box', function (hooks) {
     assert.ok(
       resultItems.some((item) => item.textContent.includes('Awesome Coffee')),
       'Saved place is now shown'
+    );
+    assert.ok(
+      resultItems.some((item) =>
+        item.textContent.includes('Saved place (Favorites)')
+      ),
+      'List names are appended to the description'
     );
   });
 
