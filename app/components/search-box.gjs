@@ -13,6 +13,7 @@ import { eq, or } from 'ember-truth-helpers';
 export default class SearchBoxComponent extends Component {
   @service photon;
   @service osm;
+  @service storage;
   @service router;
   @service mapUi;
   @service map; // Assuming we might need map context, but mostly we use router
@@ -76,8 +77,39 @@ export default class SearchBoxComponent extends Component {
         icon: 'search',
       }));
 
+      // Filter saved places (minimum 3 characters)
+      let savedMatches = [];
+      if (q.length >= 3) {
+        savedMatches = this.storage.savedPlaces
+          .filter((p) => p.title && p.title.toLowerCase().includes(q))
+          .map((p) => ({
+            source: 'saved',
+            id: p.id,
+            title: p.title,
+            icon: 'bookmark',
+            description: 'Saved place',
+            osmId: p.osmId,
+            osmType: p.osmType,
+            lat: p.lat,
+            lon: p.lon,
+          }));
+      }
+
       const results = await this.photon.search(query, lat, lon);
-      this.results = [...categoryMatches, ...results];
+
+      // Deduplicate Photon results that are already in saved matches
+      const savedOsmIds = new Set(
+        savedMatches.map((s) => s.osmId).filter(Boolean)
+      );
+      const filteredPhotonResults = results.filter(
+        (r) => !savedOsmIds.has(r.osmId)
+      );
+
+      this.results = [
+        ...categoryMatches,
+        ...savedMatches,
+        ...filteredPhotonResults,
+      ];
     } catch (e) {
       console.error('Search failed', e);
       this.results = [];
@@ -156,8 +188,12 @@ export default class SearchBoxComponent extends Component {
     }
     this.results = []; // Hide popover
 
-    // If it has an OSM ID, go to place details
-    if (place.osmId) {
+    // If it's a custom saved place without an OSM ID, go to place details via internal ID
+    if (place.source === 'saved' && place.id && !place.osmId) {
+      this.router.transitionTo('place', place.id);
+    }
+    // If it has an OSM ID, go to place details via OSM ID
+    else if (place.osmId) {
       // Format: osm:node:123
       // place.osmType is already normalized to 'node', 'way', or 'relation' by PhotonService
       const id = `osm:${place.osmType}:${place.osmId}`;
