@@ -6,7 +6,12 @@ import { MailboxesModel } from 'applesauce-core/models/mailboxes';
 import { npubEncode } from 'applesauce-core/helpers/pointers';
 import { persistEventsToCache } from 'applesauce-core/helpers/event-cache';
 import { NostrIDB, openDB } from 'nostr-idb';
-import { normalizeRelayUrl } from '../utils/nostr';
+import {
+  excludeRequiredRelays,
+  mergeRequiredRelays,
+  normalizeRelayUrl,
+  uniqNormalizedRelays,
+} from '../utils/nostr';
 import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
 
 const DIRECTORY_RELAYS = [
@@ -83,43 +88,62 @@ export default class NostrDataService extends Service {
     });
   }
 
-  get defaultReadRelays() {
-    const mailboxes = (this.mailboxes?.inboxes || [])
-      .map(normalizeRelayUrl)
-      .filter(Boolean);
-    const defaults = DEFAULT_READ_RELAYS.map(normalizeRelayUrl).filter(Boolean);
-    return Array.from(new Set([...defaults, ...mailboxes]));
+  get requiredReadRelays() {
+    return DEFAULT_READ_RELAYS;
   }
 
-  get defaultWriteRelays() {
-    const mailboxes = (this.mailboxes?.outboxes || [])
+  get requiredWriteRelays() {
+    return DEFAULT_WRITE_RELAYS;
+  }
+
+  get mailboxReadRelays() {
+    return (this.mailboxes?.inboxes || [])
       .map(normalizeRelayUrl)
       .filter(Boolean);
-    const defaults =
-      DEFAULT_WRITE_RELAYS.map(normalizeRelayUrl).filter(Boolean);
-    return Array.from(new Set([...defaults, ...mailboxes]));
+  }
+
+  get mailboxWriteRelays() {
+    return (this.mailboxes?.outboxes || [])
+      .map(normalizeRelayUrl)
+      .filter(Boolean);
+  }
+
+  get configuredReadRelays() {
+    const configured = uniqNormalizedRelays([
+      ...this.mailboxReadRelays,
+      ...(this.settings.nostrReadRelays || []),
+    ]);
+
+    return excludeRequiredRelays(
+      configured,
+      this.settings.nostrReadRelayExclusions || []
+    );
+  }
+
+  get configuredWriteRelays() {
+    const configured = uniqNormalizedRelays([
+      ...this.mailboxWriteRelays,
+      ...(this.settings.nostrWriteRelays || []),
+    ]);
+
+    return excludeRequiredRelays(
+      configured,
+      this.settings.nostrWriteRelayExclusions || []
+    );
   }
 
   get activeReadRelays() {
-    if (this.settings.nostrReadRelays) {
-      return Array.from(
-        new Set(
-          this.settings.nostrReadRelays.map(normalizeRelayUrl).filter(Boolean)
-        )
-      );
-    }
-    return this.defaultReadRelays;
+    return mergeRequiredRelays(
+      this.requiredReadRelays,
+      this.configuredReadRelays
+    );
   }
 
   get activeWriteRelays() {
-    if (this.settings.nostrWriteRelays) {
-      return Array.from(
-        new Set(
-          this.settings.nostrWriteRelays.map(normalizeRelayUrl).filter(Boolean)
-        )
-      );
-    }
-    return this.defaultWriteRelays;
+    return mergeRequiredRelays(
+      this.requiredWriteRelays,
+      this.configuredWriteRelays
+    );
   }
 
   async loadPlacesInBounds(bbox) {

@@ -14,6 +14,30 @@ export function normalizeRelayUrl(url) {
   return normalized;
 }
 
+export function uniqNormalizedRelays(relays = []) {
+  return Array.from(new Set(relays.map(normalizeRelayUrl).filter(Boolean)));
+}
+
+export function mergeRequiredRelays(requiredRelays = [], customRelays = []) {
+  const requiredSet = new Set(requiredRelays.filter(Boolean));
+  const merged = [...requiredRelays.filter(Boolean)];
+
+  for (const relay of uniqNormalizedRelays(customRelays)) {
+    if (!requiredSet.has(relay)) {
+      merged.push(relay);
+    }
+  }
+
+  return merged;
+}
+
+export function excludeRequiredRelays(customRelays = [], requiredRelays = []) {
+  const requiredSet = new Set(requiredRelays.filter(Boolean));
+  return uniqNormalizedRelays(customRelays).filter((relay) => {
+    return !requiredSet.has(relay);
+  });
+}
+
 /**
  * Extracts and normalizes photo data from NIP-360 (Place Photos) events.
  * Sorts chronologically and guarantees the first landscape photo (or first portrait) is at index 0.
