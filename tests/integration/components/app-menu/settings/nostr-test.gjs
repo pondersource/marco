@@ -43,7 +43,10 @@ class MockNostrDataService extends Service {
   }
 
   get activeReadRelays() {
-    return mergeRequiredRelays(this.requiredReadRelays, this.configuredReadRelays);
+    return mergeRequiredRelays(
+      this.requiredReadRelays,
+      this.configuredReadRelays
+    );
   }
 
   get activeWriteRelays() {
@@ -131,20 +134,26 @@ module('Integration | Component | app-menu/settings/nostr', function (hooks) {
   });
 
   test('adding read relay clears existing exclusion for same relay', async function (assert) {
-    this.settings.update('nostrReadRelayExclusions', ['wss://mailbox.example.com']);
+    this.settings.update('nostrReadRelayExclusions', [
+      'wss://mailbox.example.com',
+    ]);
 
     const element = await renderAndOpenDetails(this);
 
     await fillIn('#new-read-relay', 'Mailbox.EXAMPLE.com/');
     await click(element.querySelector('#new-read-relay').nextElementSibling);
 
-    assert.deepEqual(this.settings.nostrReadRelays, ['wss://mailbox.example.com']);
+    assert.deepEqual(this.settings.nostrReadRelays, [
+      'wss://mailbox.example.com',
+    ]);
     assert.strictEqual(this.settings.nostrReadRelayExclusions, null);
   });
 
   test('reset read relays clears additions and exclusions', async function (assert) {
     this.settings.update('nostrReadRelays', ['wss://custom.example.com']);
-    this.settings.update('nostrReadRelayExclusions', ['wss://mailbox.example.com']);
+    this.settings.update('nostrReadRelayExclusions', [
+      'wss://mailbox.example.com',
+    ]);
 
     const element = await renderAndOpenDetails(this);
     await click(element.querySelectorAll('.reset-relays')[0]);
@@ -157,7 +166,9 @@ module('Integration | Component | app-menu/settings/nostr', function (hooks) {
   });
 
   test('write relays are removable and mailbox delete stores exclusion', async function (assert) {
-    this.settings.update('nostrWriteRelays', ['wss://custom-write.example.com']);
+    this.settings.update('nostrWriteRelays', [
+      'wss://custom-write.example.com',
+    ]);
 
     const element = await renderAndOpenDetails(this);
     const rows = writeRows(element);

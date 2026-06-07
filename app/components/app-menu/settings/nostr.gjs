@@ -60,7 +60,9 @@ export default class AppMenuSettingsNostr extends Component {
   }
 
   get hasReadOverrides() {
-    return this.customReadRelays.length > 0 || this.readRelayExclusions.length > 0;
+    return (
+      this.customReadRelays.length > 0 || this.readRelayExclusions.length > 0
+    );
   }
 
   get hasWriteOverrides() {
@@ -106,7 +108,10 @@ export default class AppMenuSettingsNostr extends Component {
       ...this.customReadRelays,
       url,
     ]);
-    const custom = excludeRequiredRelays(merged, this.nostrData.requiredReadRelays);
+    const custom = excludeRequiredRelays(
+      merged,
+      this.nostrData.requiredReadRelays
+    );
 
     const readExclusions = this.readRelayExclusions.filter((relay) => {
       return normalizeRelayUrl(relay) !== url;

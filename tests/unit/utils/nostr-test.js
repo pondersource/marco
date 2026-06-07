@@ -197,6 +197,9 @@ module('Unit | Utility | nostr', function () {
       ['required.example.com']
     );
 
-    assert.deepEqual(relays, ['wss://required.example.com', 'wss://custom.example.com']);
+    assert.deepEqual(relays, [
+      'wss://required.example.com',
+      'wss://custom.example.com',
+    ]);
   });
 });
