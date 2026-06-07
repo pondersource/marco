@@ -1,5 +1,11 @@
 import { module, test } from 'qunit';
-import { normalizeRelayUrl, parsePlacePhotos } from 'marco/utils/nostr';
+import {
+  excludeRequiredRelays,
+  mergeRequiredRelays,
+  normalizeRelayUrl,
+  parsePlacePhotos,
+  uniqNormalizedRelays,
+} from 'marco/utils/nostr';
 
 module('Unit | Utility | nostr', function () {
   test('normalizeRelayUrl normalizes protocol, case, and slashes', function (assert) {
@@ -140,5 +146,57 @@ module('Unit | Utility | nostr', function () {
     assert.strictEqual(photos.length, 2);
     assert.strictEqual(photos[0].placeIdentifier, 'osm:node:123');
     assert.strictEqual(photos[1].placeIdentifier, 'osm:node:456');
+  });
+
+  test('uniqNormalizedRelays returns normalized unique relays', function (assert) {
+    const relays = uniqNormalizedRelays([
+      'Relay.example.com',
+      'wss://relay.example.com/',
+      'wss://other.example.com',
+    ]);
+
+    assert.deepEqual(relays, [
+      'wss://relay.example.com',
+      'wss://other.example.com',
+    ]);
+  });
+
+  test('mergeRequiredRelays keeps required relays as-is and merges normalized custom relays', function (assert) {
+    const relays = mergeRequiredRelays(
+      ['wss://required.example.com', 'required-2.example.com'],
+      ['required-2.example.com/', 'wss://custom.example.com']
+    );
+
+    assert.deepEqual(relays, [
+      'wss://required.example.com',
+      'required-2.example.com',
+      'wss://required-2.example.com',
+      'wss://custom.example.com',
+    ]);
+  });
+
+  test('excludeRequiredRelays removes required relays from normalized custom list', function (assert) {
+    const relays = excludeRequiredRelays(
+      [
+        'wss://required.example.com',
+        'custom.example.com',
+        'ws://custom2.example.com',
+      ],
+      ['wss://required.example.com']
+    );
+
+    assert.deepEqual(relays, [
+      'wss://custom.example.com',
+      'ws://custom2.example.com',
+    ]);
+  });
+
+  test('excludeRequiredRelays trusts required list without normalizing it', function (assert) {
+    const relays = excludeRequiredRelays(
+      ['Required.example.com', 'custom.example.com'],
+      ['required.example.com']
+    );
+
+    assert.deepEqual(relays, ['wss://required.example.com', 'wss://custom.example.com']);
   });
 });

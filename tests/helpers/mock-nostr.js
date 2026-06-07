@@ -49,11 +49,19 @@ export class MockNostrDataService extends Service {
     return [];
   }
 
-  get defaultReadRelays() {
+  get requiredReadRelays() {
     return [];
   }
 
-  get defaultWriteRelays() {
+  get requiredWriteRelays() {
+    return [];
+  }
+
+  get mailboxReadRelays() {
+    return [];
+  }
+
+  get mailboxWriteRelays() {
     return [];
   }
 

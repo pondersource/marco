@@ -5,7 +5,11 @@ import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { fn } from '@ember/helper';
 import Icon from '#components/icon';
-import { normalizeRelayUrl } from '../../../utils/nostr';
+import {
+  excludeRequiredRelays,
+  mergeRequiredRelays,
+  normalizeRelayUrl,
+} from '../../../utils/nostr';
 
 const stripProtocol = (url) => (url ? url.replace(/^wss?:\/\//, '') : '');
 
@@ -16,6 +20,72 @@ export default class AppMenuSettingsNostr extends Component {
 
   @tracked newReadRelay = '';
   @tracked newWriteRelay = '';
+
+  get customReadRelays() {
+    return excludeRequiredRelays(
+      this.settings.nostrReadRelays || [],
+      this.nostrData.requiredReadRelays
+    );
+  }
+
+  get customWriteRelays() {
+    return excludeRequiredRelays(
+      this.settings.nostrWriteRelays || [],
+      this.nostrData.requiredWriteRelays
+    );
+  }
+
+  get readRelayExclusions() {
+    return this.settings.nostrReadRelayExclusions || [];
+  }
+
+  get writeRelayExclusions() {
+    return this.settings.nostrWriteRelayExclusions || [];
+  }
+
+  get requiredReadRelaySet() {
+    return new Set(this.nostrData.requiredReadRelays.filter(Boolean));
+  }
+
+  get requiredWriteRelaySet() {
+    return new Set(this.nostrData.requiredWriteRelays.filter(Boolean));
+  }
+
+  get mailboxReadRelaySet() {
+    return new Set(this.nostrData.mailboxReadRelays);
+  }
+
+  get mailboxWriteRelaySet() {
+    return new Set(this.nostrData.mailboxWriteRelays);
+  }
+
+  get hasReadOverrides() {
+    return this.customReadRelays.length > 0 || this.readRelayExclusions.length > 0;
+  }
+
+  get hasWriteOverrides() {
+    return (
+      this.customWriteRelays.length > 0 || this.writeRelayExclusions.length > 0
+    );
+  }
+
+  get readRelaysForDisplay() {
+    return this.nostrData.activeReadRelays.map((url) => {
+      return {
+        url,
+        isRequired: this.requiredReadRelaySet.has(url),
+      };
+    });
+  }
+
+  get writeRelaysForDisplay() {
+    return this.nostrData.activeWriteRelays.map((url) => {
+      return {
+        url,
+        isRequired: this.requiredWriteRelaySet.has(url),
+      };
+    });
+  }
 
   @action
   updateNewReadRelay(event) {
@@ -32,19 +102,48 @@ export default class AppMenuSettingsNostr extends Component {
     const url = normalizeRelayUrl(this.newReadRelay);
     if (!url) return;
 
-    const current =
-      this.settings.nostrReadRelays || this.nostrData.defaultReadRelays;
-    const set = new Set([...current, url]);
-    this.settings.update('nostrReadRelays', Array.from(set));
+    const merged = mergeRequiredRelays(this.nostrData.requiredReadRelays, [
+      ...this.customReadRelays,
+      url,
+    ]);
+    const custom = excludeRequiredRelays(merged, this.nostrData.requiredReadRelays);
+
+    const readExclusions = this.readRelayExclusions.filter((relay) => {
+      return normalizeRelayUrl(relay) !== url;
+    });
+
+    this.settings.update('nostrReadRelays', custom.length > 0 ? custom : null);
+    this.settings.update(
+      'nostrReadRelayExclusions',
+      readExclusions.length > 0 ? readExclusions : null
+    );
     this.newReadRelay = '';
   }
 
   @action
   removeReadRelay(url) {
-    const current =
-      this.settings.nostrReadRelays || this.nostrData.defaultReadRelays;
-    const filtered = current.filter((r) => r !== url);
-    this.settings.update('nostrReadRelays', filtered);
+    if (this.requiredReadRelaySet.has(url)) {
+      return;
+    }
+
+    const normalizedUrl = normalizeRelayUrl(url);
+
+    const remainingCustom = this.customReadRelays.filter((relay) => {
+      return normalizeRelayUrl(relay) !== normalizedUrl;
+    });
+
+    const nextExclusions = this.mailboxReadRelaySet.has(normalizedUrl)
+      ? Array.from(new Set([...this.readRelayExclusions, normalizedUrl]))
+      : this.readRelayExclusions;
+
+    this.settings.update(
+      'nostrReadRelays',
+      remainingCustom.length > 0 ? remainingCustom : null
+    );
+    this.settings.update(
+      'nostrReadRelayExclusions',
+      nextExclusions.length > 0 ? nextExclusions : null
+    );
   }
 
   @action
@@ -64,6 +163,7 @@ export default class AppMenuSettingsNostr extends Component {
   @action
   resetReadRelays() {
     this.settings.update('nostrReadRelays', null);
+    this.settings.update('nostrReadRelayExclusions', null);
   }
 
   @action
@@ -71,24 +171,57 @@ export default class AppMenuSettingsNostr extends Component {
     const url = normalizeRelayUrl(this.newWriteRelay);
     if (!url) return;
 
-    const current =
-      this.settings.nostrWriteRelays || this.nostrData.defaultWriteRelays;
-    const set = new Set([...current, url]);
-    this.settings.update('nostrWriteRelays', Array.from(set));
+    const merged = mergeRequiredRelays(this.nostrData.requiredWriteRelays, [
+      ...this.customWriteRelays,
+      url,
+    ]);
+    const custom = excludeRequiredRelays(
+      merged,
+      this.nostrData.requiredWriteRelays
+    );
+
+    const writeExclusions = this.writeRelayExclusions.filter((relay) => {
+      return normalizeRelayUrl(relay) !== url;
+    });
+
+    this.settings.update('nostrWriteRelays', custom.length > 0 ? custom : null);
+    this.settings.update(
+      'nostrWriteRelayExclusions',
+      writeExclusions.length > 0 ? writeExclusions : null
+    );
     this.newWriteRelay = '';
   }
 
   @action
   removeWriteRelay(url) {
-    const current =
-      this.settings.nostrWriteRelays || this.nostrData.defaultWriteRelays;
-    const filtered = current.filter((r) => r !== url);
-    this.settings.update('nostrWriteRelays', filtered);
+    if (this.requiredWriteRelaySet.has(url)) {
+      return;
+    }
+
+    const normalizedUrl = normalizeRelayUrl(url);
+
+    const remainingCustom = this.customWriteRelays.filter((relay) => {
+      return normalizeRelayUrl(relay) !== normalizedUrl;
+    });
+
+    const nextExclusions = this.mailboxWriteRelaySet.has(normalizedUrl)
+      ? Array.from(new Set([...this.writeRelayExclusions, normalizedUrl]))
+      : this.writeRelayExclusions;
+
+    this.settings.update(
+      'nostrWriteRelays',
+      remainingCustom.length > 0 ? remainingCustom : null
+    );
+    this.settings.update(
+      'nostrWriteRelayExclusions',
+      nextExclusions.length > 0 ? nextExclusions : null
+    );
   }
 
   @action
   resetWriteRelays() {
     this.settings.update('nostrWriteRelays', null);
+    this.settings.update('nostrWriteRelayExclusions', null);
   }
 
   @action
@@ -112,18 +245,20 @@ export default class AppMenuSettingsNostr extends Component {
         <div class="form-group">
           <label for="new-read-relay">Read Relays</label>
           <ul class="relay-list">
-            {{#each this.nostrData.activeReadRelays as |relay|}}
+            {{#each this.readRelaysForDisplay as |relay|}}
               <li>
-                <span>{{stripProtocol relay}}</span>
-                <button
-                  type="button"
-                  class="btn-remove-relay"
-                  title="Remove relay"
-                  aria-label="Remove"
-                  {{on "click" (fn this.removeReadRelay relay)}}
-                >
-                  <Icon @name="x" @size={{14}} @color="currentColor" />
-                </button>
+                <span>{{stripProtocol relay.url}}</span>
+                {{#unless relay.isRequired}}
+                  <button
+                    type="button"
+                    class="btn-remove-relay"
+                    title="Remove relay"
+                    aria-label="Remove"
+                    {{on "click" (fn this.removeReadRelay relay.url)}}
+                  >
+                    <Icon @name="x" @size={{14}} @color="currentColor" />
+                  </button>
+                {{/unless}}
               </li>
             {{/each}}
           </ul>
@@ -143,7 +278,7 @@ export default class AppMenuSettingsNostr extends Component {
               {{on "click" this.addReadRelay}}
             >Add</button>
           </div>
-          {{#if this.settings.nostrReadRelays}}
+          {{#if this.hasReadOverrides}}
             <button
               type="button"
               class="btn-link reset-relays"
@@ -157,18 +292,20 @@ export default class AppMenuSettingsNostr extends Component {
         <div class="form-group">
           <label for="new-write-relay">Write Relays</label>
           <ul class="relay-list">
-            {{#each this.nostrData.activeWriteRelays as |relay|}}
+            {{#each this.writeRelaysForDisplay as |relay|}}
               <li>
-                <span>{{stripProtocol relay}}</span>
-                <button
-                  type="button"
-                  class="btn-remove-relay"
-                  title="Remove relay"
-                  aria-label="Remove"
-                  {{on "click" (fn this.removeWriteRelay relay)}}
-                >
-                  <Icon @name="x" @size={{14}} @color="currentColor" />
-                </button>
+                <span>{{stripProtocol relay.url}}</span>
+                {{#unless relay.isRequired}}
+                  <button
+                    type="button"
+                    class="btn-remove-relay"
+                    title="Remove relay"
+                    aria-label="Remove"
+                    {{on "click" (fn this.removeWriteRelay relay.url)}}
+                  >
+                    <Icon @name="x" @size={{14}} @color="currentColor" />
+                  </button>
+                {{/unless}}
               </li>
             {{/each}}
           </ul>
@@ -188,7 +325,7 @@ export default class AppMenuSettingsNostr extends Component {
               {{on "click" this.addWriteRelay}}
             >Add</button>
           </div>
-          {{#if this.settings.nostrWriteRelays}}
+          {{#if this.hasWriteOverrides}}
             <button
               type="button"
               class="btn-link reset-relays"

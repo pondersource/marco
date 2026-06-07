@@ -9,6 +9,8 @@ const DEFAULT_SETTINGS = {
   nostrPhotoFallbackUploads: false,
   nostrReadRelays: null,
   nostrWriteRelays: null,
+  nostrReadRelayExclusions: null,
+  nostrWriteRelayExclusions: null,
   experimentalEnablePhotoDeletion: false,
 };
 
@@ -21,6 +23,9 @@ export default class SettingsService extends Service {
     DEFAULT_SETTINGS.nostrPhotoFallbackUploads;
   @tracked nostrReadRelays = DEFAULT_SETTINGS.nostrReadRelays;
   @tracked nostrWriteRelays = DEFAULT_SETTINGS.nostrWriteRelays;
+  @tracked nostrReadRelayExclusions = DEFAULT_SETTINGS.nostrReadRelayExclusions;
+  @tracked nostrWriteRelayExclusions =
+    DEFAULT_SETTINGS.nostrWriteRelayExclusions;
   @tracked experimentalEnablePhotoDeletion =
     DEFAULT_SETTINGS.experimentalEnablePhotoDeletion;
 
@@ -111,6 +116,8 @@ export default class SettingsService extends Service {
     this.nostrPhotoFallbackUploads = finalSettings.nostrPhotoFallbackUploads;
     this.nostrReadRelays = finalSettings.nostrReadRelays;
     this.nostrWriteRelays = finalSettings.nostrWriteRelays;
+    this.nostrReadRelayExclusions = finalSettings.nostrReadRelayExclusions;
+    this.nostrWriteRelayExclusions = finalSettings.nostrWriteRelayExclusions;
     this.experimentalEnablePhotoDeletion =
       finalSettings.experimentalEnablePhotoDeletion;
 
@@ -127,6 +134,8 @@ export default class SettingsService extends Service {
       nostrPhotoFallbackUploads: this.nostrPhotoFallbackUploads,
       nostrReadRelays: this.nostrReadRelays,
       nostrWriteRelays: this.nostrWriteRelays,
+      nostrReadRelayExclusions: this.nostrReadRelayExclusions,
+      nostrWriteRelayExclusions: this.nostrWriteRelayExclusions,
       experimentalEnablePhotoDeletion: this.experimentalEnablePhotoDeletion,
     };
     localStorage.setItem('marco:settings', JSON.stringify(settings));
