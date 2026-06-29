@@ -334,4 +334,54 @@ module('Integration | Component | place-details', function (hooks) {
     assert.dom(links[0]).hasText('+44 987 654 321');
     assert.dom(links[1]).hasText('+1 234-567 8900');
   });
+
+  test('it renders correct OpenStreetMap link for an OSM place', async function (assert) {
+    const place = {
+      title: 'OSM Place',
+      osmId: '12345',
+      osmType: 'node',
+      lat: 52.520008,
+      lon: 13.404954,
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    const osmLink = this.element.querySelector(
+      '.meta-info a[href^="https://www.openstreetmap.org/node/12345"]'
+    );
+    assert.ok(osmLink, 'OpenStreetMap link is rendered');
+    assert.strictEqual(
+      osmLink.getAttribute('href'),
+      'https://www.openstreetmap.org/node/12345'
+    );
+
+    assert.dom('button.btn-link').hasText('Add a photo');
+  });
+
+  test('it renders correct search-based OpenStreetMap link for a custom saved place', async function (assert) {
+    class MockMapUi extends Service {
+      currentCenter = { lat: 52.5, lon: 13.4 };
+      currentZoom = 15.6;
+    }
+    this.owner.register('service:map-ui', MockMapUi);
+
+    const place = {
+      title: 'Custom Place',
+      lat: 52.520008,
+      lon: 13.404954,
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    const osmLink = this.element.querySelector(
+      '.meta-info a[href^="https://www.openstreetmap.org/search"]'
+    );
+    assert.ok(osmLink, 'OpenStreetMap search link is rendered');
+    assert.strictEqual(
+      osmLink.getAttribute('href'),
+      'https://www.openstreetmap.org/search?lat=52.520008&lon=13.404954&zoom=16#map=16/52.50000/13.40000'
+    );
+
+    assert.dom('button.btn-link').doesNotExist();
+  });
 });
