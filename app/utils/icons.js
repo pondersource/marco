@@ -60,7 +60,9 @@ import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
 import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.svg?raw';
 import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
 import carAndWrench from '@waysidemapping/pinhead/dist/icons/car_and_wrench.svg?raw';
+import castleKeep from '@waysidemapping/pinhead/dist/icons/castle_keep.svg?raw';
 import cigaretteWithSmokeCurl from '@waysidemapping/pinhead/dist/icons/cigarette_with_smoke_curl.svg?raw';
+import cityGate from '@waysidemapping/pinhead/dist/icons/city_gate.svg?raw';
 import classicalBuilding from '@waysidemapping/pinhead/dist/icons/classical_building.svg?raw';
 import classicalBuildingWithClock from '@waysidemapping/pinhead/dist/icons/classical_building_with_clock.svg?raw';
 import classicalBuildingWithDomeAndFlag from '@waysidemapping/pinhead/dist/icons/classical_building_with_dome_and_flag.svg?raw';
@@ -159,6 +161,7 @@ const ICONS = {
   'chevron-left': chevronLeft,
   'chevron-right': chevronRight,
   'cigarette-with-smoke-curl': cigaretteWithSmokeCurl,
+  'city-gate': cityGate,
   climbing_wall: climbingWall,
   check,
   'alert-circle': alertCircle,
@@ -266,6 +269,7 @@ const ICONS = {
   parking_p: parkingP,
   car,
   'car-and-wrench': carAndWrench,
+  'castle-keep': castleKeep,
   x,
   zap,
   'loading-ring': loadingRing,
