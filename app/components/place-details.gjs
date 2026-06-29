@@ -23,6 +23,7 @@ export default class PlaceDetails extends Component {
   @service storage;
   @service nostrAuth;
   @service nostrData;
+  @service mapUi;
   @tracked isEditing = false;
   @tracked showLists = false;
   @tracked isPhotoUploadActive = false;
@@ -345,9 +346,21 @@ export default class PlaceDetails extends Component {
 
   get osmUrl() {
     const id = this.place.osmId;
-    if (!id) return null;
-    const type = this.place.osmType || 'node';
-    return `https://www.openstreetmap.org/${type}/${id}`;
+    if (id) {
+      const type = this.place.osmType || 'node';
+      return `https://www.openstreetmap.org/${type}/${id}`;
+    }
+
+    const lat = this.place.lat;
+    const lon = this.place.lon;
+    if (!lat || !lon) return null;
+
+    const viewLat = this.mapUi.currentCenter?.lat ?? lat;
+    const viewLon = this.mapUi.currentCenter?.lon ?? lon;
+    const zoom = this.mapUi.currentZoom ?? 17;
+    const roundedZoom = Math.round(zoom);
+
+    return `https://www.openstreetmap.org/search?lat=${lat}&lon=${lon}&zoom=${roundedZoom}#map=${roundedZoom}/${Number(viewLat).toFixed(5)}/${Number(viewLon).toFixed(5)}`;
   }
 
   get gmapsUrl() {
@@ -591,7 +604,7 @@ export default class PlaceDetails extends Component {
 
       </div>
 
-      {{#if this.osmUrl}}
+      {{#if this.place.osmId}}
         <div class="meta-info">
           <p class="content-with-icon">
             <Icon @name="feather-camera" />

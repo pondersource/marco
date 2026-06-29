@@ -56,14 +56,23 @@ const PLACE_TYPE_KEYS = [
 export function getPlaceType(tags) {
   if (!tags) return null;
 
+  let fallbackKey = null;
+
   for (const key of PLACE_TYPE_KEYS) {
     const value = tags[key];
     if (value) {
       if (value === 'yes') {
-        return humanizeOsmTag(key);
+        if (!fallbackKey) {
+          fallbackKey = key;
+        }
+        continue;
       }
       return humanizeOsmTag(value);
     }
+  }
+
+  if (fallbackKey) {
+    return humanizeOsmTag(fallbackKey);
   }
 
   return null;
