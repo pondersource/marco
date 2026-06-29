@@ -1266,6 +1266,20 @@ span.icon {
   gap: 0.5rem;
 }
 
+.content-with-icon > span:not(.icon) {
+  min-width: 0;
+  flex: 1;
+}
+
+.content-with-icon > span:not(.icon) a {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
 .content-with-icon .icon {
   margin-top: 0.15rem;
 }
