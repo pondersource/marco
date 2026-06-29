@@ -1,4 +1,5 @@
-import { getIconNameForTags } from 'marco/utils/osm-icons';
+import { getIconNameForTags, POI_ICON_RULES } from 'marco/utils/osm-icons';
+import { getIcon } from 'marco/utils/icons';
 import { module, test } from 'qunit';
 
 module('Unit | Utility | osm-icons', function () {
@@ -35,5 +36,15 @@ module('Unit | Utility | osm-icons', function () {
   test('it returns null for unknown tags', function (assert) {
     let result = getIconNameForTags({ foo: 'bar' });
     assert.strictEqual(result, null);
+  });
+
+  test('all icons used in POI_ICON_RULES exist in the icons utility', function (assert) {
+    for (let rule of POI_ICON_RULES) {
+      let icon = getIcon(rule.icon);
+      assert.ok(
+        icon,
+        `Icon "${rule.icon}" specified in POI_ICON_RULES should be imported and available in getIcon`
+      );
+    }
   });
 });

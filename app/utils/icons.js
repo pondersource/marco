@@ -1,4 +1,7 @@
 // AGENT: Keep imports sorted alphabetically, grouped by feather-icons → pinhead → custom/local
+/*
+ * Feather icons
+ */
 import activity from 'feather-icons/dist/icons/activity.svg?raw';
 import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
@@ -40,6 +43,9 @@ import check from 'feather-icons/dist/icons/check.svg?raw';
 import alertCircle from 'feather-icons/dist/icons/alert-circle.svg?raw';
 import zap from 'feather-icons/dist/icons/zap.svg?raw';
 
+/*
+ * Pinhead icons
+ */
 import angelfish from '@waysidemapping/pinhead/dist/icons/angelfish.svg?raw';
 import barbell from '@waysidemapping/pinhead/dist/icons/barbell.svg?raw';
 import climbingWall from '@waysidemapping/pinhead/dist/icons/climbing_wall.svg?raw';
@@ -84,6 +90,10 @@ import iceCreamOnCone from '@waysidemapping/pinhead/dist/icons/ice_cream_on_cone
 import industrialBuilding from '@waysidemapping/pinhead/dist/icons/industrial_building.svg?raw';
 import jewel from '@waysidemapping/pinhead/dist/icons/jewel.svg?raw';
 import lowriseBuilding from '@waysidemapping/pinhead/dist/icons/lowrise_building.svg?raw';
+import marketStall from '@waysidemapping/pinhead/dist/icons/market_stall.svg?raw';
+import memorialStoneWithInscription from '@waysidemapping/pinhead/dist/icons/memorial_stone_with_inscription.svg?raw';
+import mobilePhoneWithKeypadAndAntenna from '@waysidemapping/pinhead/dist/icons/mobile_phone_with_keypad_and_antenna.svg?raw';
+import molarTooth from '@waysidemapping/pinhead/dist/icons/molar_tooth.svg?raw';
 import needleAndSpoolOfThread from '@waysidemapping/pinhead/dist/icons/needle_and_spool_of_thread.svg?raw';
 import openBook from '@waysidemapping/pinhead/dist/icons/open_book.svg?raw';
 import palace from '@waysidemapping/pinhead/dist/icons/palace.svg?raw';
@@ -118,6 +128,9 @@ import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/w
 import windingWayWide from '@waysidemapping/pinhead/dist/icons/winding_way_wide.svg?raw';
 import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/womens_and_mens_restroom_symbol.svg?raw';
 
+/*
+ * Custom/local icons
+ */
 import loadingRing from '../icons/270-ring.svg?raw';
 import nostrich from '../icons/nostrich-2.svg?raw';
 import remotestorage from '../icons/remotestorage.svg?raw';
@@ -193,7 +206,11 @@ const ICONS = {
   mail,
   map,
   'map-pin': mapPin,
+  'market-stall': marketStall,
+  'memorial-stone-with-inscription': memorialStoneWithInscription,
   menu,
+  'mobile-phone-with-keypad-and-antenna': mobilePhoneWithKeypadAndAntenna,
+  'molar-tooth': molarTooth,
   'more-horizontal': moreHorizontal,
   'more-vertical': moreVertical,
   navigation,
