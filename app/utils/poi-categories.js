@@ -43,7 +43,7 @@ export const POI_CATEGORIES = [
     label: 'Things to do',
     icon: 'feather-camera',
     filter: [
-      '["tourism"~"^(museum|gallery|attraction|viewpoint|zoo|theme_park|aquarium|artwork)$"]',
+      '["tourism"~"^(museum|gallery|attraction|viewpoint|zoo|theme_park|aquarium|artwork|information)$"]',
       '["amenity"~"^(cinema|theatre|arts_centre|planetarium)$"]',
       '["leisure"~"^(sports_centre|stadium|water_park)$"]',
       '["historic"]',

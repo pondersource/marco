@@ -106,6 +106,7 @@ export const POI_ICON_RULES = [
   { tags: { tourism: 'viewpoint' }, icon: 'camera' },
   { tags: { tourism: 'zoo' }, icon: 'camera' },
   { tags: { tourism: 'artwork' }, icon: 'camera' },
+  { tags: { tourism: 'information' }, icon: 'info-i' },
   { tags: { amenity: 'cinema' }, icon: 'film' },
   { tags: { amenity: 'theatre' }, icon: 'camera' },
   { tags: { amenity: 'arts_centre' }, icon: 'comedy-mask-and-tragedy-mask' },

@@ -92,6 +92,7 @@ import grecianVase from '@waysidemapping/pinhead/dist/icons/grecian_vase.svg?raw
 import greekCross from '@waysidemapping/pinhead/dist/icons/greek_cross.svg?raw';
 import iceCreamOnCone from '@waysidemapping/pinhead/dist/icons/ice_cream_on_cone.svg?raw';
 import industrialBuilding from '@waysidemapping/pinhead/dist/icons/industrial_building.svg?raw';
+import infoI from '@waysidemapping/pinhead/dist/icons/info_i.svg?raw';
 import jewel from '@waysidemapping/pinhead/dist/icons/jewel.svg?raw';
 import lowriseBuilding from '@waysidemapping/pinhead/dist/icons/lowrise_building.svg?raw';
 import marketStall from '@waysidemapping/pinhead/dist/icons/market_stall.svg?raw';
@@ -204,6 +205,7 @@ const ICONS = {
   'ice-cream-on-cone': iceCreamOnCone,
   'industrial-building': industrialBuilding,
   info,
+  'info-i': infoI,
   instagram,
   jewel,
   'log-in': logIn,
