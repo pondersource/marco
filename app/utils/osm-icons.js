@@ -27,6 +27,8 @@ export const POI_ICON_RULES = [
 
   { tags: { amenity: 'bank' }, icon: 'banknote' },
   { tags: { amenity: 'place_of_worship' }, icon: 'place-of-worship-building' },
+  { tags: { amenity: 'townhall' }, icon: 'classical-building-with-clock' },
+  { tags: { building: 'townhall' }, icon: 'classical-building-with-clock' },
   { tags: { amenity: 'fire_station' }, icon: 'badge-shield-with-fire' },
   { tags: { amenity: 'police' }, icon: 'police-officer-with-stop-arm' },
   { tags: { amenity: 'toilets' }, icon: 'womens-and-mens-restroom-symbol' },

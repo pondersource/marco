@@ -61,6 +61,7 @@ import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.sv
 import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
 import cigaretteWithSmokeCurl from '@waysidemapping/pinhead/dist/icons/cigarette_with_smoke_curl.svg?raw';
 import classicalBuilding from '@waysidemapping/pinhead/dist/icons/classical_building.svg?raw';
+import classicalBuildingWithClock from '@waysidemapping/pinhead/dist/icons/classical_building_with_clock.svg?raw';
 import classicalBuildingWithDomeAndFlag from '@waysidemapping/pinhead/dist/icons/classical_building_with_dome_and_flag.svg?raw';
 import classicalBuildingWithFlag from '@waysidemapping/pinhead/dist/icons/classical_building_with_flag.svg?raw';
 import commercialBuilding from '@waysidemapping/pinhead/dist/icons/commercial_building.svg?raw';
@@ -162,6 +163,7 @@ const ICONS = {
   'alert-circle': alertCircle,
   'alert-triangle': alertTriangle,
   'classical-building': classicalBuilding,
+  'classical-building-with-clock': classicalBuildingWithClock,
   'classical-building-with-dome-and-flag': classicalBuildingWithDomeAndFlag,
   'classical-building-with-flag': classicalBuildingWithFlag,
   'commercial-building': commercialBuilding,
