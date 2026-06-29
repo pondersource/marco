@@ -74,6 +74,7 @@ export const POI_ICON_RULES = [
     tags: { shop: 'beauty' },
     icon: 'fancy-mirror-with-reflection-and-stars',
   },
+  { tags: { shop: 'car_repair' }, icon: 'car-and-wrench' },
   { tags: { craft: 'tailor' }, icon: 'needle-and-spool-of-thread' },
   { tags: { office: 'estate_agent' }, icon: 'village-buildings' },
   { tags: { office: true }, icon: 'commercial-building' },

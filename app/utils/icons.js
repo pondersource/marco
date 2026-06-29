@@ -59,6 +59,7 @@ import bus from '@waysidemapping/pinhead/dist/icons/bus.svg?raw';
 import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
 import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.svg?raw';
 import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
+import carAndWrench from '@waysidemapping/pinhead/dist/icons/car_and_wrench.svg?raw';
 import cigaretteWithSmokeCurl from '@waysidemapping/pinhead/dist/icons/cigarette_with_smoke_curl.svg?raw';
 import classicalBuilding from '@waysidemapping/pinhead/dist/icons/classical_building.svg?raw';
 import classicalBuildingWithClock from '@waysidemapping/pinhead/dist/icons/classical_building_with_clock.svg?raw';
@@ -264,6 +265,7 @@ const ICONS = {
   winding_way_wide: windingWayWide,
   parking_p: parkingP,
   car,
+  'car-and-wrench': carAndWrench,
   x,
   zap,
   'loading-ring': loadingRing,
