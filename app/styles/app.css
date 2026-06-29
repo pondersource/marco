@@ -460,6 +460,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Ensure flex children are contained */
+  will-change: transform;
+  animation: sidebar-slide-in-left 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .sidebar.app-menu-pane {
@@ -1420,6 +1422,8 @@ button.create-place {
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;
     inset: auto 0 0;
+    animation: sidebar-slide-up-bottom 0.18s cubic-bezier(0.16, 1, 0.3, 1)
+      forwards;
   }
 
   .sidebar-content {
@@ -2136,4 +2140,26 @@ button.create-place {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Snappy slide-in from left (Desktop) */
+@keyframes sidebar-slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Snappy slide-up from bottom (Mobile) */
+@keyframes sidebar-slide-up-bottom {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
 }
