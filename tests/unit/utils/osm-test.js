@@ -89,6 +89,12 @@ module('Unit | Utility | osm', function (hooks) {
     assert.strictEqual(result, 'Building');
   });
 
+  test('getPlaceType ignores generic "yes" values if a more specific tag is present', function (assert) {
+    const tags = { historic: 'yes', building: 'tower' };
+    const result = getPlaceType(tags);
+    assert.strictEqual(result, 'Tower');
+  });
+
   test('getPlaceType prioritizes order (amenity > shop > building)', function (assert) {
     // If something is both a shop and a building, it should be a shop
     const tags = { building: 'yes', shop: 'supermarket' };
