@@ -270,4 +270,76 @@ module('Acceptance | search', function (hooks) {
       .hasText('Search request failed. Please try again.');
     assert.dom('.places-sidebar').doesNotExist('Results panel should not open');
   });
+
+  test('search box query synchronized with active route query parameters', async function (assert) {
+    // Mock Osm Service
+    class MockOsmService extends Service {
+      async getCategoryPois() {
+        return [];
+      }
+    }
+    this.owner.register('service:osm', MockOsmService);
+
+    // Mock Photon Service
+    class MockPhotonService extends Service {
+      async search() {
+        return [];
+      }
+    }
+    this.owner.register('service:photon', MockPhotonService);
+
+    // Mock Storage Service
+    class MockStorageService extends Service {
+      savedPlaces = [];
+      findPlaceById() {
+        return null;
+      }
+      isPlaceSaved() {
+        return false;
+      }
+      rs = { on: () => {} };
+      placesInView = [];
+      loadPlacesInBounds() {
+        return Promise.resolve();
+      }
+    }
+    this.owner.register('service:storage', MockStorageService);
+
+    // Mock Map Service
+    class MockMapService extends Service {
+      getBounds() {
+        return {
+          minLat: 52.5,
+          minLon: 13.4,
+          maxLat: 52.6,
+          maxLon: 13.5,
+        };
+      }
+    }
+    this.owner.register('service:map', MockMapService);
+
+    // 1. Visit a search URL directly
+    await visit('/search?q=Berlin');
+    assert
+      .dom('.search-input')
+      .hasValue(
+        'Berlin',
+        'Search input is populated with search term on direct load'
+      );
+
+    // 2. Visit a category search URL
+    await visit('/search?category=coffee&lat=52.52&lon=13.405');
+    assert
+      .dom('.search-input')
+      .hasValue(
+        'Coffee',
+        'Search input is populated with mapped category label'
+      );
+
+    // 3. Go back to index
+    await visit('/');
+    assert
+      .dom('.search-input')
+      .hasValue('', 'Search input is cleared on transitioning to index');
+  });
 });
