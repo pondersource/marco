@@ -4,6 +4,16 @@ import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import { task } from 'ember-concurrency';
 
+function getPlaceTime(place) {
+  const dateVal = place.createdAt;
+  if (!dateVal) return 0;
+  if (typeof dateVal === 'number') {
+    return dateVal;
+  }
+  const parsed = Date.parse(dateVal);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
 export default class ListsListController extends Controller {
   @service router;
   @service mapUi;
@@ -73,7 +83,7 @@ export default class ListsListController extends Controller {
       }
     });
 
-    return merged;
+    return merged.sort((a, b) => getPlaceTime(b) - getPlaceTime(a));
   }
 
   @action

@@ -135,4 +135,85 @@ module('Acceptance | collections navigation', function (hooks) {
       'Returns gracefully back to lists/to-go list view'
     );
   });
+
+  test('places inside a collection are sorted by createdAt descending', async function (assert) {
+    class SortedMockStorageService extends Service {
+      initialSyncDone = true;
+      savedPlaces = [
+        {
+          id: 'place-oldest',
+          title: 'Oldest Place',
+          geohash: 'u33dc0',
+          createdAt: '2023-01-01T12:00:00.000Z',
+          osmTags: { name: 'Oldest Place' },
+        },
+        {
+          id: 'place-newest',
+          title: 'Newest Place',
+          geohash: 'u33dc0',
+          createdAt: '2023-01-03T12:00:00.000Z',
+          osmTags: { name: 'Newest Place' },
+        },
+        {
+          id: 'place-middle',
+          title: 'Middle Place',
+          geohash: 'u33dc0',
+          createdAt: '2023-01-02T12:00:00.000Z',
+          updatedAt: '2023-01-04T12:00:00.000Z',
+          osmTags: { name: 'Middle Place' },
+        },
+      ];
+      lists = [
+        {
+          id: 'to-go',
+          title: 'Want to go',
+          color: '#2e9e4f',
+          placeRefs: [
+            { id: 'place-oldest', geohash: 'u33dc0' },
+            { id: 'place-newest', geohash: 'u33dc0' },
+            { id: 'place-middle', geohash: 'u33dc0' },
+          ],
+        },
+      ];
+
+      findPlaceById(id) {
+        return this.savedPlaces.find((p) => p.id === id) || null;
+      }
+
+      isPlaceSaved() {
+        return true;
+      }
+
+      loadPlacesInBounds() {
+        return [];
+      }
+
+      getPlacesInList(listId) {
+        if (listId === 'to-go') {
+          return Promise.resolve(this.savedPlaces);
+        }
+        return Promise.resolve([]);
+      }
+
+      rs = {
+        on: () => {},
+      };
+    }
+
+    this.owner.unregister('service:storage');
+    this.owner.register('service:storage', SortedMockStorageService);
+
+    await visit('/lists/to-go');
+    await waitFor('.places-list');
+
+    const placeNames = Array.from(
+      document.querySelectorAll('.places-list .place-name')
+    ).map((el) => el.textContent.trim());
+
+    assert.deepEqual(
+      placeNames,
+      ['Newest Place', 'Middle Place', 'Oldest Place'],
+      'Places are ordered by createdAt in descending order'
+    );
+  });
 });
