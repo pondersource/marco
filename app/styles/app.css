@@ -115,8 +115,6 @@ body {
   display: flex;
   align-items: center;
   grid-area: search;
-
-  /* Ensure it sits at the start of its grid area */
   justify-self: start;
   width: 100%;
 }
@@ -130,7 +128,6 @@ body {
 
 @media (width > 768px) {
   .header-left {
-    /* Desktop: Ensure minimum width for search box so it's not squeezed */
     min-width: 300px;
     max-width: 350px;
   }
@@ -143,8 +140,6 @@ body {
 
 .header-center {
   grid-area: chips;
-
-  /* Desktop: Center the chips block in the available space */
   display: flex;
   justify-content: center;
   min-width: 0; /* Allow shrinking */
@@ -159,7 +154,6 @@ body {
 }
 
 @media (width <= 768px) {
-  /* No need to reset min-width/max-width since they are only set in media query above */
   .header-center {
     width: 100%;
     overflow: hidden;
@@ -486,11 +480,13 @@ body {
 }
 
 .sidebar-header {
-  padding: 1rem;
+  height: 56px; /* Strictly enforce identical vertical height */
+  padding: 0 1rem; /* Keep horizontal padding, remove vertical padding */
   border-bottom: 1px solid var(--divider-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-sizing: border-box; /* Guarantee strict height boundaries */
 }
 
 .sidebar-header.no-border {
@@ -499,7 +495,7 @@ body {
 
 .sidebar-header h2 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -2213,4 +2209,44 @@ button.create-place {
   margin: 0;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* Centered layout when back button is present */
+.sidebar-header.has-back-btn {
+  position: relative;
+  justify-content: center; /* Center horizontally */
+}
+
+/* Absolute positioning for buttons in centered header */
+.sidebar-header.has-back-btn .back-btn {
+  position: absolute;
+  left: 1rem;
+  z-index: 10;
+}
+
+.sidebar-header.has-back-btn .close-btn {
+  position: absolute;
+  right: 1rem;
+  z-index: 10;
+}
+
+/* Centralized Title text */
+.sidebar-header-text-centered {
+  position: relative;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 60%;
+}
+
+.sidebar-header-icon-wrapper {
+  position: absolute;
+  right: 100%;
+  margin-right: 0.5rem;
+  display: flex;
+  align-items: center;
 }

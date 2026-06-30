@@ -5,6 +5,8 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import or from 'ember-truth-helpers/helpers/or';
 import eq from 'ember-truth-helpers/helpers/eq';
+import and from 'ember-truth-helpers/helpers/and';
+import not from 'ember-truth-helpers/helpers/not';
 import PlaceDetails from './place-details';
 import Icon from './icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
@@ -161,7 +163,11 @@ export default class PlacesSidebar extends Component {
 
   <template>
     <div class="sidebar">
-      <div class="sidebar-header {{if this.hasHeaderPhoto 'no-border'}}">
+      <div
+        class="sidebar-header
+          {{if this.hasHeaderPhoto 'no-border'}}
+          {{if (and (not @selectedPlace) @onBack) 'has-back-btn'}}"
+      >
         {{#if @selectedPlace}}
           <button
             type="button"
@@ -176,18 +182,25 @@ export default class PlacesSidebar extends Component {
                 @color="#333"
               /></button>
           {{/if}}
-          {{#if @title}}
-            <h2><Icon
-                @name="bookmark"
-                @size={{20}}
-                @color={{or @color "#898989"}}
-              />
-              {{@title}}</h2>
-          {{else if this.isNearbySearch}}
-            <h2><Icon @name="target" @size={{20}} @color="#ea4335" />
-              Nearby</h2>
+          {{#if @onBack}}
+            <h2 class="sidebar-header-text-centered">
+              <span class="sidebar-header-icon-wrapper">
+                <Icon
+                  @name="bookmark"
+                  @size={{20}}
+                  @color={{or @color "#898989"}}
+                />
+              </span>
+              {{@title}}
+            </h2>
           {{else}}
-            <h2><Icon @name="search" @size={{20}} @color="#333" /> Results</h2>
+            {{#if this.isNearbySearch}}
+              <h2><Icon @name="target" @size={{20}} @color="#ea4335" />
+                Nearby</h2>
+            {{else}}
+              <h2><Icon @name="search" @size={{20}} @color="#333" />
+                Results</h2>
+            {{/if}}
           {{/if}}
         {{/if}}
         <button type="button" class="close-btn" {{on "click" @onClose}}><Icon

@@ -38,12 +38,16 @@ export default class ListsIndexTemplate extends Component {
   <template>
     {{#if this.mapUi.isSidebarVisible}}
       <div class="sidebar">
-        <div class="sidebar-header">
+        <div class="sidebar-header has-back-btn">
           <button type="button" class="back-btn" {{on "click" this.backToMenu}}>
             <Icon @name="arrow-left" @size={{20}} @color="#333" />
           </button>
-          <h2><Icon @name="bookmark" @size={{20}} @color="#898989" />
-            Collections</h2>
+          <h2 class="sidebar-header-text-centered">
+            <span class="sidebar-header-icon-wrapper">
+              <Icon @name="bookmark" @size={{20}} @color="#898989" />
+            </span>
+            Collections
+          </h2>
           <button type="button" class="close-btn" {{on "click" this.close}}>
             <Icon @name="x" @size={{20}} @color="#333" />
           </button>

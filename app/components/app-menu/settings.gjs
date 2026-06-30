@@ -21,11 +21,11 @@ export default class AppMenuSettings extends Component {
   }
 
   <template>
-    <div class="sidebar-header">
+    <div class="sidebar-header has-back-btn">
       <button type="button" class="back-btn" {{on "click" @onBack}}>
         <Icon @name="arrow-left" @size={{20}} @color="#333" />
       </button>
-      <h2>Settings</h2>
+      <h2 class="sidebar-header-text-centered">Settings</h2>
       <button type="button" class="close-btn" {{on "click" @onClose}}>
         <Icon @name="x" @size={{20}} @color="#333" />
       </button>
