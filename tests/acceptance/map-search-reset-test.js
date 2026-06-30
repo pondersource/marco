@@ -101,7 +101,7 @@ module('Acceptance | map search reset', function (hooks) {
         'Should have stayed on the search route with markers intact'
       );
 
-      // Second Click (Start new search)
+      // Second Click (Clear search and markers)
       // Click slightly differently to ensure fresh event
       await triggerEvent(canvas, 'pointerdown', {
         clientX: 250,
@@ -125,11 +125,6 @@ module('Acceptance | map search reset', function (hooks) {
     // 3. Wait for transition
     await new Promise((r) => setTimeout(r, 1000));
 
-    const newUrl = currentURL();
-    assert.notOk(
-      newUrl.includes('category=coffee'),
-      `New URL ${newUrl} should not contain category param`
-    );
-    assert.ok(newUrl.includes('/search'), 'Should be on search route');
+    assert.strictEqual(currentURL(), '/', 'Should have transitioned to index');
   });
 });

@@ -1191,6 +1191,12 @@ export default class MapComponent extends Component {
       return;
     }
 
+    if (this.mapUi.searchResults && this.mapUi.searchResults.length > 0) {
+      console.debug('Clearing active search and markers on map click');
+      this.router.transitionTo('index');
+      return;
+    }
+
     // Require Zoom >= 17 for generic map searches
     // This prevents accidental searches when interacting with the map at a high level
     const currentZoom = this.mapInstance.getView().getZoom();
