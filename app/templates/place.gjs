@@ -77,8 +77,14 @@ export default class PlaceTemplate extends Component {
   navigateBack(place) {
     // The sidebar calls this with null when "Back" is clicked.
     if (place === null) {
+      // If we have an active route context (e.g. lists), return to it
+      if (this.mapUi.returnToRoute) {
+        this.mapUi.showSidebar();
+        const { name, model } = this.mapUi.returnToRoute;
+        this.router.transitionTo(name, model);
+      }
       // If we have an active search context, return to it (UP navigation)
-      if (this.mapUi.returnToSearch && this.mapUi.currentSearch) {
+      else if (this.mapUi.returnToSearch && this.mapUi.currentSearch) {
         this.mapUi.showSidebar();
         this.router.transitionTo('search', {
           queryParams: this.mapUi.currentSearch,

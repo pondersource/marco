@@ -2,7 +2,6 @@ import { module, test } from 'qunit';
 import { visit, currentURL, waitFor, triggerEvent } from '@ember/test-helpers';
 import { setupApplicationTest } from 'marco/tests/helpers';
 import Service from '@ember/service';
-import sinon from 'sinon';
 
 module('Acceptance | map search reset', function (hooks) {
   setupApplicationTest(hooks);
@@ -17,58 +16,10 @@ module('Acceptance | map search reset', function (hooks) {
       'marco:map-view',
       JSON.stringify(highZoomState)
     );
-
-    // Stub window.fetch using Sinon
-    // We want to intercept map style requests and let everything else through
-    this.fetchStub = sinon.stub(window, 'fetch');
-
-    this.fetchStub.callsFake(async (input, init) => {
-      let url = input;
-      if (typeof input === 'object' && input !== null && 'url' in input) {
-        url = input.url;
-      }
-
-      if (
-        typeof url === 'string' &&
-        url.includes('tiles.openfreemap.org/styles/liberty')
-      ) {
-        return {
-          ok: true,
-          status: 200,
-          json: async () => ({
-            version: 8,
-            name: 'Liberty',
-            sources: {
-              openmaptiles: {
-                type: 'vector',
-                url: 'https://tiles.openfreemap.org/planet',
-              },
-            },
-            layers: [
-              {
-                id: 'background',
-                type: 'background',
-                paint: {
-                  'background-color': '#123456',
-                },
-              },
-            ],
-            glyphs:
-              'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-            sprite: 'https://tiles.openfreemap.org/sprites/liberty',
-          }),
-        };
-      }
-
-      // Pass through to the original implementation
-      return this.fetchStub.wrappedMethod(input, init);
-    });
   });
 
   hooks.afterEach(function () {
     window.localStorage.removeItem('marco:map-view');
-    // Restore the original fetch
-    this.fetchStub.restore();
   });
 
   test('clicking the map clears the category search parameter', async function (assert) {

@@ -1,5 +1,6 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
+import { action } from '@ember/object';
 
 export default class MapUiService extends Service {
   @service nostrData;
@@ -9,6 +10,7 @@ export default class MapUiService extends Service {
   @tracked isCreating = false;
   @tracked creationCoordinates = null;
   @tracked returnToSearch = false;
+  @tracked returnToRoute = null;
   @tracked currentCenter = null;
   @tracked currentBounds = null;
   @tracked currentZoom = null;
@@ -19,13 +21,33 @@ export default class MapUiService extends Service {
   @tracked currentSearch = null;
   @tracked loadingState = null;
   @tracked isSidebarVisible = false;
+  @tracked isSidebarOpening = false;
+
+  scrollPositions = {};
+
+  @action
+  saveScrollPosition(key, value) {
+    this.scrollPositions[key] = value;
+  }
+
+  @action
+  getScrollPosition(key) {
+    return this.scrollPositions[key] || 0;
+  }
 
   showSidebar() {
-    this.isSidebarVisible = true;
+    if (!this.isSidebarVisible) {
+      this.isSidebarVisible = true;
+      this.isSidebarOpening = true;
+      setTimeout(() => {
+        this.isSidebarOpening = false;
+      }, 250);
+    }
   }
 
   hideSidebar() {
     this.isSidebarVisible = false;
+    this.isSidebarOpening = false;
   }
 
   selectPlace(place, options = {}) {

@@ -20,7 +20,24 @@ export default class SearchController extends Controller {
   category = null;
 
   fetchResultsTask = task({ restartable: true }, async (params) => {
-    // Hide sidebar and clear previous results immediately to signal a new search
+    // 1. Check if the incoming parameters match our currently loaded search
+    const isSameSearch =
+      this.mapUi.currentSearch &&
+      params.q === this.mapUi.currentSearch.q &&
+      params.category === this.mapUi.currentSearch.category &&
+      params.lat === this.mapUi.currentSearch.lat &&
+      params.lon === this.mapUi.currentSearch.lon;
+
+    const hasResults =
+      this.mapUi.searchResults && this.mapUi.searchResults.length > 0;
+
+    // 2. If it's a back navigation to the exact same search, resolve instantly with no animation
+    if (isSameSearch && hasResults) {
+      this.mapUi.showSidebar();
+      return;
+    }
+
+    // 3. Otherwise, this is a brand new search: hide the sidebar and clear previous results immediately to signal a new search
     this.mapUi.hideSidebar();
     this.mapUi.clearSearchResults();
 

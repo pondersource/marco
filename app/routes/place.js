@@ -108,6 +108,7 @@ export default class PlaceRoute extends Route {
     this.mapUi.clearSelection();
     // Reset the "return to search" flag so it doesn't persist to subsequent navigations
     this.mapUi.returnToSearch = false;
+    this.mapUi.returnToRoute = null;
   }
 
   async loadOsmPlace(id, type = null) {

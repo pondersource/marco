@@ -20,6 +20,12 @@ import iconRounded from '../../icons/icon-rounded.svg?raw';
   <div class="sidebar-content">
     <ul class="app-menu">
       <li>
+        <button type="button" {{on "click" @onSavedPlaces}}>
+          <Icon @name="bookmark" @size={{20}} />
+          <span>Collections</span>
+        </button>
+      </li>
+      <li>
         <button type="button" {{on "click" (fn @onNavigate "settings")}}>
           <Icon @name="settings" @size={{20}} />
           <span>Settings</span>

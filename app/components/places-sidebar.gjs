@@ -5,10 +5,13 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import or from 'ember-truth-helpers/helpers/or';
 import eq from 'ember-truth-helpers/helpers/eq';
+import and from 'ember-truth-helpers/helpers/and';
+import not from 'ember-truth-helpers/helpers/not';
 import PlaceDetails from './place-details';
 import Icon from './icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import restoreScroll from '../modifiers/restore-scroll';
 
 export default class PlacesSidebar extends Component {
   @service storage;
@@ -160,7 +163,11 @@ export default class PlacesSidebar extends Component {
 
   <template>
     <div class="sidebar">
-      <div class="sidebar-header {{if this.hasHeaderPhoto 'no-border'}}">
+      <div
+        class="sidebar-header
+          {{if this.hasHeaderPhoto 'no-border'}}
+          {{if (and (not @selectedPlace) @onBack) 'has-back-btn'}}"
+      >
         {{#if @selectedPlace}}
           <button
             type="button"
@@ -168,11 +175,32 @@ export default class PlacesSidebar extends Component {
             {{on "click" this.clearSelection}}
           ><Icon @name="arrow-left" @size={{20}} @color="#333" /></button>
         {{else}}
-          {{#if this.isNearbySearch}}
-            <h2><Icon @name="target" @size={{20}} @color="#ea4335" />
-              Nearby</h2>
+          {{#if @onBack}}
+            <button type="button" class="back-btn" {{on "click" @onBack}}><Icon
+                @name="arrow-left"
+                @size={{20}}
+                @color="#333"
+              /></button>
+          {{/if}}
+          {{#if @onBack}}
+            <h2 class="sidebar-header-text-centered">
+              <span class="sidebar-header-icon-wrapper">
+                <Icon
+                  @name="bookmark"
+                  @size={{20}}
+                  @color={{or @color "#898989"}}
+                />
+              </span>
+              {{@title}}
+            </h2>
           {{else}}
-            <h2><Icon @name="search" @size={{20}} @color="#333" /> Results</h2>
+            {{#if this.isNearbySearch}}
+              <h2><Icon @name="target" @size={{20}} @color="#ea4335" />
+                Nearby</h2>
+            {{else}}
+              <h2><Icon @name="search" @size={{20}} @color="#333" />
+                Results</h2>
+            {{/if}}
           {{/if}}
         {{/if}}
         <button type="button" class="close-btn" {{on "click" @onClose}}><Icon
@@ -182,7 +210,7 @@ export default class PlacesSidebar extends Component {
           /></button>
       </div>
 
-      <div class="sidebar-content">
+      <div class="sidebar-content" {{restoreScroll @scrollTop}}>
         {{#if @selectedPlace}}
           <PlaceDetails
             @place={{@selectedPlace}}
@@ -190,54 +218,58 @@ export default class PlacesSidebar extends Component {
             @onSave={{this.updateBookmark}}
           />
         {{else}}
-          {{#if @places}}
-            <ul class="places-list">
-              {{#each @places as |place|}}
-                <li>
-                  <button
-                    type="button"
-                    class="place-item"
-                    {{on "click" (fn this.selectPlace place)}}
-                  >
-                    <div class="place-name">{{or
-                        place.title
-                        place.osmTags.name
-                        place.osmTags.name:en
-                        "Unnamed Place"
-                      }}</div>
-                    <div class="place-type">
-                      {{#if (eq place.source "osm")}}
-                        {{humanizeOsmTag place.type}}
-                      {{else if (eq place.source "photon")}}
-                        {{place.description}}
-                      {{else}}
-                        {{#if place.osmTags}}
-                          {{humanizeOsmTag (getPlaceType place.osmTags)}}
-                        {{else if place.description}}
-                          {{place.description}}
-                        {{/if}}
-                      {{/if}}
-                    </div>
-                  </button>
-                </li>
-              {{/each}}
-            </ul>
+          {{#if @isLoading}}
+            <div class="sidebar-loading">
+              <Icon @name="loading-ring" @size={{24}} @color="#898989" />
+            </div>
           {{else}}
-            {{#if this.isNearbySearch}}
-              <p class="empty-state">No places found nearby.</p>
+            {{#if @places}}
+              <ul class="places-list">
+                {{#each @places as |place|}}
+                  <li>
+                    <button
+                      type="button"
+                      class="place-item"
+                      {{on "click" (fn this.selectPlace place)}}
+                    >
+                      <div class="place-name">{{or
+                          place.title
+                          place.osmTags.name
+                          place.osmTags.name:en
+                          "Unnamed Place"
+                        }}</div>
+                      <div class="place-type">
+                        {{#if (eq place.source "osm")}}
+                          {{humanizeOsmTag place.type}}
+                        {{else if (eq place.source "photon")}}
+                          {{place.description}}
+                        {{else if (getPlaceType place.osmTags)}}
+                          {{getPlaceType place.osmTags}}
+                        {{else}}
+                          Saved place
+                        {{/if}}
+                      </div>
+                    </button>
+                  </li>
+                {{/each}}
+              </ul>
             {{else}}
-              <p class="empty-state">No results found.</p>
+              {{#if this.isNearbySearch}}
+                <p class="empty-state">No places found nearby.</p>
+              {{else}}
+                <p class="empty-state">No results found.</p>
+              {{/if}}
             {{/if}}
-          {{/if}}
 
-          <button
-            type="button"
-            class="btn btn-outline create-place"
-            {{on "click" this.createNewPlace}}
-          >
-            <Icon @name="plus" @size={{18}} @color="var(--link-color)" />
-            Create new place
-          </button>
+            <button
+              type="button"
+              class="btn btn-outline create-place"
+              {{on "click" this.createNewPlace}}
+            >
+              <Icon @name="plus" @size={{18}} @color="var(--link-color)" />
+              Create new place
+            </button>
+          {{/if}}
         {{/if}}
       </div>
     </div>
