@@ -238,12 +238,10 @@ export default class PlacesSidebar extends Component {
                         {{humanizeOsmTag place.type}}
                       {{else if (eq place.source "photon")}}
                         {{place.description}}
+                      {{else if (getPlaceType place.osmTags)}}
+                        {{getPlaceType place.osmTags}}
                       {{else}}
-                        {{#if place.osmTags}}
-                          {{humanizeOsmTag (getPlaceType place.osmTags)}}
-                        {{else if place.description}}
-                          {{place.description}}
-                        {{/if}}
+                        Saved place
                       {{/if}}
                     </div>
                   </button>
