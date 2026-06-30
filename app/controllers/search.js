@@ -33,7 +33,9 @@ export default class SearchController extends Controller {
 
     // 2. If it's a back navigation to the exact same search, resolve instantly with no animation
     if (isSameSearch && hasResults) {
-      this.mapUi.showSidebar();
+      if (this.mapUi.isSidebarVisible) {
+        this.mapUi.showSidebar();
+      }
       return;
     }
 

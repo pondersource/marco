@@ -1088,6 +1088,7 @@ export default class MapComponent extends Component {
     const bbox = { minLat, minLon, maxLat, maxLon };
     this.mapUi.updateBounds(bbox);
     await this.storage.loadPlacesInBounds(bbox);
+    if (this.isDestroying || this.isDestroyed) return;
     this.nostrData.loadPlacesInBounds(bbox);
     this.loadBookmarks(this.storage.placesInView);
 
@@ -1188,6 +1189,12 @@ export default class MapComponent extends Component {
     if (clickedSearchResult) {
       console.debug('Clicked search result:', clickedSearchResult);
       transitionToPlace(clickedSearchResult);
+      return;
+    }
+
+    if (this.mapUi.searchResults && this.mapUi.searchResults.length > 0) {
+      console.debug('Clearing active search and markers on map click');
+      this.router.transitionTo('index');
       return;
     }
 

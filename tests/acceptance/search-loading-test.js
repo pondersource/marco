@@ -169,4 +169,77 @@ module('Acceptance | search loading', function (hooks) {
     // Verify we are back on index (or at least query is gone)
     assert.strictEqual(currentURL(), '/', 'Navigated to index');
   });
+
+  test('quick search pills visibility during category search transition', async function (assert) {
+    const mapUi = this.owner.lookup('service:map-ui');
+    mapUi.currentZoom = 15;
+
+    // Seed localStorage with a high zoom level to ensure quick search buttons show
+    const highZoomState = {
+      center: [13.4, 52.5],
+      zoom: 18,
+    };
+    window.localStorage.setItem(
+      'marco:map-view',
+      JSON.stringify(highZoomState)
+    );
+
+    try {
+      // Make sure quick search buttons setting is enabled
+      const settings = this.owner.lookup('service:settings');
+      settings.showQuickSearchButtons = true;
+
+      // 1. Visit slowly loading category search
+      const catPromise = visit('/search?category=slow_category&lat=1&lon=1');
+      await new Promise((r) => setTimeout(r, 10));
+
+      // Verify loading state is set and pills are visible (i.e. header-center does NOT have .searching)
+      assert.ok(mapUi.loadingState, 'Search is loading');
+      assert
+        .dom('.header-center')
+        .doesNotHaveClass(
+          'searching',
+          'Pills remain visible while search is loading'
+        );
+
+      // Resolve the promise with empty results
+      osmResolve();
+      await catPromise;
+      await settled();
+
+      // Verify search completed and since results are empty, pills are still visible
+      assert.strictEqual(mapUi.searchResults.length, 0, 'No results found');
+      assert
+        .dom('.header-center')
+        .doesNotHaveClass(
+          'searching',
+          'Pills remain visible after search completes with no results'
+        );
+
+      // 2. Now simulate a fast category search that returns results
+      const osmService = this.owner.lookup('service:osm');
+      osmService.getCategoryPois = async () => [
+        {
+          title: 'Latte Art Cafe',
+          lat: 1,
+          lon: 1,
+          osmId: '101',
+          osmType: 'N',
+        },
+      ];
+
+      await visit('/search?category=coffee&lat=1&lon=1');
+
+      // Verify search completed with results, so pills are hidden
+      assert.ok(mapUi.searchResults.length > 0, 'Results found');
+      assert
+        .dom('.header-center')
+        .hasClass(
+          'searching',
+          'Pills are hidden after search completes with results'
+        );
+    } finally {
+      window.localStorage.removeItem('marco:map-view');
+    }
+  });
 });

@@ -9,6 +9,7 @@ import SearchBox from '#components/search-box';
 import CategoryChips from '#components/category-chips';
 import { and } from 'ember-truth-helpers';
 import cachedImage from '../modifiers/cached-image';
+import { POI_CATEGORIES } from '../utils/poi-categories';
 
 export default class AppHeaderComponent extends Component {
   @service storage;
@@ -16,11 +17,59 @@ export default class AppHeaderComponent extends Component {
   @service nostrAuth;
   @service nostrData;
   @service mapUi;
+  @service router;
   @tracked isUserMenuOpen = false;
   @tracked searchQuery = '';
 
-  get hasQuery() {
-    return !!this.searchQuery;
+  constructor() {
+    super(...arguments);
+    if (this.router && typeof this.router.on === 'function') {
+      this.router.on('routeDidChange', this.syncSearchQuery);
+    }
+    this.syncSearchQuery();
+  }
+
+  willDestroy() {
+    if (this.router && typeof this.router.off === 'function') {
+      this.router.off('routeDidChange', this.syncSearchQuery);
+    }
+    super.willDestroy(...arguments);
+  }
+
+  @action
+  syncSearchQuery() {
+    const qp =
+      this.mapUi.currentSearch || this.router?.currentRoute?.queryParams;
+    if (qp?.q) {
+      this.searchQuery = qp.q;
+    } else if (qp?.category) {
+      const category = POI_CATEGORIES.find((c) => c.id === qp.category);
+      this.searchQuery = category ? category.label : qp.category;
+    } else {
+      this.searchQuery = '';
+    }
+  }
+
+  get isSearching() {
+    // 1. If we are actively focusing/typing in the search box with a query, hide pills
+    if (this.mapUi.searchBoxHasFocus && this.searchQuery) {
+      return true;
+    }
+
+    // 2. If we are on the search route, check loading and results status
+    if (this.router?.currentRouteName === 'search') {
+      if (this.mapUi.loadingState) {
+        return false; // Keep pills visible while loading
+      }
+      return this.mapUi.searchResults && this.mapUi.searchResults.length > 0;
+    }
+
+    // 3. Fallback for integration tests (non-search route with a query)
+    if (this.router?.currentRouteName !== 'search' && this.searchQuery) {
+      return true;
+    }
+
+    return false;
   }
 
   get showQuickSearch() {
@@ -61,7 +110,7 @@ export default class AppHeaderComponent extends Component {
       </div>
 
       {{#if this.showQuickSearch}}
-        <div class="header-center {{if this.hasQuery 'searching'}}">
+        <div class="header-center {{if this.isSearching 'searching'}}">
           <CategoryChips @onSelect={{this.handleChipSelect}} />
         </div>
       {{/if}}
