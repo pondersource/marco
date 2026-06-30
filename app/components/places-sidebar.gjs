@@ -218,52 +218,58 @@ export default class PlacesSidebar extends Component {
             @onSave={{this.updateBookmark}}
           />
         {{else}}
-          {{#if @places}}
-            <ul class="places-list">
-              {{#each @places as |place|}}
-                <li>
-                  <button
-                    type="button"
-                    class="place-item"
-                    {{on "click" (fn this.selectPlace place)}}
-                  >
-                    <div class="place-name">{{or
-                        place.title
-                        place.osmTags.name
-                        place.osmTags.name:en
-                        "Unnamed Place"
-                      }}</div>
-                    <div class="place-type">
-                      {{#if (eq place.source "osm")}}
-                        {{humanizeOsmTag place.type}}
-                      {{else if (eq place.source "photon")}}
-                        {{place.description}}
-                      {{else if (getPlaceType place.osmTags)}}
-                        {{getPlaceType place.osmTags}}
-                      {{else}}
-                        Saved place
-                      {{/if}}
-                    </div>
-                  </button>
-                </li>
-              {{/each}}
-            </ul>
+          {{#if @isLoading}}
+            <div class="sidebar-loading">
+              <Icon @name="loading-ring" @size={{24}} @color="#898989" />
+            </div>
           {{else}}
-            {{#if this.isNearbySearch}}
-              <p class="empty-state">No places found nearby.</p>
+            {{#if @places}}
+              <ul class="places-list">
+                {{#each @places as |place|}}
+                  <li>
+                    <button
+                      type="button"
+                      class="place-item"
+                      {{on "click" (fn this.selectPlace place)}}
+                    >
+                      <div class="place-name">{{or
+                          place.title
+                          place.osmTags.name
+                          place.osmTags.name:en
+                          "Unnamed Place"
+                        }}</div>
+                      <div class="place-type">
+                        {{#if (eq place.source "osm")}}
+                          {{humanizeOsmTag place.type}}
+                        {{else if (eq place.source "photon")}}
+                          {{place.description}}
+                        {{else if (getPlaceType place.osmTags)}}
+                          {{getPlaceType place.osmTags}}
+                        {{else}}
+                          Saved place
+                        {{/if}}
+                      </div>
+                    </button>
+                  </li>
+                {{/each}}
+              </ul>
             {{else}}
-              <p class="empty-state">No results found.</p>
+              {{#if this.isNearbySearch}}
+                <p class="empty-state">No places found nearby.</p>
+              {{else}}
+                <p class="empty-state">No results found.</p>
+              {{/if}}
             {{/if}}
-          {{/if}}
 
-          <button
-            type="button"
-            class="btn btn-outline create-place"
-            {{on "click" this.createNewPlace}}
-          >
-            <Icon @name="plus" @size={{18}} @color="var(--link-color)" />
-            Create new place
-          </button>
+            <button
+              type="button"
+              class="btn btn-outline create-place"
+              {{on "click" this.createNewPlace}}
+            >
+              <Icon @name="plus" @size={{18}} @color="var(--link-color)" />
+              Create new place
+            </button>
+          {{/if}}
         {{/if}}
       </div>
     </div>

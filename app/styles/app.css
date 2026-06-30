@@ -2250,3 +2250,11 @@ button.create-place {
   display: flex;
   align-items: center;
 }
+
+/* Sidebar Loading State */
+.sidebar-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+}
