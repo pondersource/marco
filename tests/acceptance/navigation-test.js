@@ -85,7 +85,7 @@ module('Acceptance | navigation', function (hooks) {
     );
   });
 
-  test('closing the sidebar resets the returnToSearch flag', async function (assert) {
+  test('closing the sidebar transitions back to search route when opened from search results', async function (assert) {
     const mapUi = this.owner.lookup('service:map-ui');
 
     await visit('/search?lat=1&lon=1');
@@ -97,7 +97,22 @@ module('Acceptance | navigation', function (hooks) {
     await click('.close-btn');
 
     assert.dom('.sidebar').doesNotExist('Sidebar should be closed');
-    assert.ok(currentURL().includes('/place/'), 'Remains on place route');
+    assert.strictEqual(
+      currentURL(),
+      '/search?lat=1&lon=1',
+      'Should transition back to search route'
+    );
+  });
+
+  test('closing the sidebar when visiting a place directly transitions to index', async function (assert) {
+    await visit('/place/osm:node:123');
+    assert.ok(currentURL().includes('/place/'), 'Visited place directly');
+
+    // Click the Close (X) button
+    await click('.close-btn');
+
+    assert.dom('.sidebar').doesNotExist('Sidebar should be closed');
+    assert.strictEqual(currentURL(), '/', 'Should transition back to index');
   });
 
   test('navigating directly to place and back closes sidebar', async function (assert) {

@@ -55,6 +55,14 @@ export default class ApplicationComponent extends Component {
       this.mapUi.hideSidebar();
       if (name === 'menu' || name.startsWith('lists')) {
         this.router.transitionTo('index');
+      } else if (name === 'place') {
+        if (this.mapUi.returnToSearch && this.mapUi.currentSearch) {
+          this.router.transitionTo('search', {
+            queryParams: this.mapUi.currentSearch,
+          });
+        } else {
+          this.router.transitionTo('index');
+        }
       }
     }
   }

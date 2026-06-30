@@ -104,6 +104,13 @@ export default class PlaceTemplate extends Component {
   close() {
     this.mapUi.clearSelection();
     this.mapUi.hideSidebar();
+    if (this.mapUi.returnToSearch && this.mapUi.currentSearch) {
+      this.router.transitionTo('search', {
+        queryParams: this.mapUi.currentSearch,
+      });
+    } else {
+      this.router.transitionTo('index');
+    }
   }
 
   <template>
