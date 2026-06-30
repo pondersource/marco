@@ -16,9 +16,19 @@ export default class ListsListTemplate extends Component {
     return this.mapUi.getScrollPosition(`list-${this.listId}`);
   }
 
+  get listColor() {
+    const list = this.storage.lists.find((l) => l.id === this.listId);
+    if (list && list.color) {
+      return list.color;
+    }
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue('--default-list-color')
+      .trim();
+  }
+
   get listTitle() {
     const list = this.storage.lists.find((l) => l.id === this.listId);
-    return list ? list.title : 'Saved places';
+    return list ? list.title : 'Collections';
   }
 
   get places() {
@@ -88,6 +98,7 @@ export default class ListsListTemplate extends Component {
       <PlacesSidebar
         @places={{this.places}}
         @title={{this.listTitle}}
+        @color={{this.listColor}}
         @scrollTop={{this.scrollTop}}
         @onSelect={{this.selectPlace}}
         @onClose={{this.close}}

@@ -177,7 +177,11 @@ export default class PlacesSidebar extends Component {
               /></button>
           {{/if}}
           {{#if @title}}
-            <h2><Icon @name="bookmark" @size={{20}} @color="#333" />
+            <h2><Icon
+                @name="bookmark"
+                @size={{20}}
+                @color={{or @color "#898989"}}
+              />
               {{@title}}</h2>
           {{else if this.isNearbySearch}}
             <h2><Icon @name="target" @size={{20}} @color="#ea4335" />

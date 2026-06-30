@@ -12,7 +12,12 @@ export default class ListsIndexTemplate extends Component {
   @service mapUi;
 
   styleFor(color) {
-    return htmlSafe(`background-color: ${color}`);
+    const finalColor =
+      color ||
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--default-list-color')
+        .trim();
+    return htmlSafe(`background-color: ${finalColor}`);
   }
 
   @action
@@ -37,8 +42,8 @@ export default class ListsIndexTemplate extends Component {
           <button type="button" class="back-btn" {{on "click" this.backToMenu}}>
             <Icon @name="arrow-left" @size={{20}} @color="#333" />
           </button>
-          <h2><Icon @name="bookmark" @size={{20}} @color="#333" />
-            Saved places</h2>
+          <h2><Icon @name="bookmark" @size={{20}} @color="#898989" />
+            Collections</h2>
           <button type="button" class="close-btn" {{on "click" this.close}}>
             <Icon @name="x" @size={{20}} @color="#333" />
           </button>

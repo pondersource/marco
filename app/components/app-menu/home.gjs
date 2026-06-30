@@ -22,7 +22,7 @@ import iconRounded from '../../icons/icon-rounded.svg?raw';
       <li>
         <button type="button" {{on "click" @onSavedPlaces}}>
           <Icon @name="bookmark" @size={{20}} />
-          <span>Saved places</span>
+          <span>Collections</span>
         </button>
       </li>
       <li>
