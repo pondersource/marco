@@ -9,6 +9,7 @@ import PlaceDetails from './place-details';
 import Icon from './icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import restoreScroll from '../modifiers/restore-scroll';
 
 export default class PlacesSidebar extends Component {
   @service storage;
@@ -168,7 +169,17 @@ export default class PlacesSidebar extends Component {
             {{on "click" this.clearSelection}}
           ><Icon @name="arrow-left" @size={{20}} @color="#333" /></button>
         {{else}}
-          {{#if this.isNearbySearch}}
+          {{#if @onBack}}
+            <button type="button" class="back-btn" {{on "click" @onBack}}><Icon
+                @name="arrow-left"
+                @size={{20}}
+                @color="#333"
+              /></button>
+          {{/if}}
+          {{#if @title}}
+            <h2><Icon @name="bookmark" @size={{20}} @color="#333" />
+              {{@title}}</h2>
+          {{else if this.isNearbySearch}}
             <h2><Icon @name="target" @size={{20}} @color="#ea4335" />
               Nearby</h2>
           {{else}}
@@ -182,7 +193,7 @@ export default class PlacesSidebar extends Component {
           /></button>
       </div>
 
-      <div class="sidebar-content">
+      <div class="sidebar-content" {{restoreScroll @scrollTop}}>
         {{#if @selectedPlace}}
           <PlaceDetails
             @place={{@selectedPlace}}

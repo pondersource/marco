@@ -10,6 +10,10 @@ export default class SearchTemplate extends Component {
   @action
   selectPlace(place) {
     if (place) {
+      const sidebarContent = document.querySelector('.sidebar-content');
+      if (sidebarContent) {
+        this.mapUi.saveScrollPosition('search', sidebarContent.scrollTop);
+      }
       this.mapUi.returnToSearch = true;
       this.mapUi.showSidebar();
       this.mapUi.preventNextZoom = true;
@@ -28,6 +32,7 @@ export default class SearchTemplate extends Component {
     {{#if this.mapUi.isSidebarVisible}}
       <PlacesSidebar
         @places={{this.mapUi.searchResults}}
+        @scrollTop={{this.mapUi.getScrollPosition "search"}}
         @onSelect={{this.selectPlace}}
         @onClose={{this.close}}
       />

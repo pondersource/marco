@@ -270,6 +270,11 @@ export default class StorageService extends Service {
     }
   }
 
+  async getPlacesInList(listId) {
+    if (!this.places || !this.places.lists) return [];
+    return this.places.lists.getPlaces(listId);
+  }
+
   async loadPlacesInBounds(bbox) {
     // 1. Calculate required prefixes
     const requiredPrefixes = getGeohashPrefixesInBbox(bbox);

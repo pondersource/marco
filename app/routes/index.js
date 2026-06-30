@@ -6,5 +6,6 @@ export default class IndexRoute extends Route {
 
   activate() {
     this.mapUi.clearSearchResults();
+    this.mapUi.hideSidebar();
   }
 }

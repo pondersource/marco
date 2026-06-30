@@ -103,7 +103,7 @@ export default class PlaceListsManager extends Component {
             checked={{this.isSaved}}
             {{on "change" this.toggleSaved}}
           />
-          <span class="list-color"></span>
+          <span class="list-color-dot"></span>
           <span class="list-name">Saved places</span>
         </label>
       </div>
@@ -122,7 +122,7 @@ export default class PlaceListsManager extends Component {
               />
               {{! template-lint-disable no-inline-styles }}
               <span
-                class="list-color"
+                class="list-color-dot"
                 style={{this.styleFor list.color}}
               ></span>
               <span class="list-name">{{list.title}}</span>

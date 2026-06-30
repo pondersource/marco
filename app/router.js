@@ -10,6 +10,10 @@ Router.map(function () {
   this.route('place', { path: '/place/:place_id' });
   this.route('place.new', { path: '/place/new' });
   this.route('search');
+  this.route('menu');
+  this.route('lists', function () {
+    this.route('list', { path: '/:list_id' });
+  });
   this.route('oauth', function () {
     this.route('osm-callback', { path: '/osm/callback' });
   });

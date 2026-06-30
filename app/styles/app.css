@@ -1,8 +1,10 @@
 /* Ember supports plain CSS out of the box. More info: https://cli.emberjs.com/release/advanced-use/stylesheets/ */
 
 :root {
-  --default-list-color: #fc3;
+  --body-text-color: #333;
+  --primary-background-color: #fff;
   --hover-bg: #f8f9fa;
+  --divider-color: #eee;
   --sidebar-width: 350px;
   --link-color: #2a7fff;
   --link-color-visited: #6a4fbf;
@@ -10,6 +12,7 @@
   --marker-color-dark: #b31412;
   --danger-color: var(--marker-color-primary);
   --danger-color-dark: var(--marker-color-dark);
+  --default-list-color: #fc3;
 }
 
 html,
@@ -31,7 +34,7 @@ body {
   font-family: 'Noto Sans', sans-serif;
   font-size: 16px;
   font-weight: normal;
-  color: #333;
+  color: var(--body-text-color);
 }
 
 #root,
@@ -383,7 +386,7 @@ body {
   display: flex;
   flex-direction: column;
   padding: 1rem 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--divider-color);
 }
 
 .account-item:last-child {
@@ -461,6 +464,9 @@ body {
   flex-direction: column;
   overflow: hidden; /* Ensure flex children are contained */
   will-change: transform;
+}
+
+.sidebar-opening .sidebar {
   animation: sidebar-slide-in-left 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -481,7 +487,7 @@ body {
 
 .sidebar-header {
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--divider-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -528,7 +534,7 @@ body {
   padding-left: 1.4rem;
   background: none;
   border: none;
-  color: #333;
+  color: var(--body-text-color);
   cursor: pointer;
   text-align: left;
   font-size: 0.95rem;
@@ -559,7 +565,7 @@ body {
   padding-left: 1.4rem;
   cursor: pointer;
   font-size: 0.95rem;
-  color: #333;
+  color: var(--body-text-color);
   transition: background-color 0.2s;
 }
 
@@ -630,7 +636,7 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #fff;
+  background-color: var(--primary-background-color);
   border: 1px solid var(--danger-color);
   color: var(--danger-color);
   cursor: pointer;
@@ -646,7 +652,7 @@ body {
 .btn-remove-relay:hover,
 .btn-remove-relay:active {
   background-color: var(--danger-color);
-  color: #fff;
+  color: var(--primary-background-color);
 }
 
 .add-relay-input {
@@ -676,7 +682,7 @@ body {
   margin-bottom: 1rem;
   background: var(--hover-bg);
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--divider-color);
 }
 
 .form-group {
@@ -698,8 +704,8 @@ body {
   font-family: inherit;
   font-size: 1rem;
   box-sizing: border-box; /* Ensure padding doesn't overflow width */
-  color: #333;
-  background-color: #fff;
+  color: var(--body-text-color);
+  background-color: var(--primary-background-color);
 }
 
 .form-control:focus {
@@ -710,7 +716,7 @@ body {
 
 select.form-control {
   appearance: none;
-  background-color: #fff;
+  background-color: var(--primary-background-color);
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
@@ -786,7 +792,7 @@ select.form-control {
 .meta-info p:first-child {
   margin-top: 1.2rem;
   padding-top: 1.2rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--divider-color);
 }
 
 .meta-info a,
@@ -845,9 +851,9 @@ abbr[title] {
   width: 100%;
   text-align: left;
   border: none;
-  border-bottom: 1px solid #eee;
-  background: #fff;
-  color: #333;
+  border-bottom: 1px solid var(--divider-color);
+  background: var(--primary-background-color);
+  color: var(--body-text-color);
   padding: 1rem;
   cursor: pointer;
   transition: background 0.2s;
@@ -1018,7 +1024,7 @@ abbr[title] {
   .photo-carousel.inline .photo-carousel-track {
     scroll-snap-type: none;
     gap: 2px;
-    background-color: #fff;
+    background-color: var(--primary-background-color);
   }
 
   .photo-carousel.inline .carousel-slide {
@@ -1097,7 +1103,7 @@ abbr[title] {
 
 .btn-outline {
   background: transparent;
-  color: #333;
+  color: var(--body-text-color);
   border: 1px solid #ccc;
 }
 
@@ -1106,7 +1112,7 @@ abbr[title] {
 }
 
 .btn-secondary {
-  color: #333;
+  color: var(--body-text-color);
   border: 1px solid rgb(255 204 51 / 20%);
   background: rgb(255 204 51 / 30%);
 }
@@ -1363,7 +1369,7 @@ span.icon {
   width: 24px;
   height: 24px;
   transform: translate(-50%, -50%);
-  color: #333;
+  color: var(--body-text-color);
   pointer-events: none;
   z-index: 2000;
   display: none;
@@ -1499,7 +1505,7 @@ button.create-place {
   min-width: 0;
   height: 100%;
   font-size: 1rem;
-  color: #333;
+  color: var(--body-text-color);
   outline: none;
   width: 100%;
   padding: 0 4px;
@@ -1530,7 +1536,7 @@ button.create-place {
 
 .search-submit-btn:hover {
   background: rgb(0 0 0 / 5%);
-  color: #333;
+  color: var(--body-text-color);
 }
 
 .search-clear-btn {
@@ -1548,7 +1554,7 @@ button.create-place {
 
 .search-clear-btn:hover {
   background: rgb(0 0 0 / 5%);
-  color: #333;
+  color: var(--body-text-color);
 }
 
 /* Search Results Popover */
@@ -1617,7 +1623,7 @@ button.create-place {
 
 .result-title {
   font-weight: 500;
-  color: #333;
+  color: var(--body-text-color);
   font-size: 0.95rem;
   white-space: nowrap;
   overflow: hidden;
@@ -1669,7 +1675,7 @@ button.create-place {
   cursor: pointer;
   margin: 0;
   font-size: 0.95rem;
-  color: #333;
+  color: var(--body-text-color);
 }
 
 .place-lists-manager input[type='checkbox'] {
@@ -1679,7 +1685,8 @@ button.create-place {
   cursor: pointer;
 }
 
-.place-lists-manager .list-color {
+/* Shared List Color Dot */
+.list-color-dot {
   width: 12px;
   height: 12px;
   background-color: var(--default-list-color);
@@ -1690,7 +1697,7 @@ button.create-place {
 
 .place-lists-manager .divider {
   height: 1px;
-  background: #eee;
+  background: var(--divider-color);
   margin: 0.5rem 0;
 }
 
@@ -1733,7 +1740,7 @@ button.create-place {
   border: 1px solid #ddd;
   border-radius: 16px; /* Pill shape */
   font-size: 0.9rem;
-  color: #333;
+  color: var(--body-text-color);
   cursor: pointer;
   white-space: nowrap;
   box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
@@ -1745,7 +1752,7 @@ button.create-place {
 }
 
 .category-chip:active {
-  background: #eee;
+  background: var(--divider-color);
 }
 
 .category-chip:disabled {
@@ -1880,7 +1887,7 @@ button.create-place {
 
 .photo-tag-chip {
   background: #f8f9fa;
-  color: #333;
+  color: var(--body-text-color);
   border: none;
   border-radius: 16px;
   padding: 6px 12px;
@@ -1890,7 +1897,7 @@ button.create-place {
 }
 
 .photo-tag-chip:hover {
-  background: #eee;
+  background: var(--divider-color);
 }
 
 .photo-tag-chip.is-selected {
@@ -2121,7 +2128,7 @@ button.create-place {
   text-align: left;
   cursor: pointer;
   font-size: 0.95rem;
-  color: #333;
+  color: var(--body-text-color);
   white-space: nowrap;
 }
 
@@ -2162,4 +2169,48 @@ button.create-place {
   to {
     transform: translateY(0);
   }
+}
+
+/* Lists Index Sidebar Menu */
+.lists-index-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--divider-color);
+  background: var(--primary-background-color);
+  color: var(--body-text-color);
+  padding: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lists-index-item:hover {
+  background: var(--hover-bg);
+}
+
+.lists-index-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.lists-index-name {
+  font-size: 0.95rem;
+  font-weight: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lists-index-count {
+  color: #666;
+  font-size: 0.85rem;
+  margin: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
