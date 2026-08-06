@@ -150,9 +150,6 @@ export default class NostrAuthService extends Service {
       const relay = DEFAULT_CONNECT_RELAY;
       localStorage.setItem(STORAGE_KEY_CONNECT_RELAY, relay);
 
-      // Override aggressive 10s EOSE timeout to allow time for QR scanning
-      this.nostrRelay.pool.relay(relay).eoseTimeout = 180000; // 3 minutes
-
       this._signerInstance = new NostrConnectSigner({
         pool: this.nostrRelay.pool,
         relays: [relay],
@@ -234,9 +231,6 @@ export default class NostrAuthService extends Service {
     }
 
     const localSigner = this._getLocalSigner();
-
-    // Override aggressive 10s EOSE timeout to allow time for QR scanning
-    this.nostrRelay.pool.relay(relay).eoseTimeout = 180000; // 3 minutes
 
     this._signerInstance = new NostrConnectSigner({
       pool: this.nostrRelay.pool,

@@ -6,6 +6,9 @@ import PhotoGallery from 'marco/components/photo-gallery';
 import { setupNostrMocks } from 'marco/tests/helpers/mock-nostr';
 import sinon from 'sinon';
 
+const USER_A = 'a'.repeat(64);
+const USER_B = 'b'.repeat(64);
+
 class MockBlossomService extends Service {
   async delete() {
     return true;
@@ -34,7 +37,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
     this.photos = [
       {
         eventId: 'event1',
-        pubkey: 'userA',
+        pubkey: USER_A,
         placeIdentifier: 'osm:node:12345',
         url: 'https://example.com/a3b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1.jpg',
         thumbUrl:
@@ -42,7 +45,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
       },
       {
         eventId: 'event2',
-        pubkey: 'userB',
+        pubkey: USER_B,
         placeIdentifier: 'osm:node:12345',
         url: 'photo2.jpg',
       },
@@ -55,7 +58,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
   });
 
   test('it does not show delete button if user is not creator', async function (assert) {
-    this.nostrAuth.pubkey = 'userB'; // Different from photo1's pubkey
+    this.nostrAuth.pubkey = USER_B; // Different from photo1's pubkey
     this.selectedPhoto = this.photos[0];
 
     await render(
@@ -80,7 +83,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
   });
 
   test('it shows delete button if user is creator and setting is enabled', async function (assert) {
-    this.nostrAuth.pubkey = 'userA'; // Matches photo1's pubkey
+    this.nostrAuth.pubkey = USER_A; // Matches photo1's pubkey
     this.settings.update('experimentalEnablePhotoDeletion', true); // Enable the setting
     this.selectedPhoto = this.photos[0];
 
@@ -106,7 +109,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
   });
 
   test('it handles cancellation of deletion', async function (assert) {
-    this.nostrAuth.pubkey = 'userA';
+    this.nostrAuth.pubkey = USER_A;
     this.settings.update('experimentalEnablePhotoDeletion', true);
     this.selectedPhoto = this.photos[0];
 
@@ -133,7 +136,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
   });
 
   test('it performs full deletion flow when confirmed', async function (assert) {
-    this.nostrAuth.pubkey = 'userA';
+    this.nostrAuth.pubkey = USER_A;
     this.settings.update('experimentalEnablePhotoDeletion', true);
     // Override the mock's getter just for this test
     Object.defineProperty(this.nostrAuth, 'signer', {
@@ -141,11 +144,11 @@ module('Integration | Component | photo-gallery', function (hooks) {
       get: () => ({
         signEvent: async (e) => ({
           ...e,
-          id: 'signed-id',
-          sig: 'sig',
-          pubkey: 'userA',
+          id: 'a3b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1',
+          sig: 'b3b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1',
+          pubkey: USER_A,
         }),
-        getPublicKey: async () => 'userA',
+        getPublicKey: async () => USER_A,
       }),
     });
     this.selectedPhoto = this.photos[0];
@@ -227,7 +230,7 @@ module('Integration | Component | photo-gallery', function (hooks) {
   });
 
   test('it copies event id to clipboard', async function (assert) {
-    this.nostrAuth.pubkey = 'userA';
+    this.nostrAuth.pubkey = USER_A;
     this.selectedPhoto = this.photos[0];
 
     const clipboardStub = sinon
