@@ -102,7 +102,7 @@ import molarTooth from '@waysidemapping/pinhead/dist/icons/molar_tooth.svg?raw';
 import needleAndSpoolOfThread from '@waysidemapping/pinhead/dist/icons/needle_and_spool_of_thread.svg?raw';
 import openBook from '@waysidemapping/pinhead/dist/icons/open_book.svg?raw';
 import palace from '@waysidemapping/pinhead/dist/icons/palace.svg?raw';
-import parkingP from '@waysidemapping/pinhead/dist/icons/parking_p.svg?raw';
+import parkingP from '@waysidemapping/pinhead/dist/icons/p_wide.svg?raw';
 import personCricketBattingAtCricketBall from '@waysidemapping/pinhead/dist/icons/person_cricket_batting_at_cricket_ball.svg?raw';
 import personBoardingTramWithDestinationDisplayAndPantographOnTramTrack from '@waysidemapping/pinhead/dist/icons/person_boarding_tram_with_destination_display_and_pantograph_on_tram_track.svg?raw';
 import personJockeyingRacehorse from '@waysidemapping/pinhead/dist/icons/person_jockeying_racehorse.svg?raw';
@@ -118,7 +118,7 @@ import policeOfficerWithStopArm from '@waysidemapping/pinhead/dist/icons/police_
 import planeTopRight from '@waysidemapping/pinhead/dist/icons/plane_top_right.svg?raw';
 import roundStructureWithFlag from '@waysidemapping/pinhead/dist/icons/round_structure_with_flag.svg?raw';
 import sailingShipInWater from '@waysidemapping/pinhead/dist/icons/sailing_ship_in_water.svg?raw';
-import scissorsOpen from '@waysidemapping/pinhead/dist/icons/scissors_open.svg?raw';
+import scissorsOpen from '@waysidemapping/pinhead/dist/icons/open_scissors.svg?raw';
 import shipwreckInWater from '@waysidemapping/pinhead/dist/icons/shipwreck_in_water.svg?raw';
 import steamTrainOnRailwayTrack from '@waysidemapping/pinhead/dist/icons/steam_train_on_railway_track.svg?raw';
 import shoppingBag from '@waysidemapping/pinhead/dist/icons/shopping_bag.svg?raw';

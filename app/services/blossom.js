@@ -35,23 +35,20 @@ export default class BlossomService extends Service {
   }
 
   async _getAuthHeader(action, hash, serverUrl) {
-    const factory = new EventFactory({ signer: this.nostrAuth.signer });
     const now = Math.floor(Date.now() / 1000);
     const serverHostname = new URL(serverUrl).hostname;
 
-    const authTemplate = {
-      kind: 24242,
-      created_at: now,
-      content: action === 'upload' ? 'Upload photo for place' : 'Delete photo',
-      tags: [
+    const authEvent = await EventFactory.fromKind(24242)
+      .content(action === 'upload' ? 'Upload photo for place' : 'Delete photo')
+      .modifyPublicTags(() => [
         ['t', action],
         ['x', hash],
         ['expiration', String(now + 3600)],
         ['server', serverHostname],
-      ],
-    };
-
-    const authEvent = await factory.sign(authTemplate);
+      ])
+      .created(now)
+      .as(this.nostrAuth.signer)
+      .sign();
     const base64 = btoa(JSON.stringify(authEvent));
     const base64url = base64
       .replace(/\+/g, '-')

@@ -6,7 +6,7 @@ import { fn } from '@ember/helper';
 import { service } from '@ember/service';
 import { modifier } from 'ember-modifier';
 import { task } from 'ember-concurrency';
-import { EventFactory } from 'applesauce-factory';
+import { EventFactory } from 'applesauce-core';
 import config from 'marco/config/environment';
 import DropdownMenu from './dropdown-menu';
 import PhotoCarousel from './photo-carousel';
@@ -201,21 +201,17 @@ export default class PhotoGallery extends Component {
       const eventId = this.currentPhoto.eventId;
 
       // Publish Nostr kind: 5 deletion event first so we don't end up with dead blossom links on a failure
-      const factory = new EventFactory({ signer: this.nostrAuth.signer });
       const tags = [['e', eventId]];
 
       if (this.currentPhoto.placeIdentifier) {
         tags.push(['i', this.currentPhoto.placeIdentifier]);
       }
 
-      const template = {
-        kind: 5,
-        created_at: Math.floor(Date.now() / 1000),
-        content: 'Deleted photo',
-        tags,
-      };
-
-      const event = await factory.sign(template);
+      const event = await EventFactory.fromKind(5)
+        .content('Deleted photo')
+        .modifyPublicTags(() => tags)
+        .as(this.nostrAuth.signer)
+        .sign();
       await this.nostrRelay.publish(this.nostrData.activeWriteRelays, event);
 
       // Remove from local store by adding the kind 5 to it

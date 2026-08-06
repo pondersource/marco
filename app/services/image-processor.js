@@ -114,7 +114,7 @@ export default class ImageProcessorService extends Service {
         });
       });
     } catch (e) {
-      throw new Error(`Failed to process image: ${e.message}`);
+      throw new Error(`Failed to process image: ${e.message}`, { cause: e });
     }
   }
 

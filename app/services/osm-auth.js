@@ -45,6 +45,9 @@ export default class OsmAuthService extends Service {
         clientId: clientId,
         redirectUrl: redirectUrl,
         storeRefreshToken: true,
+        onAccessTokenExpiry() {
+          return this.exchangeRefreshTokenForAccessToken();
+        },
       },
       new MarcoOsmAuthStorage()
     );

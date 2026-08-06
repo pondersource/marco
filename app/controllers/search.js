@@ -179,10 +179,8 @@ export default class SearchController extends Controller {
     const targetName = params.selected || params.q;
 
     if (targetName && pois.length > 0) {
-      let matchedPlace = null;
-
       // 1. Exact Name Match
-      matchedPlace = pois.find(
+      let matchedPlace = pois.find(
         (p) =>
           p.osmTags &&
           (p.osmTags.name === targetName || p.osmTags['name:en'] === targetName)

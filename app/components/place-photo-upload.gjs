@@ -155,8 +155,6 @@ export default class PlacePhotoUpload extends Component {
     this.isPublishing = true;
 
     try {
-      const factory = new EventFactory({ signer: this.nostrAuth.signer });
-
       const tags = [['i', `osm:${osmType}:${osmId}`]];
 
       for (const tag of this.selectedTags) {
@@ -198,17 +196,11 @@ export default class PlacePhotoUpload extends Component {
       tags.push(imeta);
 
       // NIP-XX draft Place Photo event
-      const template = {
-        kind: 360,
-        content: '',
-        tags,
-      };
-
-      if (!template.created_at) {
-        template.created_at = Math.floor(Date.now() / 1000);
-      }
-
-      const event = await factory.sign(template);
+      const event = await EventFactory.fromKind(360)
+        .content('')
+        .modifyPublicTags(() => tags)
+        .as(this.nostrAuth.signer)
+        .sign();
       await this.nostrRelay.publish(this.nostrData.activeWriteRelays, event);
       this.nostrData.store.add(event);
 
