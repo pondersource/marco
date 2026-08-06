@@ -1,0 +1,2 @@
+patchedDependencies:
+  ember-concurrency@5.2.0: patches/ember-concurrency@5.2.0.patch
