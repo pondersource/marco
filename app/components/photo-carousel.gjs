@@ -237,7 +237,7 @@ export default class PhotoCarousel extends Component {
                   data-src={{photo.url}}
                   class="place-header-photo
                     {{if photo.isLandscape 'landscape' 'portrait'}}"
-                  alt={{@name}}
+                  alt={{photo.alt}}
                   {{fadeInImage photo.url}}
                 />
               {{else if this.isGalleryThumbnails}}
@@ -245,7 +245,7 @@ export default class PhotoCarousel extends Component {
                   data-src={{if photo.thumbUrl photo.thumbUrl photo.url}}
                   class="place-header-photo
                     {{if photo.isLandscape 'landscape' 'portrait'}}"
-                  alt={{@name}}
+                  alt={{photo.alt}}
                   {{fadeInImage (if photo.thumbUrl photo.thumbUrl photo.url)}}
                 />
               {{else}}
@@ -260,7 +260,7 @@ export default class PhotoCarousel extends Component {
                     <img
                       data-src={{photo.url}}
                       class="place-header-photo landscape"
-                      alt={{@name}}
+                      alt={{photo.alt}}
                       {{fadeInImage photo.url}}
                     />
                   </picture>
@@ -269,7 +269,7 @@ export default class PhotoCarousel extends Component {
                   <img
                     data-src={{if photo.thumbUrl photo.thumbUrl photo.url}}
                     class="place-header-photo portrait"
-                    alt={{@name}}
+                    alt={{photo.alt}}
                     {{fadeInImage (if photo.thumbUrl photo.thumbUrl photo.url)}}
                   />
                 {{/if}}

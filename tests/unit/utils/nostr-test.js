@@ -148,6 +148,68 @@ module('Unit | Utility | nostr', function () {
     assert.strictEqual(photos[1].placeIdentifier, 'osm:node:456');
   });
 
+  test('parsePlacePhotos extracts alt text from imeta', function (assert) {
+    const events = [
+      {
+        id: 'event-1',
+        pubkey: 'pubkey-1',
+        created_at: 100,
+        tags: [
+          [
+            'imeta',
+            'url https://example.com/photo.jpg',
+            'dim 800x600',
+            'alt A sunny terrace overlooking the bay',
+          ],
+        ],
+      },
+    ];
+
+    const photos = parsePlacePhotos(events);
+
+    assert.strictEqual(photos.length, 1);
+    assert.strictEqual(photos[0].alt, 'A sunny terrace overlooking the bay');
+  });
+
+  test('parsePlacePhotos strips the legacy placeholder alt text', function (assert) {
+    const events = [
+      {
+        id: 'event-1',
+        pubkey: 'pubkey-1',
+        created_at: 100,
+        tags: [
+          [
+            'imeta',
+            'url https://example.com/photo.jpg',
+            'dim 800x600',
+            'alt A photo of a place',
+          ],
+        ],
+      },
+    ];
+
+    const photos = parsePlacePhotos(events);
+
+    assert.strictEqual(photos.length, 1);
+    assert.strictEqual(photos[0].alt, null);
+  });
+
+  test('parsePlacePhotos leaves alt null when not provided', function (assert) {
+    const events = [
+      {
+        id: 'event-1',
+        pubkey: 'pubkey-1',
+        created_at: 100,
+        tags: [['imeta', 'url https://example.com/photo.jpg', 'dim 800x600']],
+      },
+    ];
+
+    const photos = parsePlacePhotos(events);
+
+    assert.strictEqual(photos.length, 1);
+    assert.strictEqual(photos[0].alt, null);
+  });
+
   test('uniqNormalizedRelays returns normalized unique relays', function (assert) {
     const relays = uniqNormalizedRelays([
       'Relay.example.com',
