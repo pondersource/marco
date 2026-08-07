@@ -245,13 +245,6 @@ body {
   display: none;
 }
 
-.photo-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
 .photo-upload-item {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -259,6 +252,7 @@ body {
   overflow: hidden;
   background: #1e262e;
   width: 100%;
+  margin-bottom: 1.25rem;
 }
 
 .photo-upload-item img {
@@ -1866,8 +1860,12 @@ button.create-place {
   font-size: 1.2rem;
 }
 
+.place-photo-upload .form-group {
+  margin-bottom: 1.5rem;
+}
+
 .photo-tag-suggestions {
-  margin: 1rem 0 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .photo-tag-suggestions-title {

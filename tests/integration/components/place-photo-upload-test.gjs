@@ -97,4 +97,27 @@ module('Integration | Component | place-photo-upload', function (hooks) {
 
     assert.dom('.photo-tag-suggestions').doesNotExist();
   });
+
+  test('it renders an optional alt text input after upload selection', async function (assert) {
+    this.place = {
+      title: 'Cafe Alpha',
+      osmId: '123',
+      osmType: 'node',
+      osmTags: { amenity: 'cafe' },
+    };
+
+    await render(
+      <template><PlacePhotoUpload @place={{this.place}} /></template>
+    );
+
+    assert.dom('#photo-alt-input').doesNotExist();
+
+    const file = new File(['test'], 'photo.jpg', { type: 'image/jpeg' });
+    await selectFile(this.element, file);
+
+    assert.dom('#photo-alt-input').exists();
+    assert
+      .dom('#photo-alt-input')
+      .hasAttribute('placeholder', 'Describe this photo');
+  });
 });

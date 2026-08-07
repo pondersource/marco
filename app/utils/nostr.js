@@ -67,6 +67,7 @@ export function parsePlacePhotos(events) {
       let blurhash = null;
       let isLandscape = false;
       let aspectRatio = 16 / 9; // default
+      let altText = null;
       let placeIdentifier = event.tags.find((t) => t[0] === 'i')?.[1];
 
       for (const tag of imeta.slice(1)) {
@@ -85,6 +86,10 @@ export function parsePlacePhotos(events) {
               isLandscape = true;
             }
           }
+        } else if (tag.startsWith('alt ')) {
+          const alt = tag.substring(4).trim();
+          // Strip the legacy placeholder we used to write on every event
+          altText = alt === 'A photo of a place' ? null : alt || null;
         }
       }
 
@@ -100,6 +105,7 @@ export function parsePlacePhotos(events) {
           aspectRatio,
           placeIdentifier,
           tags: eventTagValues,
+          alt: altText,
         });
       }
     }

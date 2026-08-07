@@ -27,6 +27,7 @@ export default class PlacePhotoUpload extends Component {
   @tracked isPublishing = false;
   @tracked isDragging = false;
   @tracked selectedTags = [];
+  @tracked altText = '';
 
   get place() {
     return this.args.place || {};
@@ -103,6 +104,7 @@ export default class PlacePhotoUpload extends Component {
     this.file = null;
     this.uploadedPhoto = null;
     this.selectedTags = [];
+    this.altText = '';
     if (this.args.onUploadStateChange) {
       this.args.onUploadStateChange(false);
     }
@@ -116,6 +118,11 @@ export default class PlacePhotoUpload extends Component {
     }
 
     this.selectedTags = [tag];
+  }
+
+  @action
+  updateAltText(event) {
+    this.altText = event.target.value;
   }
 
   deletePhotoTask = task(async (photoData) => {
@@ -177,7 +184,10 @@ export default class PlacePhotoUpload extends Component {
         imeta.push(`dim ${photo.dim}`);
       }
 
-      imeta.push('alt A photo of a place');
+      const alt = this.altText.trim();
+      if (alt) {
+        imeta.push(`alt ${alt}`);
+      }
 
       if (photo.fallbackUrls && photo.fallbackUrls.length > 0) {
         for (const fallbackUrl of photo.fallbackUrls) {
@@ -209,6 +219,7 @@ export default class PlacePhotoUpload extends Component {
       // Clear out the file so user can upload more or be done
       this.file = null;
       this.uploadedPhoto = null;
+      this.altText = '';
 
       if (this.args.onUploadStateChange) {
         this.args.onUploadStateChange(false);
@@ -235,13 +246,11 @@ export default class PlacePhotoUpload extends Component {
       {{/if}}
 
       {{#if this.file}}
-        <div class="photo-grid">
-          <PlacePhotoUploadItem
-            @file={{this.file}}
-            @onSuccess={{this.handleUploadSuccess}}
-            @onRemove={{this.removeFile}}
-          />
-        </div>
+        <PlacePhotoUploadItem
+          @file={{this.file}}
+          @onSuccess={{this.handleUploadSuccess}}
+          @onRemove={{this.removeFile}}
+        />
 
         {{#if this.suggestedTags.length}}
           <div class="photo-tag-suggestions">
@@ -262,6 +271,19 @@ export default class PlacePhotoUpload extends Component {
             </div>
           </div>
         {{/if}}
+
+        <div class="form-group">
+          <label for="photo-alt-input">Description (optional):</label>
+          <input
+            id="photo-alt-input"
+            type="text"
+            class="form-control"
+            placeholder="Describe this photo"
+            value={{this.altText}}
+            disabled={{this.isPublishing}}
+            {{on "input" this.updateAltText}}
+          />
+        </div>
 
         <button
           type="button"
