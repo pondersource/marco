@@ -12,7 +12,7 @@ const STORAGE_KEY_CONNECT_LOCAL_KEY = 'marco:nostr_connect_local_key';
 const STORAGE_KEY_CONNECT_REMOTE_PUBKEY = 'marco:nostr_connect_remote_pubkey';
 const STORAGE_KEY_CONNECT_RELAY = 'marco:nostr_connect_relay';
 
-const DEFAULT_CONNECT_RELAY = 'wss://relay.nsec.app';
+const DEFAULT_CONNECT_RELAY = 'wss://nostr.kosmos.org';
 
 import { isMobile } from '../utils/device';
 
