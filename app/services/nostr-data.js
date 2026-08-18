@@ -34,11 +34,13 @@ export default class NostrDataService extends Service {
   @tracked mailboxes = null;
   @tracked blossomServers = [];
   @tracked placePhotos = [];
+  @tracked myContributionEvents = [];
 
   _profileSub = null;
   _mailboxesSub = null;
   _blossomSub = null;
   _photosSub = null;
+  _contributionsSub = null;
 
   _requestSub = null;
   _cachePromise = null;
@@ -278,6 +280,57 @@ export default class NostrDataService extends Service {
       });
   }
 
+  async loadMyContributions(pubkey) {
+    if (!pubkey) return;
+
+    // Reset state and unsubscribe from any previous subscription
+    this.myContributionEvents = [];
+    if (this._contributionsSub) {
+      this._contributionsSub.unsubscribe();
+      this._contributionsSub = null;
+    }
+
+    const filters = [{ kinds: [360, 5], authors: [pubkey] }];
+
+    // 1. Set up reactive store subscription so the timeline updates as events arrive
+    this._contributionsSub = this.store
+      .timeline(filters)
+      .subscribe((events) => {
+        this.myContributionEvents = events;
+      });
+
+    // 2. Populate the store from the local Nostr IDB cache (instant)
+    try {
+      await this._cachePromise;
+
+      const cachedEvents = await this.cache.query(filters);
+
+      if (cachedEvents && cachedEvents.length > 0) {
+        for (const event of cachedEvents) {
+          this.store.add(event);
+        }
+      }
+    } catch (e) {
+      console.warn(
+        '[nostr-data] Failed to read my contributions from local Nostr IDB cache',
+        e
+      );
+    }
+
+    // 3. Request fresh events from the network in the background
+    this.nostrRelay.pool.request(this.activeReadRelays, filters).subscribe({
+      next: (event) => {
+        this.store.add(event);
+      },
+      error: (err) => {
+        console.error(
+          '[nostr-data] Error fetching my contribution events:',
+          err
+        );
+      },
+    });
+  }
+
   async loadProfile(pubkey) {
     if (!pubkey) return;
 
@@ -408,6 +461,10 @@ export default class NostrDataService extends Service {
     if (this._photosSub) {
       this._photosSub.unsubscribe();
       this._photosSub = null;
+    }
+    if (this._contributionsSub) {
+      this._contributionsSub.unsubscribe();
+      this._contributionsSub = null;
     }
   }
 

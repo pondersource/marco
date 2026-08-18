@@ -292,4 +292,144 @@ module('Unit | Service | osm', function (hooks) {
       'Call with different lat/lon should trigger fetch'
     );
   });
+
+  test('_storeInMemoryAndLocalStorage rejects entries without a title', function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    service._storeInMemoryAndLocalStorage('node:1', 'node', '1', {
+      title: null,
+      lat: 1,
+      lon: 1,
+    });
+
+    assert.false(
+      service.cachedPlaces.has('node:1'),
+      'Does not cache entries without a title'
+    );
+
+    service._storeInMemoryAndLocalStorage('node:2', 'node', '2', null);
+    assert.false(
+      service.cachedPlaces.has('node:2'),
+      'Does not cache null entries'
+    );
+  });
+
+  test('_storeInMemoryAndLocalStorage accepts entries with a title', function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    service._storeInMemoryAndLocalStorage('node:3', 'node', '3', {
+      title: 'Café Example',
+      lat: 52.5,
+      lon: 13.4,
+    });
+
+    assert.true(
+      service.cachedPlaces.has('node:3'),
+      'Caches entries with a title'
+    );
+  });
+
+  test('fetchOsmObjectsBatch does not write to the general OSM cache', async function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    service.fetchWithRetry = async () => ({
+      ok: true,
+      json: async () => ({
+        elements: [
+          { id: 100, type: 'node', lat: 1, lon: 2, tags: { name: 'Node 100' } },
+        ],
+      }),
+    });
+
+    await service.fetchOsmObjectsBatch([{ osmType: 'node', osmId: '100' }]);
+
+    assert.false(
+      service.cachedPlaces.has('node:100'),
+      'Batch fetch does not write to the in-memory OSM cache'
+    );
+    assert.notOk(
+      localStorage.getItem('marco:osm_cache:node:100'),
+      'Batch fetch does not write to the localStorage OSM cache'
+    );
+  });
+
+  test('fetchOsmObjectsBatch returns resolved places in the result Map', async function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    service.fetchWithRetry = async () => ({
+      ok: true,
+      json: async () => ({
+        elements: [
+          { id: 200, type: 'node', lat: 1, lon: 2, tags: { name: 'Café 200' } },
+        ],
+      }),
+    });
+
+    const result = await service.fetchOsmObjectsBatch([
+      { osmType: 'node', osmId: '200' },
+    ]);
+
+    assert.true(result.has('node:200'), 'Result contains the fetched place');
+    assert.strictEqual(
+      result.get('node:200').title,
+      'Café 200',
+      'Result has the correct title'
+    );
+  });
+
+  test('fetchOsmObjectsBatch uses .json suffix in the API URL', async function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    let capturedUrls = [];
+    service.fetchWithRetry = async (url) => {
+      capturedUrls.push(url);
+      return {
+        ok: true,
+        json: async () => ({
+          elements: [
+            { id: 300, type: 'node', lat: 1, lon: 2, tags: { name: 'Test' } },
+          ],
+        }),
+      };
+    };
+
+    await service.fetchOsmObjectsBatch([{ osmType: 'node', osmId: '300' }]);
+
+    assert.true(
+      capturedUrls.some((url) => url.includes('.json')),
+      'Batch fetch URL includes .json suffix'
+    );
+  });
+
+  test('fetchOsmObjectsBatch uses correct pluralized endpoints', async function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    let capturedUrls = [];
+    service.fetchWithRetry = async (url) => {
+      capturedUrls.push(url);
+      return {
+        ok: true,
+        json: async () => ({ elements: [] }),
+      };
+    };
+
+    await service.fetchOsmObjectsBatch([
+      { osmType: 'node', osmId: '1' },
+      { osmType: 'way', osmId: '2' },
+      { osmType: 'relation', osmId: '3' },
+    ]);
+
+    assert.true(
+      capturedUrls.some((u) => u.includes('/nodes.json?nodes=')),
+      'Uses nodes.json endpoint'
+    );
+    assert.true(
+      capturedUrls.some((u) => u.includes('/ways.json?ways=')),
+      'Uses ways.json endpoint'
+    );
+    assert.true(
+      capturedUrls.some((u) => u.includes('/relations.json?relations=')),
+      'Uses relations.json endpoint'
+    );
+  });
 });

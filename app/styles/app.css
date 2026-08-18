@@ -2258,3 +2258,101 @@ button.create-place {
   justify-content: center;
   padding: 4rem 1rem;
 }
+
+/* Contributions Timeline */
+.contributions-list {
+  list-style: none;
+  padding: 0;
+  margin: -1rem -1rem 0;
+}
+
+.contribution-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--divider-color);
+  background: var(--primary-background-color);
+  color: var(--body-text-color);
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.contribution-item:hover {
+  background: var(--hover-bg);
+}
+
+.contribution-thumb {
+  position: relative;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.contribution-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.contribution-thumb-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: rgb(0 0 0 / 65%);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.contribution-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contribution-place {
+  font-size: 1rem;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contribution-name-loading {
+  color: #999;
+  font-weight: normal;
+  font-style: italic;
+}
+
+.contribution-meta {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.contribution-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.contribution-tag {
+  background: #f0f0f0;
+  color: #555;
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+}

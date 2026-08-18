@@ -14,6 +14,7 @@ Router.map(function () {
   this.route('lists', function () {
     this.route('list', { path: '/:list_id' });
   });
+  this.route('contributions');
   this.route('oauth', function () {
     this.route('osm-callback', { path: '/osm/callback' });
   });

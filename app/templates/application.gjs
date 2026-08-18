@@ -13,7 +13,7 @@ export default class ApplicationComponent extends Component {
   @service router;
 
   get isSidebarOpen() {
-    // We consider the sidebar "open" if we are in search, menu, lists or place routes AND it's visible.
+    // We consider the sidebar "open" if we are in search, menu, lists, contributions or place routes AND it's visible.
     // This helps the map know if it should shift the center or adjust view.
     const name = this.router.currentRouteName;
     return (
@@ -22,6 +22,7 @@ export default class ApplicationComponent extends Component {
         name === 'place.new' ||
         name === 'search' ||
         name === 'menu' ||
+        name === 'contributions' ||
         name.startsWith('lists'))
     );
   }
@@ -49,11 +50,16 @@ export default class ApplicationComponent extends Component {
       name === 'search' ||
       name === 'place' ||
       name === 'menu' ||
+      name === 'contributions' ||
       name.startsWith('lists')
     ) {
       this.mapUi.clearSelection();
       this.mapUi.hideSidebar();
-      if (name === 'menu' || name.startsWith('lists')) {
+      if (
+        name === 'menu' ||
+        name === 'contributions' ||
+        name.startsWith('lists')
+      ) {
         this.router.transitionTo('index');
       } else if (name === 'place') {
         if (this.mapUi.returnToSearch && this.mapUi.currentSearch) {
