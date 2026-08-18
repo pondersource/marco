@@ -40,10 +40,6 @@ export default class ContributionsController extends Controller {
     this.mapUi.showSidebar();
     this.mapUi.preventNextZoom = true;
 
-    // Use a URL-based transition so the place route's model hook runs and
-    // resolves the full place data (with lat/lon) from bookmarks or the OSM API.
-    // Passing a context object would skip the model hook, leaving the model
-    // without coordinates and preventing the map from panning.
     this.router.transitionTo(`/place/${item.placeIdentifier}`);
   }
 
