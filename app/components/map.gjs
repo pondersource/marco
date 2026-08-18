@@ -8,6 +8,7 @@ import { defaults as defaultInteractions, DragPan } from 'ol/interaction.js';
 import Kinetic from 'ol/Kinetic.js';
 import View from 'ol/View.js';
 import { fromLonLat, toLonLat, getPointResolution } from 'ol/proj.js';
+import { containsExtent } from 'ol/extent.js';
 import Overlay from 'ol/Overlay.js';
 import LayerGroup from 'ol/layer/Group.js';
 import VectorLayer from 'ol/layer/Vector.js';
@@ -665,7 +666,12 @@ export default class MapComponent extends Component {
       if (options.preventZoom) {
         // If we are preventing zoom (e.g. user clicked a bookmark), we rely on visibility check.
         // This avoids unnecessary panning if the place is already visible.
-        this.handlePinVisibility(coords, { maintainZoom: true });
+        // But if the place has a bbox that doesn't fit in the current view, zoom out to fit it.
+        if (selected.bbox && !this.bboxFitsInView(selected.bbox)) {
+          this.zoomToBbox(selected.bbox);
+        } else {
+          this.handlePinVisibility(coords, { maintainZoom: true });
+        }
       } else if (selected.bbox) {
         this.zoomToBbox(selected.bbox);
       } else {
@@ -677,6 +683,20 @@ export default class MapComponent extends Component {
       this.selectedPinOverlay.setPosition(undefined);
     }
   });
+
+  bboxFitsInView(bbox) {
+    if (!this.mapInstance || !bbox) return true;
+
+    const view = this.mapInstance.getView();
+    const size = this.mapInstance.getSize();
+    const viewExtent = view.calculateExtent(size);
+
+    const min = fromLonLat([bbox.minLon, bbox.minLat]);
+    const max = fromLonLat([bbox.maxLon, bbox.maxLat]);
+    const bboxExtent = [...min, ...max];
+
+    return containsExtent(viewExtent, bboxExtent);
+  }
 
   zoomToBbox(bbox) {
     if (!this.mapInstance || !bbox) return;
