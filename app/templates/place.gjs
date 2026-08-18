@@ -81,7 +81,11 @@ export default class PlaceTemplate extends Component {
       if (this.mapUi.returnToRoute) {
         this.mapUi.showSidebar();
         const { name, model } = this.mapUi.returnToRoute;
-        this.router.transitionTo(name, model);
+        if (model !== undefined) {
+          this.router.transitionTo(name, model);
+        } else {
+          this.router.transitionTo(name);
+        }
       }
       // If we have an active search context, return to it (UP navigation)
       else if (this.mapUi.returnToSearch && this.mapUi.currentSearch) {

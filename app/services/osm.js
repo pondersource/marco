@@ -10,6 +10,102 @@ export default class OsmService extends Service {
   lastQueryKey = null;
   cachedPlaces = new Map();
 
+  // Long-term cache for OSM place metadata, persisted to localStorage so that
+  // names and basic info survive across sessions and can be rendered instantly
+  // without waiting on the OSM API. Entries are refreshed in the background.
+  static CACHE_KEY_PREFIX = 'marco:osm_cache:';
+  static CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+  static IN_MEMORY_TTL_MS = 10000; // 10 seconds
+
+  _buildCacheKey(osmType, osmId) {
+    return `${osmType}:${osmId}`;
+  }
+
+  _readLocalCache(osmType, osmId) {
+    if (typeof localStorage === 'undefined') return null;
+    const key = `${OsmService.CACHE_KEY_PREFIX}${osmType}:${osmId}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (
+        !parsed ||
+        typeof parsed.timestamp !== 'number' ||
+        Date.now() - parsed.timestamp > OsmService.CACHE_TTL_MS
+      ) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      return parsed.data;
+    } catch {
+      try {
+        localStorage.removeItem(
+          `${OsmService.CACHE_KEY_PREFIX}${osmType}:${osmId}`
+        );
+      } catch {
+        // ignore
+      }
+      return null;
+    }
+  }
+
+  _writeLocalCache(osmType, osmId, data) {
+    if (typeof localStorage === 'undefined' || !data) return;
+    const key = `${OsmService.CACHE_KEY_PREFIX}${osmType}:${osmId}`;
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({ data, timestamp: Date.now() })
+      );
+    } catch (e) {
+      console.debug('[osm] Failed to write localStorage cache entry', e);
+    }
+  }
+
+  /**
+   * Synchronous lookup for an OSM place. Checks the short-lived in-memory cache
+   * first, then the persistent localStorage cache. Returns `null` if not cached.
+   *
+   * Use this for instant rendering (e.g. place names in a list) and fall back to
+   * `fetchOsmObject` for a fresh fetch + background refresh.
+   *
+   * @param {string} osmType 'node' | 'way' | 'relation'
+   * @param {string} osmId
+   * @returns {object|null} Normalized OSM place data
+   */
+  getCachedOsmObject(osmType, osmId) {
+    if (!osmType || !osmId) return null;
+
+    const cacheKey = this._buildCacheKey(osmType, osmId);
+    const memoryEntry = this.cachedPlaces.get(cacheKey);
+    if (
+      memoryEntry &&
+      Date.now() - memoryEntry.timestamp < OsmService.IN_MEMORY_TTL_MS
+    ) {
+      return memoryEntry.data;
+    }
+
+    return this._readLocalCache(osmType, osmId);
+  }
+
+  _storeInMemoryAndLocalStorage(cacheKey, osmType, osmId, data) {
+    if (!data || !data.title) {
+      console.debug(
+        `[osm] Skipping cache write for ${cacheKey}: data has no title`
+      );
+      return;
+    }
+
+    this.cachedPlaces.set(cacheKey, { data, timestamp: Date.now() });
+
+    // Auto-evict from the short-lived in-memory cache so it doesn't grow unbounded.
+    setTimeout(() => {
+      this.cachedPlaces.delete(cacheKey);
+    }, OsmService.IN_MEMORY_TTL_MS);
+
+    this._writeLocalCache(osmType, osmId, data);
+  }
+
   cancelAll() {
     if (this.controller) {
       this.controller.abort();
@@ -233,13 +329,46 @@ out center;
   async fetchOsmObject(osmId, osmType) {
     if (!osmId || !osmType) return null;
 
-    const cacheKey = `${osmType}:${osmId}`;
+    const cacheKey = this._buildCacheKey(osmType, osmId);
     const cached = this.cachedPlaces.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < 10000) {
+    if (cached && Date.now() - cached.timestamp < OsmService.IN_MEMORY_TTL_MS) {
       console.debug(`Using in-memory cached OSM object for ${cacheKey}`);
       return cached.data;
     }
 
+    // If we have a persistent (localStorage) cache entry, return it immediately and
+    // kick off a background refresh. This keeps the UI snappy while still ensuring
+    // the cache is updated with the latest OSM data.
+    const localCached = this._readLocalCache(osmType, osmId);
+    if (localCached) {
+      console.debug(`Using localStorage cached OSM object for ${cacheKey}`);
+      // Refresh in the background, but don't block the caller.
+      this._refreshOsmObject(osmId, osmType, cacheKey).catch((e) => {
+        console.debug('[osm] Background refresh failed for', cacheKey, e);
+      });
+      return localCached;
+    }
+
+    return this._fetchAndCacheOsmObject(osmId, osmType, cacheKey);
+  }
+
+  async _refreshOsmObject(osmId, osmType, cacheKey) {
+    const fresh = await this._fetchOsmObjectFromApi(osmId, osmType);
+    if (fresh) {
+      this._storeInMemoryAndLocalStorage(cacheKey, osmType, osmId, fresh);
+    }
+    return fresh;
+  }
+
+  async _fetchAndCacheOsmObject(osmId, osmType, cacheKey) {
+    const data = await this._fetchOsmObjectFromApi(osmId, osmType);
+    if (data) {
+      this._storeInMemoryAndLocalStorage(cacheKey, osmType, osmId, data);
+    }
+    return data;
+  }
+
+  async _fetchOsmObjectFromApi(osmId, osmType) {
     let url;
     if (osmType === 'node') {
       url = `https://www.openstreetmap.org/api/0.6/node/${osmId}.json`;
@@ -263,26 +392,97 @@ out center;
       }
 
       const data = await res.json();
-      const normalizedData = this.normalizeOsmApiData(
-        data.elements,
-        osmId,
-        osmType
-      );
-
-      this.cachedPlaces.set(cacheKey, {
-        data: normalizedData,
-        timestamp: Date.now(),
-      });
-
-      // Cleanup cache entry automatically after 10 seconds
-      setTimeout(() => {
-        this.cachedPlaces.delete(cacheKey);
-      }, 10000);
-
-      return normalizedData;
+      return this.normalizeOsmApiData(data.elements, osmId, osmType);
     } catch (e) {
       console.error('Failed to fetch OSM object:', e);
       return null;
+    }
+  }
+
+  /**
+   * Batch-fetches multiple OSM objects, using cached data where available and
+   * only making network requests for uncached IDs.
+   *
+   * @param {Array<{osmType: string, osmId: string}>} items
+   * @returns {Promise<Map<string, object>>} Map keyed by `${osmType}:${osmId}`
+   */
+  async fetchOsmObjectsBatch(items) {
+    const result = new Map();
+    if (!items || items.length === 0) return result;
+
+    // 1. Collect whatever is already cached
+    const missing = [];
+    for (const { osmType, osmId } of items) {
+      if (!osmType || !osmId) continue;
+      const cacheKey = this._buildCacheKey(osmType, osmId);
+      const cached = this.getCachedOsmObject(osmType, osmId);
+      if (cached) {
+        result.set(cacheKey, cached);
+      } else {
+        missing.push({ osmType, osmId, cacheKey });
+      }
+    }
+
+    if (missing.length === 0) return result;
+
+    // 2. Group missing items by OSM type for batched API requests
+    const byType = new Map();
+    for (const item of missing) {
+      if (!byType.has(item.osmType)) byType.set(item.osmType, []);
+      byType.get(item.osmType).push(item);
+    }
+
+    // 3. Fetch each type group from the OSM API (one request per type)
+    const fetchPromises = [];
+    for (const [osmType, group] of byType) {
+      fetchPromises.push(this._fetchOsmObjectsByType(osmType, group, result));
+    }
+
+    await Promise.allSettled(fetchPromises);
+    return result;
+  }
+
+  async _fetchOsmObjectsByType(osmType, group, result) {
+    // OSM API supports fetching multiple elements of the same type in a single
+    // request using comma-separated IDs (max ~50 per request).
+    //
+    // Note: the multi-fetch endpoint returns ways/relations WITHOUT their child
+    // nodes, so normalized data may lack lat/lon and geometry. We intentionally
+    // do NOT write these results to the general OSM cache — only the returned
+    // Map is used by the caller (the contributions service manages its own
+    // name cache). This prevents incomplete data from breaking place detail
+    // navigation, which needs the full single-object endpoint.
+    const MAX_IDS_PER_REQUEST = 50;
+
+    for (let i = 0; i < group.length; i += MAX_IDS_PER_REQUEST) {
+      const chunk = group.slice(i, i + MAX_IDS_PER_REQUEST);
+      const idsParam = chunk.map((c) => c.osmId).join(',');
+      const plural = osmType === 'way' ? 'ways' : osmType + 's';
+      const url = `https://www.openstreetmap.org/api/0.6/${plural}.json?${plural}=${idsParam}`;
+
+      try {
+        const res = await this.fetchWithRetry(url);
+        if (!res.ok) {
+          console.warn(
+            `[osm] Batch fetch failed for ${osmType} (${res.status})`,
+            idsParam
+          );
+          continue;
+        }
+        const data = await res.json();
+        for (const item of chunk) {
+          const normalized = this.normalizeOsmApiData(
+            data.elements,
+            item.osmId,
+            osmType
+          );
+          if (normalized) {
+            result.set(item.cacheKey, normalized);
+          }
+        }
+      } catch (e) {
+        console.error(`[osm] Batch fetch error for ${osmType}:`, e);
+      }
     }
   }
 
