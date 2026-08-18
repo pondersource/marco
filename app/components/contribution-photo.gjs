@@ -2,26 +2,7 @@ import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import or from 'ember-truth-helpers/helpers/or';
-
-function formatRelativeDate(timestamp) {
-  if (!timestamp) return '';
-  const date = new Date(timestamp * 1000);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
-
-  if (diffMin < 1) return 'just now';
-  if (diffMin < 60) return `${diffMin} min ago`;
-  if (diffHr < 24) return `${diffHr} hr ago`;
-  if (diffDay < 7) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
+import formatRelativeDate from '../helpers/format-relative-date';
 
 export default class ContributionPhoto extends Component {
   get item() {
@@ -42,10 +23,6 @@ export default class ContributionPhoto extends Component {
 
   get isNameLoading() {
     return this.item?.placeNameLoading;
-  }
-
-  get relativeDate() {
-    return formatRelativeDate(this.item?.createdAt);
   }
 
   get tags() {
@@ -86,7 +63,7 @@ export default class ContributionPhoto extends Component {
             {{/if}}
           </div>
           <div class="contribution-meta">
-            {{this.relativeDate}}
+            {{formatRelativeDate @item.createdAt}}
             {{#if (gt this.item.photos.length 1)}}
               ·
               {{this.item.photos.length}}
