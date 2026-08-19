@@ -159,13 +159,20 @@ import Icon from '#components/icon';
         <div class="details-content">
           <p>
             <strong>Most impactful:</strong>
-            Add and improve data for points of interest in
-            <a
-              href="https://www.openstreetmap.org"
-              target="_blank"
-              rel="noopener"
-            >OpenStreetMap</a>.
           </p>
+          <ul>
+            <li>
+              Add and improve data for points of interest in
+              <a
+                href="https://www.openstreetmap.org"
+                target="_blank"
+                rel="noopener"
+              >OpenStreetMap</a>.
+            </li>
+            <li>
+              Add place photos with your Nostr account.
+            </li>
+          </ul>
           <p>
             <strong>Most appreciated:</strong>
             Use this app as much as you can and
