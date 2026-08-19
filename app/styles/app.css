@@ -752,6 +752,25 @@ select.form-control {
   text-decoration: underline;
 }
 
+.about-section p + ul {
+  margin-top: 0.25rem;
+}
+
+.about-section ul {
+  padding-inline-start: 1.2em;
+  margin: 0.5rem 0 0;
+}
+
+.about-section li {
+  padding-inline-start: 0.5rem;
+  margin-block: 0.15rem;
+}
+
+.about-section li::marker {
+  content: '♥';
+  color: #898989;
+}
+
 .btn-full {
   width: 100%;
 }

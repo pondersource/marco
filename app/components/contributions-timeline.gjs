@@ -32,7 +32,8 @@ import restoreScroll from '../modifiers/restore-scroll';
           Connect your Nostr account to see your contributions.
         </p>
       {{else if (not @items.length)}}
-        <p class="empty-state">No contributions yet.</p>
+        <p class="empty-state">No contributions yet. Start by adding photos to
+          places.</p>
       {{else}}
         <ul class="contributions-list">
           {{#each @items as |item|}}

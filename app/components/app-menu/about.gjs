@@ -34,6 +34,15 @@ import Icon from '#components/icon';
         >remote storage</a>
         to sync place bookmarks across apps and devices.
       </p>
+      <p>
+        Connect your
+        <a
+          href="https://start.nostr.net"
+          target="_blank"
+          rel="noopener"
+        >Nostr</a>
+        identity to publish photos of places.
+      </p>
 
       <details>
         <summary>
@@ -94,6 +103,26 @@ import Icon from '#components/icon';
               <tr>
                 <td>
                   <a
+                    href="https://openfreemap.org"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Map tiles
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://github.com/hyperknot/openfreemap/blob/main/LICENSE.md"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Various
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
                     href="https://github.com/feathericons/feather"
                     target="_blank"
                     rel="noopener"
@@ -139,13 +168,20 @@ import Icon from '#components/icon';
         <div class="details-content">
           <p>
             <strong>Most impactful:</strong>
-            Add and improve data for points of interest in
-            <a
-              href="https://www.openstreetmap.org"
-              target="_blank"
-              rel="noopener"
-            >OpenStreetMap</a>.
           </p>
+          <ul>
+            <li>
+              Add and improve data for points of interest in
+              <a
+                href="https://www.openstreetmap.org"
+                target="_blank"
+                rel="noopener"
+              >OpenStreetMap</a>.
+            </li>
+            <li>
+              Add place photos with your Nostr account.
+            </li>
+          </ul>
           <p>
             <strong>Most appreciated:</strong>
             Use this app as much as you can and
