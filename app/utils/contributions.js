@@ -6,7 +6,45 @@
  * succession). Entries are ordered newest-first.
  */
 
+import { tracked } from '@glimmer/tracking';
+
 const HOUR_IN_SECONDS = 60 * 60;
+
+/**
+ * A single contribution timeline entry.
+ *
+ * `placeName` and `placeNameLoading` are tracked so that mutating them after
+ * the entry has been rendered (e.g. when the background OSM batch fetch
+ * resolves a place name) re-renders the consuming component. The remaining
+ * fields are static data and do not need to be tracked.
+ */
+export class ContributionEntry {
+  type = 'photo';
+  placeIdentifier;
+  osmType;
+  osmId;
+  photos;
+  createdAt;
+  eventCount;
+  @tracked placeName = null;
+  @tracked placeNameLoading = true;
+
+  constructor({
+    placeIdentifier,
+    osmType,
+    osmId,
+    photos,
+    createdAt,
+    eventCount,
+  }) {
+    this.placeIdentifier = placeIdentifier;
+    this.osmType = osmType;
+    this.osmId = osmId;
+    this.photos = photos;
+    this.createdAt = createdAt;
+    this.eventCount = eventCount;
+  }
+}
 
 /**
  * Parses a single kind 360 (Place Photo) event's `imeta` tag into a photo object.
@@ -180,15 +218,12 @@ function buildEntry(placeIdentifier, events) {
 
   const [, osmType, osmId] = placeIdentifier.split(':');
 
-  return {
-    type: 'photo',
+  return new ContributionEntry({
     placeIdentifier,
     osmType,
     osmId,
-    placeName: null,
-    placeNameLoading: true,
     photos,
     createdAt,
     eventCount: events.length,
-  };
+  });
 }
