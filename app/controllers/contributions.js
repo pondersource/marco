@@ -44,6 +44,11 @@ export default class ContributionsController extends Controller {
   }
 
   @action
+  onNostrConnected() {
+    this.loadContributionsTask.perform(this.nostrAuth.pubkey);
+  }
+
+  @action
   backToMenu() {
     this.router.transitionTo('menu');
   }
