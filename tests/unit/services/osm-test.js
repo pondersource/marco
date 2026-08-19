@@ -348,8 +348,8 @@ module('Unit | Service | osm', function (hooks) {
       'Batch fetch does not write to the in-memory OSM cache'
     );
     assert.notOk(
-      localStorage.getItem('marco:osm_cache:node:100'),
-      'Batch fetch does not write to the localStorage OSM cache'
+      await service.localForage.get('osm-cache', 'node:100'),
+      'Batch fetch does not write to the persistent OSM cache'
     );
   });
 

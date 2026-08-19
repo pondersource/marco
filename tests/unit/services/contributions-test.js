@@ -42,13 +42,19 @@ class MockNostrDataService extends Service {
 }
 
 class MockOsmService extends Service {
-  getCachedOsmObject() {
+  async getCachedOsmObject() {
     return null;
   }
 
   async fetchOsmObjectsBatch() {
     return new Map();
   }
+}
+
+const NAME_CACHE_STORE = 'contributions-name-cache';
+
+function flushPromises() {
+  return new Promise((resolve) => setTimeout(resolve, 50));
 }
 
 module('Unit | Service | contributions', function (hooks) {
@@ -58,12 +64,6 @@ module('Unit | Service | contributions', function (hooks) {
     this.owner.register('service:storage', MockStorageService);
     this.owner.register('service:nostrData', MockNostrDataService);
     this.owner.register('service:osm', MockOsmService);
-
-    localStorage.removeItem('marco:contributions:name_cache');
-  });
-
-  hooks.afterEach(function () {
-    localStorage.removeItem('marco:contributions:name_cache');
   });
 
   test('_updateItems resolves names from bookmarks immediately', function (assert) {
@@ -85,7 +85,7 @@ module('Unit | Service | contributions', function (hooks) {
     );
   });
 
-  test('_updateItems resolves names from the persistent name cache', function (assert) {
+  test('_updateItems resolves names from the persistent name cache', async function (assert) {
     const events = [
       makePhotoEvent({
         id: 'e1',
@@ -95,36 +95,66 @@ module('Unit | Service | contributions', function (hooks) {
     ];
 
     const service = this.owner.lookup('service:contributions');
-    service._nameCache.set('osm:node:999', 'Cached Park');
+    await service.localForage.set(
+      NAME_CACHE_STORE,
+      'osm:node:999',
+      'Cached Park'
+    );
 
     service._updateItems(events);
+    await flushPromises();
 
     assert.strictEqual(service.items[0].placeName, 'Cached Park');
     assert.false(service.items[0].placeNameLoading);
   });
 
-  test('name cache is persisted to localStorage', function (assert) {
-    const service = this.owner.lookup('service:contributions');
-    service._nameCache.set('osm:node:42', 'Test Place');
-    service._saveNameCache();
+  test('resolved names are persisted to the IndexedDB name cache', async function (assert) {
+    const events = [
+      makePhotoEvent({
+        id: 'e1',
+        created_at: 1000,
+        placeIdentifier: 'osm:node:42',
+      }),
+    ];
 
-    const raw = localStorage.getItem('marco:contributions:name_cache');
-    assert.ok(raw, 'Cache entry exists in localStorage');
-    const parsed = JSON.parse(raw);
-    assert.strictEqual(parsed['osm:node:42'], 'Test Place');
+    const service = this.owner.lookup('service:contributions');
+    service.osm.fetchOsmObjectsBatch = async () => {
+      const map = new Map();
+      map.set('node:42', { title: 'Test Place' });
+      return map;
+    };
+
+    service._updateItems(events);
+    await flushPromises();
+
+    assert.strictEqual(
+      await service.localForage.get(NAME_CACHE_STORE, 'osm:node:42'),
+      'Test Place',
+      'Name is persisted to the IndexedDB name cache'
+    );
   });
 
-  test('name cache is loaded from localStorage on construction', function (assert) {
-    localStorage.setItem(
-      'marco:contributions:name_cache',
-      JSON.stringify({ 'osm:node:77': 'Persisted Place' })
-    );
+  test('names stored in a previous session are resolved from the IndexedDB cache', async function (assert) {
+    const events = [
+      makePhotoEvent({
+        id: 'e1',
+        created_at: 1000,
+        placeIdentifier: 'osm:node:77',
+      }),
+    ];
 
     const service = this.owner.lookup('service:contributions');
-    assert.strictEqual(
-      service._nameCache.get('osm:node:77'),
+    await service.localForage.set(
+      NAME_CACHE_STORE,
+      'osm:node:77',
       'Persisted Place'
     );
+
+    service._updateItems(events);
+    await flushPromises();
+
+    assert.strictEqual(service.items[0].placeName, 'Persisted Place');
+    assert.false(service.items[0].placeNameLoading);
   });
 
   test('batch fetch failure applies a fallback name so items do not stay loading', async function (assert) {
@@ -143,7 +173,7 @@ module('Unit | Service | contributions', function (hooks) {
     service._updateItems(events);
 
     // Wait for the background batch to complete
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await flushPromises();
 
     assert.false(
       service.items[0].placeNameLoading,
@@ -169,31 +199,18 @@ module('Unit | Service | contributions', function (hooks) {
     service.osm.fetchOsmObjectsBatch = async () => new Map();
 
     service._updateItems(events);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await flushPromises();
 
     // Fallback should be shown but NOT cached
     assert.strictEqual(service.items[0].placeName, 'OSM node 666');
-    assert.false(
-      service._nameCache.has('osm:node:666'),
-      'Fallback is not stored in the name cache'
+    assert.notOk(
+      await service.localForage.get(NAME_CACHE_STORE, 'osm:node:666'),
+      'No fallback name persisted in the IndexedDB name cache'
     );
     assert.true(
       service._unresolvable.has('osm:node:666'),
       'Item is marked unresolvable for this session'
     );
-
-    // Verify the fallback was NOT persisted to localStorage
-    service._saveNameCache();
-    const raw = localStorage.getItem('marco:contributions:name_cache');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      assert.notOk(
-        parsed['osm:node:666'],
-        'No fallback name persisted in localStorage'
-      );
-    } else {
-      assert.true(true, 'No cache entry was persisted');
-    }
   });
 
   test('unresolvable items are not re-fetched within the same session', async function (assert) {
@@ -214,14 +231,14 @@ module('Unit | Service | contributions', function (hooks) {
 
     // First update triggers a fetch
     service._updateItems(events);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await flushPromises();
 
     assert.strictEqual(fetchCount, 1, 'First update triggers a fetch');
     assert.strictEqual(service.items[0].placeName, 'OSM node 777');
 
     // Second update should NOT trigger another fetch (already unresolvable)
     service._updateItems(events);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await flushPromises();
 
     assert.strictEqual(fetchCount, 1, 'Second update does not re-fetch');
     assert.strictEqual(
@@ -248,11 +265,11 @@ module('Unit | Service | contributions', function (hooks) {
     };
 
     service._updateItems(events);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await flushPromises();
 
     assert.strictEqual(service.items[0].placeName, 'Resolved Café');
     assert.strictEqual(
-      service._nameCache.get('osm:node:111'),
+      await service.localForage.get(NAME_CACHE_STORE, 'osm:node:111'),
       'Resolved Café',
       'Name is stored in the name cache'
     );

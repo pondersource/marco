@@ -20,7 +20,7 @@ class MockOsmService extends Service {
   }
 
   getCachedOsmObject() {
-    return null;
+    return Promise.resolve(null);
   }
 }
 
