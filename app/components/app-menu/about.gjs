@@ -94,6 +94,26 @@ import Icon from '#components/icon';
               <tr>
                 <td>
                   <a
+                    href="https://openfreemap.org"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Map tiles
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://github.com/hyperknot/openfreemap/blob/main/LICENSE.md"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Various
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
                     href="https://github.com/feathericons/feather"
                     target="_blank"
                     rel="noopener"
