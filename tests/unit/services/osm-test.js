@@ -348,8 +348,8 @@ module('Unit | Service | osm', function (hooks) {
       'Batch fetch does not write to the in-memory OSM cache'
     );
     assert.notOk(
-      localStorage.getItem('marco:osm_cache:node:100'),
-      'Batch fetch does not write to the localStorage OSM cache'
+      await service.localForage.get('osm-cache', 'node:100'),
+      'Batch fetch does not write to the persistent OSM cache'
     );
   });
 
@@ -431,5 +431,66 @@ module('Unit | Service | osm', function (hooks) {
       capturedUrls.some((u) => u.includes('/relations.json?relations=')),
       'Uses relations.json endpoint'
     );
+  });
+
+  test('fetchOsmObject with forceFresh bypasses the cache and returns fresh data', async function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    // Seed both caches so we can prove forceFresh skips them.
+    service.cachedPlaces.set('node:5', {
+      data: { title: 'Stale In-Memory', lat: 1, lon: 1 },
+      timestamp: Date.now(),
+    });
+    await service.localForage.set('osm-cache', 'node:5', {
+      data: { title: 'Stale IndexedDB', lat: 1, lon: 1 },
+      timestamp: Date.now(),
+    });
+
+    service.fetchWithRetry = async () => ({
+      ok: true,
+      json: async () => ({
+        elements: [
+          {
+            id: 5,
+            type: 'node',
+            lat: 2,
+            lon: 3,
+            tags: { name: 'Fresh From API' },
+          },
+        ],
+      }),
+    });
+
+    const result = await service.fetchOsmObject('5', 'node', {
+      forceFresh: true,
+    });
+
+    assert.strictEqual(
+      result.title,
+      'Fresh From API',
+      'Returns fresh API data, not cached data'
+    );
+    assert.strictEqual(result.lat, 2);
+    assert.strictEqual(result.lon, 3);
+  });
+
+  test('fetchOsmObject without forceFresh returns the in-memory cache entry without hitting the API', async function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    service.cachedPlaces.set('node:6', {
+      data: { title: 'Warm In-Memory', lat: 4, lon: 5 },
+      timestamp: Date.now(),
+    });
+
+    let fetchCalled = 0;
+    service.fetchWithRetry = async () => {
+      fetchCalled++;
+      return { ok: true, json: async () => ({ elements: [] }) };
+    };
+
+    const result = await service.fetchOsmObject('6', 'node');
+
+    assert.strictEqual(fetchCalled, 0, 'API was not hit');
+    assert.strictEqual(result.title, 'Warm In-Memory');
   });
 });

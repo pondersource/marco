@@ -1,6 +1,23 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
 
+// Detects whether the fresh OSM data differs from the currently-shown model
+// by more than ~1m of coordinate drift, or in any tag. Mirrors the relevant
+// subset of `storage.refreshPlace`'s diff for the non-bookmark path.
+function hasOsmChanges(place, fresh) {
+  const latDiff = Math.abs((place.lat ?? 0) - (fresh.lat ?? 0));
+  const lonDiff = Math.abs((place.lon ?? 0) - (fresh.lon ?? 0));
+  if (latDiff > 0.00001 || lonDiff > 0.00001) return true;
+
+  const oldTags = place.osmTags || {};
+  const newTags = fresh.osmTags || {};
+  const allKeys = new Set([...Object.keys(oldTags), ...Object.keys(newTags)]);
+  for (const key of allKeys) {
+    if (oldTags[key] !== newTags[key]) return true;
+  }
+  return false;
+}
+
 export default class PlaceRoute extends Route {
   @service storage;
   @service osm;
@@ -131,14 +148,32 @@ export default class PlaceRoute extends Route {
   }
 
   async checkUpdates(place) {
-    // Only check for updates if it's a saved place (has ID) and is an OSM object
-    if (place && place.id && place.osmId && place.osmType) {
+    if (!place || !place.osmId || !place.osmType) return;
+
+    // Bookmarked place — refresh via storage, which persists the update.
+    if (place.id) {
       const updatedPlace = await this.storage.refreshPlace(place);
       if (updatedPlace) {
-        // If an update occurred, refresh the map UI selection without moving the camera
-        // This ensures the sidebar shows the new data
+        // If an update occurred, refresh the map UI selection without moving
+        // the camera. This ensures the sidebar shows the new data.
         this.mapUi.selectPlace(updatedPlace, { preventZoom: true });
       }
+      return;
+    }
+
+    // Non-bookmarked explicit OSM place — fetch fresh and update the model
+    // in-place if anything changed, so the sidebar reflects the latest OSM
+    // data without requiring a re-open.
+    try {
+      const fresh = await this.osm.fetchOsmObject(place.osmId, place.osmType, {
+        forceFresh: true,
+      });
+      if (fresh && hasOsmChanges(place, fresh)) {
+        Object.assign(place, fresh);
+        this.mapUi.selectPlace(place, { preventZoom: true });
+      }
+    } catch (e) {
+      console.debug('[place] Fresh fetch failed for', place.osmId, e);
     }
   }
 

@@ -4,16 +4,18 @@ import { getCategoryById } from '../utils/poi-categories';
 
 export default class OsmService extends Service {
   @service settings;
+  @service localForage;
 
   controller = null;
   cachedResults = null;
   lastQueryKey = null;
   cachedPlaces = new Map();
 
-  // Long-term cache for OSM place metadata, persisted to localStorage so that
-  // names and basic info survive across sessions and can be rendered instantly
-  // without waiting on the OSM API. Entries are refreshed in the background.
-  static CACHE_KEY_PREFIX = 'marco:osm_cache:';
+  // Long-term cache for OSM place metadata, persisted to IndexedDB (via the
+  // `localForage` service) so that names and basic info survive across
+  // sessions and can be rendered instantly without waiting on the OSM API.
+  // Entries are refreshed in the background.
+  static STORE_NAME = 'osm-cache';
   static CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
   static IN_MEMORY_TTL_MS = 10000; // 10 seconds
 
@@ -21,27 +23,24 @@ export default class OsmService extends Service {
     return `${osmType}:${osmId}`;
   }
 
-  _readLocalCache(osmType, osmId) {
-    if (typeof localStorage === 'undefined') return null;
-    const key = `${OsmService.CACHE_KEY_PREFIX}${osmType}:${osmId}`;
+  async _readLocalCache(osmType, osmId) {
+    const key = this._buildCacheKey(osmType, osmId);
     try {
-      const raw = localStorage.getItem(key);
+      const raw = await this.localForage.get(OsmService.STORE_NAME, key);
       if (!raw) return null;
-      const parsed = JSON.parse(raw);
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
       if (
         !parsed ||
         typeof parsed.timestamp !== 'number' ||
         Date.now() - parsed.timestamp > OsmService.CACHE_TTL_MS
       ) {
-        localStorage.removeItem(key);
+        await this.localForage.remove(OsmService.STORE_NAME, key);
         return null;
       }
       return parsed.data;
     } catch {
       try {
-        localStorage.removeItem(
-          `${OsmService.CACHE_KEY_PREFIX}${osmType}:${osmId}`
-        );
+        await this.localForage.remove(OsmService.STORE_NAME, key);
       } catch {
         // ignore
       }
@@ -49,31 +48,32 @@ export default class OsmService extends Service {
     }
   }
 
-  _writeLocalCache(osmType, osmId, data) {
-    if (typeof localStorage === 'undefined' || !data) return;
-    const key = `${OsmService.CACHE_KEY_PREFIX}${osmType}:${osmId}`;
+  async _writeLocalCache(osmType, osmId, data) {
+    if (!data) return;
+    const key = this._buildCacheKey(osmType, osmId);
     try {
-      localStorage.setItem(
-        key,
-        JSON.stringify({ data, timestamp: Date.now() })
-      );
+      await this.localForage.set(OsmService.STORE_NAME, key, {
+        data,
+        timestamp: Date.now(),
+      });
     } catch (e) {
-      console.debug('[osm] Failed to write localStorage cache entry', e);
+      console.debug('[osm] Failed to write IndexedDB cache entry', e);
     }
   }
 
   /**
-   * Synchronous lookup for an OSM place. Checks the short-lived in-memory cache
-   * first, then the persistent localStorage cache. Returns `null` if not cached.
+   * Async lookup for an OSM place. Checks the short-lived in-memory cache
+   * first, then the persistent IndexedDB cache. Returns `null` if not
+   * cached.
    *
-   * Use this for instant rendering (e.g. place names in a list) and fall back to
-   * `fetchOsmObject` for a fresh fetch + background refresh.
+   * Use this for instant rendering (e.g. place names in a list) and fall
+   * back to `fetchOsmObject` for a fresh fetch + background refresh.
    *
    * @param {string} osmType 'node' | 'way' | 'relation'
    * @param {string} osmId
-   * @returns {object|null} Normalized OSM place data
+   * @returns {Promise<object|null>} Normalized OSM place data
    */
-  getCachedOsmObject(osmType, osmId) {
+  async getCachedOsmObject(osmType, osmId) {
     if (!osmType || !osmId) return null;
 
     const cacheKey = this._buildCacheKey(osmType, osmId);
@@ -103,7 +103,9 @@ export default class OsmService extends Service {
       this.cachedPlaces.delete(cacheKey);
     }, OsmService.IN_MEMORY_TTL_MS);
 
-    this._writeLocalCache(osmType, osmId, data);
+    // Fire-and-forget the persistent write — the in-memory cache covers the
+    // next immediate read, and the IndexedDB write happens in the background.
+    void this._writeLocalCache(osmType, osmId, data);
   }
 
   cancelAll() {
@@ -326,22 +328,30 @@ out center;
     return this.normalizePoi(data.elements[0]);
   }
 
-  async fetchOsmObject(osmId, osmType) {
+  async fetchOsmObject(osmId, osmType, { forceFresh = false } = {}) {
     if (!osmId || !osmType) return null;
 
     const cacheKey = this._buildCacheKey(osmType, osmId);
+
+    // Force a fresh fetch from the API, bypassing the cache. Used by callers
+    // that need genuinely current data (e.g. storage.refreshPlace, which
+    // diffs the bookmark against freshly-fetched OSM data).
+    if (forceFresh) {
+      return this._fetchAndCacheOsmObject(osmId, osmType, cacheKey);
+    }
+
+    // Cached-first path: return the in-memory entry if it's still warm.
     const cached = this.cachedPlaces.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < OsmService.IN_MEMORY_TTL_MS) {
       console.debug(`Using in-memory cached OSM object for ${cacheKey}`);
       return cached.data;
     }
 
-    // If we have a persistent (localStorage) cache entry, return it immediately and
-    // kick off a background refresh. This keeps the UI snappy while still ensuring
-    // the cache is updated with the latest OSM data.
-    const localCached = this._readLocalCache(osmType, osmId);
+    // Otherwise return the persistent IndexedDB entry and refresh in the
+    // background so the next visit is fresh.
+    const localCached = await this._readLocalCache(osmType, osmId);
     if (localCached) {
-      console.debug(`Using localStorage cached OSM object for ${cacheKey}`);
+      console.debug(`Using IndexedDB cached OSM object for ${cacheKey}`);
       // Refresh in the background, but don't block the caller.
       this._refreshOsmObject(osmId, osmType, cacheKey).catch((e) => {
         console.debug('[osm] Background refresh failed for', cacheKey, e);
@@ -415,7 +425,7 @@ out center;
     for (const { osmType, osmId } of items) {
       if (!osmType || !osmId) continue;
       const cacheKey = this._buildCacheKey(osmType, osmId);
-      const cached = this.getCachedOsmObject(osmType, osmId);
+      const cached = await this.getCachedOsmObject(osmType, osmId);
       if (cached) {
         result.set(cacheKey, cached);
       } else {

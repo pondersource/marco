@@ -426,7 +426,8 @@ export default class StorageService extends Service {
       console.debug(`Checking for updates for ${place.title} (${place.osmId})`);
       const freshData = await this.osm.fetchOsmObject(
         place.osmId,
-        place.osmType
+        place.osmType,
+        { forceFresh: true }
       );
 
       if (!freshData) {

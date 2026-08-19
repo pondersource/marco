@@ -110,6 +110,7 @@
     "blurhash": "^2.0.5",
     "ember-concurrency": "^5.2.0",
     "ember-lifeline": "^7.1.0",
+    "localforage": "^1.10.0",
     "nostr-idb": "^5.1.0",
     "oauth2-pkce": "^3.0.0",
     "qrcode": "^1.5.4",
