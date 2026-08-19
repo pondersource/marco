@@ -1,14 +1,23 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'marco/tests/helpers';
 import { render, click } from '@ember/test-helpers';
+import Service from '@ember/service';
 import ContributionsTimeline from 'marco/components/contributions-timeline';
+import { setupNostrMocks } from 'marco/tests/helpers/mock-nostr';
 
 function noop() {}
 
+class MockToastService extends Service {
+  show() {}
+}
+
 module('Integration | Component | contributions-timeline', function (hooks) {
   setupRenderingTest(hooks);
+  setupNostrMocks(hooks);
 
   hooks.beforeEach(function () {
+    this.owner.register('service:toast', MockToastService);
+
     this.noop = noop;
     this.emptyItems = [];
   });
@@ -46,6 +55,28 @@ module('Integration | Component | contributions-timeline', function (hooks) {
     );
 
     assert.dom('.empty-state').includesText('Connect your Nostr account');
+  });
+
+  test('clicking "Connect your Nostr account" opens the Nostr connect modal', async function (assert) {
+    await render(
+      <template>
+        <div id="modal-portal"></div>
+        <ContributionsTimeline
+          @items={{this.emptyItems}}
+          @isLoading={{false}}
+          @isConnected={{false}}
+          @onBack={{this.noop}}
+          @onClose={{this.noop}}
+          @onSelect={{this.noop}}
+        />
+      </template>
+    );
+
+    assert.dom('.nostr-connect-modal').doesNotExist();
+
+    await click('.empty-state a');
+
+    assert.dom('.nostr-connect-modal').exists();
   });
 
   test('it renders an empty state when connected but no contributions', async function (assert) {
