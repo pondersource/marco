@@ -328,19 +328,27 @@ out center;
     return this.normalizePoi(data.elements[0]);
   }
 
-  async fetchOsmObject(osmId, osmType) {
+  async fetchOsmObject(osmId, osmType, { forceFresh = false } = {}) {
     if (!osmId || !osmType) return null;
 
     const cacheKey = this._buildCacheKey(osmType, osmId);
+
+    // Force a fresh fetch from the API, bypassing the cache. Used by callers
+    // that need genuinely current data (e.g. storage.refreshPlace, which
+    // diffs the bookmark against freshly-fetched OSM data).
+    if (forceFresh) {
+      return this._fetchAndCacheOsmObject(osmId, osmType, cacheKey);
+    }
+
+    // Cached-first path: return the in-memory entry if it's still warm.
     const cached = this.cachedPlaces.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < OsmService.IN_MEMORY_TTL_MS) {
       console.debug(`Using in-memory cached OSM object for ${cacheKey}`);
       return cached.data;
     }
 
-    // If we have a persistent (IndexedDB) cache entry, return it immediately and
-    // kick off a background refresh. This keeps the UI snappy while still ensuring
-    // the cache is updated with the latest OSM data.
+    // Otherwise return the persistent IndexedDB entry and refresh in the
+    // background so the next visit is fresh.
     const localCached = await this._readLocalCache(osmType, osmId);
     if (localCached) {
       console.debug(`Using IndexedDB cached OSM object for ${cacheKey}`);

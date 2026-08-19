@@ -15,8 +15,10 @@ module('Unit | Service | storage', function (hooks) {
     let service = this.owner.lookup('service:storage');
 
     // Stub OSM Service
+    let capturedOptions;
     class OsmStub extends Service {
-      async fetchOsmObject(id, type) {
+      async fetchOsmObject(id, type, options) {
+        capturedOptions = options;
         return {
           osmId: id,
           osmType: type,
@@ -49,6 +51,10 @@ module('Unit | Service | storage', function (hooks) {
 
     assert.ok(updatePlaceCalled, 'updatePlace should be called');
     assert.strictEqual(result.lat, 52.5201, 'Latitude updated');
+    assert.ok(
+      capturedOptions?.forceFresh,
+      'refreshPlace fetches fresh OSM data (forceFresh: true)'
+    );
   });
 
   test('refreshPlace ignores tiny coordinate drift', async function (assert) {
