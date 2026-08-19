@@ -1,7 +1,8 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'marco/tests/helpers';
-import { render, click } from '@ember/test-helpers';
+import { render, click, settled } from '@ember/test-helpers';
 import ContributionPhoto from 'marco/components/contribution-photo';
+import { ContributionEntry } from 'marco/utils/contributions';
 
 function noop() {}
 
@@ -144,5 +145,41 @@ module('Integration | Component | contribution-photo', function (hooks) {
     await click('.contribution-item');
 
     assert.strictEqual(selected, this.item);
+  });
+
+  test('it updates the place name when a tracked entry resolves after render', async function (assert) {
+    // Regression: when a place name is resolved by the background batch fetch
+    // after the entry has already been rendered as "Loading…", the component
+    // must re-render with the resolved name. This requires the entry's
+    // placeName/placeNameLoading to be tracked.
+    this.item = new ContributionEntry({
+      placeIdentifier: 'osm:node:12345',
+      osmType: 'node',
+      osmId: '12345',
+      createdAt: 1000,
+      photos: [
+        {
+          url: 'https://x.com/1.jpg',
+          thumbUrl: 'https://x.com/t1.jpg',
+          tags: [],
+        },
+      ],
+    });
+
+    await render(
+      <template>
+        <ContributionPhoto @item={{this.item}} @onSelect={{this.noop}} />
+      </template>
+    );
+
+    assert.dom('.contribution-name-loading').hasText('Loading…');
+
+    // Simulate the contributions service resolving the name after the batch fetch
+    this.item.placeName = 'Resolved Café';
+    this.item.placeNameLoading = false;
+    await settled();
+
+    assert.dom('.contribution-place').hasText('Resolved Café');
+    assert.dom('.contribution-name-loading').doesNotExist();
   });
 });
