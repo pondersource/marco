@@ -320,19 +320,46 @@ module('Integration | Component | place-details', function (hooks) {
     const links = whatsappBlock.querySelectorAll('a[href^="https://wa.me/"]');
     assert.strictEqual(links.length, 2, 'Rendered exactly 2 WhatsApp links');
 
-    // Verify it stripped the dashes and spaces for the wa.me URL
+    // Verify it stripped the dashes, spaces and leading plus for the wa.me URL
     assert.strictEqual(
       links[0].getAttribute('href'),
-      'https://wa.me/+44987654321'
+      'https://wa.me/44987654321'
     );
     assert.strictEqual(
       links[1].getAttribute('href'),
-      'https://wa.me/+12345678900'
+      'https://wa.me/12345678900'
     );
 
     // Verify it kept the dashes and spaces for the visible text
     assert.dom(links[0]).hasText('+44 987 654 321');
     assert.dom(links[1]).hasText('+1 234-567 8900');
+  });
+
+  test('it strips parentheses, dots and the leading plus from whatsapp hrefs', async function (assert) {
+    const place = {
+      title: 'Chat Shop',
+      osmTags: {
+        whatsapp: '+504-9850-3802;(504) 9850.3802;+1.234.567.8900',
+      },
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    const links = this.element.querySelectorAll('a[href^="https://wa.me/"]');
+    assert.strictEqual(links.length, 3, 'Rendered exactly 3 WhatsApp links');
+
+    assert.strictEqual(
+      links[0].getAttribute('href'),
+      'https://wa.me/50498503802'
+    );
+    assert.strictEqual(
+      links[1].getAttribute('href'),
+      'https://wa.me/50498503802'
+    );
+    assert.strictEqual(
+      links[2].getAttribute('href'),
+      'https://wa.me/12345678900'
+    );
   });
 
   test('it renders correct OpenStreetMap link for an OSM place', async function (assert) {
