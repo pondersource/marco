@@ -1,6 +1,6 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
-import { from } from 'rxjs';
+import { EMPTY, from } from 'rxjs';
 import { EventStore } from 'applesauce-core/event-store';
 import { ProfileModel } from 'applesauce-core/models/profile';
 import { MailboxesModel } from 'applesauce-core/models/mailboxes';
@@ -17,9 +17,9 @@ import {
 import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
 
 const DIRECTORY_RELAYS = [
-  'wss://purplepag.es',
-  'wss://relay.damus.io',
+  'wss://relay.primal.net',
   'wss://nos.lol',
+  'wss://relay.damus.io',
 ];
 
 const DEFAULT_READ_RELAYS = ['wss://nostr.kosmos.org'];
@@ -48,10 +48,24 @@ export default class NostrDataService extends Service {
 
   _requestSub = null;
   _cachePromise = null;
+  _currentPlaceEntityId = null;
   loadedGeohashPrefixes = new Set();
 
   constructor() {
     super(...arguments);
+
+    // Set up the event loader synchronously so that any subscription
+    // (e.g. loadProfiles from a route's afterModel) can auto-fetch even
+    // before the IndexedDB cache has finished opening. The cacheRequest
+    // is lazy — it returns EMPTY until `this.cache` is available, so the
+    // loader falls through to relay hints → lookup relays in the meantime.
+    createEventLoaderForStore(this.store, this.nostrRelay.pool, {
+      cacheRequest: (filters) => {
+        if (!this.cache) return EMPTY;
+        return from(this.cache.query(filters));
+      },
+      lookupRelays: DIRECTORY_RELAYS,
+    });
 
     // Initialize the IndexedDB cache
     this._cachePromise = openDB('applesauce-events').then(async (db) => {
@@ -85,13 +99,6 @@ export default class NostrDataService extends Service {
           maxBatchSize: 100,
         }
       );
-
-      // Set up the event loader so replaceable/event subscriptions auto-fetch
-      // from cache → relay hints → lookup relays with batching and dedup
-      createEventLoaderForStore(this.store, this.nostrRelay.pool, {
-        cacheRequest: (filters) => from(this.cache.query(filters)),
-        lookupRelays: DIRECTORY_RELAYS,
-      });
     });
 
     // Feed events from the relay pool into the event store
@@ -223,6 +230,18 @@ export default class NostrDataService extends Service {
   }
 
   async loadPhotosForPlace(place) {
+    const entityId =
+      place && place.osmId && place.osmType
+        ? `osm:${place.osmType}:${place.osmId}`
+        : null;
+
+    // Skip the full reset if we're loading the same place again (e.g. from
+    // checkUpdates calling selectPlace a second time). This prevents tearing
+    // down timeline and profile subscriptions that are still in-flight.
+    if (entityId && entityId === this._currentPlaceEntityId) {
+      return;
+    }
+
     if (this._photosSub) {
       this._photosSub.unsubscribe();
       this._photosSub = null;
@@ -230,12 +249,11 @@ export default class NostrDataService extends Service {
 
     this.placePhotos = [];
     this._clearProfileSubs();
+    this._currentPlaceEntityId = entityId;
 
-    if (!place || !place.osmId || !place.osmType) {
+    if (!entityId) {
       return;
     }
-
-    const entityId = `osm:${place.osmType}:${place.osmId}`;
 
     // Setup reactive store query
     this._photosSub = this.store
@@ -507,12 +525,12 @@ export default class NostrDataService extends Service {
       this._contributionsSub.unsubscribe();
       this._contributionsSub = null;
     }
-    this._clearProfileSubs();
   }
 
   willDestroy() {
     super.willDestroy(...arguments);
     this._cleanupSubscriptions();
+    this._clearProfileSubs();
 
     if (this._stopPersisting) {
       this._stopPersisting();
