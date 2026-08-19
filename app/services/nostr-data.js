@@ -1,10 +1,12 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
+import { from } from 'rxjs';
 import { EventStore } from 'applesauce-core/event-store';
 import { ProfileModel } from 'applesauce-core/models/profile';
 import { MailboxesModel } from 'applesauce-core/models/mailboxes';
 import { npubEncode } from 'applesauce-core/helpers/pointers';
 import { persistEventsToCache } from 'applesauce-core/helpers/event-cache';
+import { createEventLoaderForStore } from 'applesauce-loaders/loaders';
 import { NostrIDB, openDB } from 'nostr-idb';
 import {
   excludeRequiredRelays,
@@ -35,12 +37,14 @@ export default class NostrDataService extends Service {
   @tracked blossomServers = [];
   @tracked placePhotos = [];
   @tracked myContributionEvents = [];
+  @tracked profiles = {};
 
   _profileSub = null;
   _mailboxesSub = null;
   _blossomSub = null;
   _photosSub = null;
   _contributionsSub = null;
+  _profileModelSubs = new Map();
 
   _requestSub = null;
   _cachePromise = null;
@@ -81,6 +85,13 @@ export default class NostrDataService extends Service {
           maxBatchSize: 100,
         }
       );
+
+      // Set up the event loader so replaceable/event subscriptions auto-fetch
+      // from cache → relay hints → lookup relays with batching and dedup
+      createEventLoaderForStore(this.store, this.nostrRelay.pool, {
+        cacheRequest: (filters) => from(this.cache.query(filters)),
+        lookupRelays: DIRECTORY_RELAYS,
+      });
     });
 
     // Feed events from the relay pool into the event store
@@ -218,6 +229,7 @@ export default class NostrDataService extends Service {
     }
 
     this.placePhotos = [];
+    this._clearProfileSubs();
 
     if (!place || !place.osmId || !place.osmType) {
       return;
@@ -235,6 +247,8 @@ export default class NostrDataService extends Service {
       ])
       .subscribe((events) => {
         this.placePhotos = events;
+        const pubkeys = [...new Set(events.map((e) => e.pubkey))];
+        this.loadProfiles(pubkeys);
       });
 
     try {
@@ -329,6 +343,33 @@ export default class NostrDataService extends Service {
         );
       },
     });
+  }
+
+  loadProfiles(pubkeys) {
+    const newPubkeys = pubkeys.filter(
+      (pk) => pk && !this._profileModelSubs.has(pk)
+    );
+
+    for (const pubkey of newPubkeys) {
+      const sub = this.store
+        .model(ProfileModel, pubkey)
+        .subscribe((profileContent) => {
+          this.profiles = { ...this.profiles, [pubkey]: profileContent };
+        });
+      this._profileModelSubs.set(pubkey, sub);
+    }
+  }
+
+  getProfile(pubkey) {
+    return this.profiles[pubkey];
+  }
+
+  _clearProfileSubs() {
+    for (const sub of this._profileModelSubs.values()) {
+      sub.unsubscribe();
+    }
+    this._profileModelSubs.clear();
+    this.profiles = {};
   }
 
   async loadProfile(pubkey) {
@@ -466,6 +507,7 @@ export default class NostrDataService extends Service {
       this._contributionsSub.unsubscribe();
       this._contributionsSub = null;
     }
+    this._clearProfileSubs();
   }
 
   willDestroy() {
