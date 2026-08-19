@@ -34,6 +34,15 @@ import Icon from '#components/icon';
         >remote storage</a>
         to sync place bookmarks across apps and devices.
       </p>
+      <p>
+        Connect your
+        <a
+          href="https://start.nostr.net"
+          target="_blank"
+          rel="noopener"
+        >Nostr</a>
+        identity to publish photos of places.
+      </p>
 
       <details>
         <summary>
