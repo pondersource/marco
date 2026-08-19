@@ -232,7 +232,7 @@ export default class PlaceDetails extends Component {
       return htmlSafe(
         parts
           .map((p) => {
-            const safeTel = p.replace(/[\s-]+/g, '');
+            const safeTel = p.replace(/[\s()+.-]/g, '');
             return `<a href="https://wa.me/${safeTel}" target="_blank" rel="noopener noreferrer">${p}</a>`;
           })
           .join('<br>')
