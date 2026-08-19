@@ -10,6 +10,7 @@ import ContributionsTimeline from '#components/contributions-timeline';
       @onSelect={{@controller.selectContribution}}
       @onBack={{@controller.backToMenu}}
       @onClose={{@controller.close}}
+      @onNostrConnected={{@controller.onNostrConnected}}
     />
   {{/if}}
 </template>
