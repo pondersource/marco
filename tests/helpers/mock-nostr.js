@@ -9,7 +9,12 @@ export class MockNostrAuthService extends Service {
   @tracked connectUri = null;
 
   get isConnected() {
-    return false;
+    return (
+      !!this.pubkey &&
+      (this.signerType === 'extension'
+        ? typeof window !== 'undefined' && typeof window.nostr !== 'undefined'
+        : true)
+    );
   }
 
   get isMobile() {

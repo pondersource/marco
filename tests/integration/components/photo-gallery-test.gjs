@@ -480,7 +480,8 @@ module('Integration | Component | photo-gallery', function (hooks) {
   });
 
   test('it shows Zap this photo in the dropdown', async function (assert) {
-    this.nostrAuth.pubkey = USER_A;
+    this.nostrAuth.pubkey = USER_B;
+    this.nostrAuth.signerType = 'connect';
     this.selectedPhoto = this.photos[0];
 
     await render(
@@ -508,7 +509,8 @@ module('Integration | Component | photo-gallery', function (hooks) {
   });
 
   test('it opens zap modal when Zap this photo is clicked', async function (assert) {
-    this.nostrAuth.pubkey = USER_A;
+    this.nostrAuth.pubkey = USER_B;
+    this.nostrAuth.signerType = 'connect';
     this.selectedPhoto = this.photos[0];
 
     await render(

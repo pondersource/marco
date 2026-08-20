@@ -41,11 +41,13 @@ const GalleryContent = <template>
               type="button"
               {{on "click" (fn @copyEventId closeMenu)}}
             >Copy Photo Event ID</button>
-            <button
-              class="dropdown-item"
-              type="button"
-              {{on "click" (fn @openZap closeMenu)}}
-            >Zap this photo</button>
+            {{#if @canZapPhoto}}
+              <button
+                class="dropdown-item"
+                type="button"
+                {{on "click" (fn @openZap closeMenu)}}
+              >Zap this photo</button>
+            {{/if}}
             {{#if @canDeletePhoto}}
               <button
                 class="dropdown-item text-danger"
@@ -120,6 +122,7 @@ export default class PhotoGallery extends Component {
   @service nostrAuth;
   @service nostrData;
   @service nostrRelay;
+  @service nostrZap;
   @service blossom;
   @service settings;
 
@@ -144,6 +147,14 @@ export default class PhotoGallery extends Component {
   get canDeletePhoto() {
     return (
       this.isCreator && this.settings.experimentalEnablePhotoDeletion === true
+    );
+  }
+
+  get canZapPhoto() {
+    return (
+      !this.isCreator &&
+      this.nostrAuth.isConnected &&
+      !!this.nostrZap.getLightningAddress(this.currentPhoto?.pubkey)
     );
   }
 
@@ -335,6 +346,7 @@ export default class PhotoGallery extends Component {
         @openZap={{this.openZap}}
         @closeZap={{this.closeZap}}
         @zapModalOpen={{this.zapModalOpen}}
+        @canZapPhoto={{this.canZapPhoto}}
       />
     {{else}}
       {{#in-element this.destinationElement}}
@@ -357,6 +369,7 @@ export default class PhotoGallery extends Component {
           @openZap={{this.openZap}}
           @closeZap={{this.closeZap}}
           @zapModalOpen={{this.zapModalOpen}}
+          @canZapPhoto={{this.canZapPhoto}}
         />
       {{/in-element}}
     {{/if}}
