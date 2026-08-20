@@ -31,7 +31,7 @@ function satsToSlider(sats) {
   );
 }
 
-const DEFAULT_SLIDER_POSITION = satsToSlider(1000);
+const DEFAULT_SLIDER_POSITION = satsToSlider(100);
 
 export default class ZapPhotoModal extends Component {
   @service nostrZap;

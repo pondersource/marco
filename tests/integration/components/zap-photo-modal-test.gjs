@@ -114,8 +114,8 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
     );
     assert.strictEqual(
       zapSpy.firstCall.args[1],
-      1_000_000,
-      'zap amount is 1000 sats in millisats'
+      100_000,
+      'zap amount is 100 sats in millisats'
     );
 
     await waitFor('.qr-code-container');
