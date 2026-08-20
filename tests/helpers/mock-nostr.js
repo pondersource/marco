@@ -36,10 +36,15 @@ export class MockNostrDataService extends Service {
   @tracked mailboxes = null;
   @tracked blossomServers = [];
   @tracked placePhotos = [];
+  @tracked profiles = {};
 
   store = {
     add: () => {},
   };
+
+  getProfile(pubkey) {
+    return this.profiles[pubkey];
+  }
 
   get activeReadRelays() {
     return [];

@@ -94,11 +94,14 @@ function parsePhotoFromEvent(event) {
   if (!url) return null;
 
   const placeIdentifier = tags.find((t) => t[0] === 'i')?.[1];
+  const publishedAtRaw = tags.find((t) => t[0] === 'published_at')?.[1];
+  const publishedAt = publishedAtRaw ? Number(publishedAtRaw) : null;
 
   return {
     eventId: event.id,
     pubkey: event.pubkey,
     createdAt: event.created_at,
+    publishedAt: publishedAt && publishedAt > 0 ? publishedAt : null,
     url,
     thumbUrl,
     blurhash,

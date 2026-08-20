@@ -339,4 +339,143 @@ module('Integration | Component | photo-gallery', function (hooks) {
     await triggerKeyEvent(document, 'keydown', 'Escape');
     assert.ok(closed, 'gallery was closed on escape key');
   });
+
+  test('it renders uploader name and date when profile is loaded', async function (assert) {
+    const displayName = 'Alice';
+    const publishedAt = Math.floor(Date.now() / 1000) - 60 * 60 * 24; // 1 day ago
+
+    this.nostrData.profiles = {
+      [USER_A]: { displayName, display_name: 'ignored', name: 'ignored' },
+    };
+
+    this.photos = [
+      {
+        eventId: 'event1',
+        pubkey: USER_A,
+        placeIdentifier: 'osm:node:12345',
+        url: 'https://example.com/photo.jpg',
+        publishedAt,
+        createdAt: publishedAt + 10,
+      },
+    ];
+    this.selectedPhoto = this.photos[0];
+
+    await render(
+      <template>
+        <div id="test-container">
+          <div id="modal-portal"></div>
+          <PhotoGallery
+            @photos={{this.photos}}
+            @selectedPhoto={{this.selectedPhoto}}
+          />
+        </div>
+      </template>
+    );
+
+    assert
+      .dom('.photo-gallery-uploader-name')
+      .hasText(displayName, 'uploader name is rendered');
+    assert
+      .dom('.photo-gallery-uploader-date')
+      .exists('date element is rendered');
+  });
+
+  test('it prefers published_at over created_at for the date', async function (assert) {
+    this.nostrData.profiles = {
+      [USER_A]: { displayName: 'Alice' },
+    };
+
+    const publishedAt = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 3; // 3 days ago
+    const createdAt = Math.floor(Date.now() / 1000) - 60; // 1 min ago
+
+    this.photos = [
+      {
+        eventId: 'event1',
+        pubkey: USER_A,
+        url: 'https://example.com/photo.jpg',
+        publishedAt,
+        createdAt,
+      },
+    ];
+    this.selectedPhoto = this.photos[0];
+
+    await render(
+      <template>
+        <div id="test-container">
+          <div id="modal-portal"></div>
+          <PhotoGallery
+            @photos={{this.photos}}
+            @selectedPhoto={{this.selectedPhoto}}
+          />
+        </div>
+      </template>
+    );
+
+    // Should show "3 days ago" (publishedAt), not "just now" (createdAt)
+    assert.dom('.photo-gallery-uploader-date').hasText('3 days ago');
+  });
+
+  test('it does not render uploader info when profile is missing', async function (assert) {
+    this.nostrData.profiles = {};
+
+    this.photos = [
+      {
+        eventId: 'event1',
+        pubkey: USER_A,
+        url: 'https://example.com/photo.jpg',
+        createdAt: Math.floor(Date.now() / 1000),
+      },
+    ];
+    this.selectedPhoto = this.photos[0];
+
+    await render(
+      <template>
+        <div id="test-container">
+          <div id="modal-portal"></div>
+          <PhotoGallery
+            @photos={{this.photos}}
+            @selectedPhoto={{this.selectedPhoto}}
+          />
+        </div>
+      </template>
+    );
+
+    assert
+      .dom('.photo-gallery-uploader-name')
+      .doesNotExist('uploader name is not rendered without profile');
+    // Date should still render since createdAt is present
+    assert.dom('.photo-gallery-uploader-date').exists('date is still rendered');
+  });
+
+  test('it falls back through displayName -> display_name -> name', async function (assert) {
+    this.nostrData.profiles = {
+      [USER_A]: { display_name: 'Bob', name: 'Robert' },
+    };
+
+    this.photos = [
+      {
+        eventId: 'event1',
+        pubkey: USER_A,
+        url: 'https://example.com/photo.jpg',
+        createdAt: Math.floor(Date.now() / 1000) - 60,
+      },
+    ];
+    this.selectedPhoto = this.photos[0];
+
+    await render(
+      <template>
+        <div id="test-container">
+          <div id="modal-portal"></div>
+          <PhotoGallery
+            @photos={{this.photos}}
+            @selectedPhoto={{this.selectedPhoto}}
+          />
+        </div>
+      </template>
+    );
+
+    assert
+      .dom('.photo-gallery-uploader-name')
+      .hasText('Bob', 'falls back to display_name when displayName is missing');
+  });
 });

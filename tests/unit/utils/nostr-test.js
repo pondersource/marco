@@ -210,6 +210,66 @@ module('Unit | Utility | nostr', function () {
     assert.strictEqual(photos[0].alt, null);
   });
 
+  test('parsePlacePhotos extracts published_at when present', function (assert) {
+    const events = [
+      {
+        id: 'event-1',
+        pubkey: 'pubkey-1',
+        created_at: 200,
+        tags: [
+          ['i', 'osm:node:123'],
+          ['published_at', '100'],
+          ['imeta', 'url https://example.com/photo.jpg', 'dim 800x600'],
+        ],
+      },
+    ];
+
+    const photos = parsePlacePhotos(events);
+
+    assert.strictEqual(photos.length, 1);
+    assert.strictEqual(photos[0].publishedAt, 100);
+    assert.strictEqual(photos[0].createdAt, 200);
+  });
+
+  test('parsePlacePhotos sets publishedAt to null when not present', function (assert) {
+    const events = [
+      {
+        id: 'event-1',
+        pubkey: 'pubkey-1',
+        created_at: 200,
+        tags: [
+          ['i', 'osm:node:123'],
+          ['imeta', 'url https://example.com/photo.jpg', 'dim 800x600'],
+        ],
+      },
+    ];
+
+    const photos = parsePlacePhotos(events);
+
+    assert.strictEqual(photos.length, 1);
+    assert.strictEqual(photos[0].publishedAt, null);
+  });
+
+  test('parsePlacePhotos ignores invalid published_at values', function (assert) {
+    const events = [
+      {
+        id: 'event-1',
+        pubkey: 'pubkey-1',
+        created_at: 200,
+        tags: [
+          ['i', 'osm:node:123'],
+          ['published_at', 'not-a-number'],
+          ['imeta', 'url https://example.com/photo.jpg', 'dim 800x600'],
+        ],
+      },
+    ];
+
+    const photos = parsePlacePhotos(events);
+
+    assert.strictEqual(photos.length, 1);
+    assert.strictEqual(photos[0].publishedAt, null);
+  });
+
   test('uniqNormalizedRelays returns normalized unique relays', function (assert) {
     const relays = uniqNormalizedRelays([
       'Relay.example.com',

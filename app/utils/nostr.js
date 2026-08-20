@@ -69,6 +69,10 @@ export function parsePlacePhotos(events) {
       let aspectRatio = 16 / 9; // default
       let altText = null;
       let placeIdentifier = event.tags.find((t) => t[0] === 'i')?.[1];
+      const publishedAtRaw = event.tags.find(
+        (t) => t[0] === 'published_at'
+      )?.[1];
+      const publishedAt = publishedAtRaw ? Number(publishedAtRaw) : null;
 
       for (const tag of imeta.slice(1)) {
         if (tag.startsWith('url ')) {
@@ -98,6 +102,7 @@ export function parsePlacePhotos(events) {
           eventId: event.id,
           pubkey: event.pubkey,
           createdAt: event.created_at,
+          publishedAt: publishedAt && publishedAt > 0 ? publishedAt : null,
           url,
           thumbUrl,
           blurhash,

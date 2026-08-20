@@ -7,10 +7,12 @@ import { service } from '@ember/service';
 import { modifier } from 'ember-modifier';
 import { task } from 'ember-concurrency';
 import { EventFactory } from 'applesauce-core';
+import or from 'ember-truth-helpers/helpers/or';
 import config from 'marco/config/environment';
 import DropdownMenu from './dropdown-menu';
 import PhotoCarousel from './photo-carousel';
 import Icon from './icon';
+import formatRelativeDate from '../helpers/format-relative-date';
 
 const GalleryContent = <template>
   <div
@@ -25,26 +27,41 @@ const GalleryContent = <template>
       class="photo-gallery-content"
       data-current-event-id={{@currentPhoto.eventId}}
     >
-      <div class="actions-btn-container">
-        <DropdownMenu
-          @iconSize={{24}}
-          @triggerIcon="more-horizontal"
-          @iconColor="white"
-          as |closeMenu|
-        >
-          <button
-            class="dropdown-item"
-            type="button"
-            {{on "click" (fn @copyEventId closeMenu)}}
-          >Copy Photo Event ID</button>
-          {{#if @canDeletePhoto}}
+      <div class="photo-gallery-header">
+        <div class="actions-btn-container">
+          <DropdownMenu
+            @iconSize={{24}}
+            @triggerIcon={{@triggerIcon}}
+            @iconColor="white"
+            as |closeMenu|
+          >
             <button
-              class="dropdown-item text-danger"
+              class="dropdown-item"
               type="button"
-              {{on "click" (fn @deletePhotoTask.perform closeMenu)}}
-            >Delete Photo</button>
-          {{/if}}
-        </DropdownMenu>
+              {{on "click" (fn @copyEventId closeMenu)}}
+            >Copy Photo Event ID</button>
+            {{#if @canDeletePhoto}}
+              <button
+                class="dropdown-item text-danger"
+                type="button"
+                {{on "click" (fn @deletePhotoTask.perform closeMenu)}}
+              >Delete Photo</button>
+            {{/if}}
+          </DropdownMenu>
+        </div>
+
+        {{#if (or @uploaderName @photoDate)}}
+          <div class="photo-gallery-uploader-info">
+            {{#if @uploaderName}}
+              <span class="photo-gallery-uploader-name">{{@uploaderName}}</span>
+            {{/if}}
+            {{#if @photoDate}}
+              <span class="photo-gallery-uploader-date">
+                {{formatRelativeDate @photoDate}}
+              </span>
+            {{/if}}
+          </div>
+        {{/if}}
       </div>
 
       <button
@@ -98,6 +115,13 @@ export default class PhotoGallery extends Component {
 
   @tracked currentPhoto = this.args.selectedPhoto || this.args.photos?.[0];
 
+  get triggerIcon() {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      return 'more-vertical';
+    }
+    return 'more-horizontal';
+  }
+
   get isCreator() {
     return (
       this.currentPhoto?.pubkey &&
@@ -110,6 +134,19 @@ export default class PhotoGallery extends Component {
     return (
       this.isCreator && this.settings.experimentalEnablePhotoDeletion === true
     );
+  }
+
+  get uploaderName() {
+    const pubkey = this.currentPhoto?.pubkey;
+    if (!pubkey) return null;
+    const profile = this.nostrData.getProfile?.(pubkey);
+    if (!profile) return null;
+    return profile.displayName || profile.display_name || profile.name || null;
+  }
+
+  get photoDate() {
+    const ts = this.currentPhoto?.publishedAt || this.currentPhoto?.createdAt;
+    return ts || null;
   }
 
   bindKeyboard = modifier((element, [handler]) => {
@@ -131,7 +168,7 @@ export default class PhotoGallery extends Component {
       e.target.closest('.thumbnail-strip-container') ||
       e.target.closest('.carousel-nav-btn') ||
       e.target.closest('.close-btn') ||
-      e.target.closest('.actions-btn-container')
+      e.target.closest('.photo-gallery-header')
     ) {
       return;
     }
@@ -268,6 +305,9 @@ export default class PhotoGallery extends Component {
         @handleVisiblePhotoChange={{this.handleVisiblePhotoChange}}
         @placeName={{@placeName}}
         @selectPhoto={{this.selectPhoto}}
+        @uploaderName={{this.uploaderName}}
+        @photoDate={{this.photoDate}}
+        @triggerIcon={{this.triggerIcon}}
       />
     {{else}}
       {{#in-element this.destinationElement}}
@@ -284,6 +324,9 @@ export default class PhotoGallery extends Component {
           @handleVisiblePhotoChange={{this.handleVisiblePhotoChange}}
           @placeName={{@placeName}}
           @selectPhoto={{this.selectPhoto}}
+          @uploaderName={{this.uploaderName}}
+          @photoDate={{this.photoDate}}
+          @triggerIcon={{this.triggerIcon}}
         />
       {{/in-element}}
     {{/if}}

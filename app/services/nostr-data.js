@@ -1,10 +1,12 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
+import { EMPTY, from } from 'rxjs';
 import { EventStore } from 'applesauce-core/event-store';
 import { ProfileModel } from 'applesauce-core/models/profile';
 import { MailboxesModel } from 'applesauce-core/models/mailboxes';
 import { npubEncode } from 'applesauce-core/helpers/pointers';
 import { persistEventsToCache } from 'applesauce-core/helpers/event-cache';
+import { createEventLoaderForStore } from 'applesauce-loaders/loaders';
 import { NostrIDB, openDB } from 'nostr-idb';
 import {
   excludeRequiredRelays,
@@ -15,9 +17,9 @@ import {
 import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
 
 const DIRECTORY_RELAYS = [
-  'wss://purplepag.es',
-  'wss://relay.damus.io',
+  'wss://relay.primal.net',
   'wss://nos.lol',
+  'wss://relay.damus.io',
 ];
 
 const DEFAULT_READ_RELAYS = ['wss://nostr.kosmos.org'];
@@ -35,19 +37,35 @@ export default class NostrDataService extends Service {
   @tracked blossomServers = [];
   @tracked placePhotos = [];
   @tracked myContributionEvents = [];
+  @tracked profiles = {};
 
   _profileSub = null;
   _mailboxesSub = null;
   _blossomSub = null;
   _photosSub = null;
   _contributionsSub = null;
+  _profileModelSubs = new Map();
 
   _requestSub = null;
   _cachePromise = null;
+  _currentPlaceEntityId = null;
   loadedGeohashPrefixes = new Set();
 
   constructor() {
     super(...arguments);
+
+    // Set up the event loader synchronously so that any subscription
+    // (e.g. loadProfiles from a route's afterModel) can auto-fetch even
+    // before the IndexedDB cache has finished opening. The cacheRequest
+    // is lazy — it returns EMPTY until `this.cache` is available, so the
+    // loader falls through to relay hints → lookup relays in the meantime.
+    createEventLoaderForStore(this.store, this.nostrRelay.pool, {
+      cacheRequest: (filters) => {
+        if (!this.cache) return EMPTY;
+        return from(this.cache.query(filters));
+      },
+      lookupRelays: DIRECTORY_RELAYS,
+    });
 
     // Initialize the IndexedDB cache
     this._cachePromise = openDB('applesauce-events').then(async (db) => {
@@ -212,18 +230,30 @@ export default class NostrDataService extends Service {
   }
 
   async loadPhotosForPlace(place) {
+    const entityId =
+      place && place.osmId && place.osmType
+        ? `osm:${place.osmType}:${place.osmId}`
+        : null;
+
+    // Skip the full reset if we're loading the same place again (e.g. from
+    // checkUpdates calling selectPlace a second time). This prevents tearing
+    // down timeline and profile subscriptions that are still in-flight.
+    if (entityId && entityId === this._currentPlaceEntityId) {
+      return;
+    }
+
     if (this._photosSub) {
       this._photosSub.unsubscribe();
       this._photosSub = null;
     }
 
     this.placePhotos = [];
+    this._clearProfileSubs();
+    this._currentPlaceEntityId = entityId;
 
-    if (!place || !place.osmId || !place.osmType) {
+    if (!entityId) {
       return;
     }
-
-    const entityId = `osm:${place.osmType}:${place.osmId}`;
 
     // Setup reactive store query
     this._photosSub = this.store
@@ -235,6 +265,8 @@ export default class NostrDataService extends Service {
       ])
       .subscribe((events) => {
         this.placePhotos = events;
+        const pubkeys = [...new Set(events.map((e) => e.pubkey))];
+        this.loadProfiles(pubkeys);
       });
 
     try {
@@ -329,6 +361,33 @@ export default class NostrDataService extends Service {
         );
       },
     });
+  }
+
+  loadProfiles(pubkeys) {
+    const newPubkeys = pubkeys.filter(
+      (pk) => pk && !this._profileModelSubs.has(pk)
+    );
+
+    for (const pubkey of newPubkeys) {
+      const sub = this.store
+        .model(ProfileModel, pubkey)
+        .subscribe((profileContent) => {
+          this.profiles = { ...this.profiles, [pubkey]: profileContent };
+        });
+      this._profileModelSubs.set(pubkey, sub);
+    }
+  }
+
+  getProfile(pubkey) {
+    return this.profiles[pubkey];
+  }
+
+  _clearProfileSubs() {
+    for (const sub of this._profileModelSubs.values()) {
+      sub.unsubscribe();
+    }
+    this._profileModelSubs.clear();
+    this.profiles = {};
   }
 
   async loadProfile(pubkey) {
@@ -471,6 +530,7 @@ export default class NostrDataService extends Service {
   willDestroy() {
     super.willDestroy(...arguments);
     this._cleanupSubscriptions();
+    this._clearProfileSubs();
 
     if (this._stopPersisting) {
       this._stopPersisting();
