@@ -38,6 +38,7 @@ export default class NostrDataService extends Service {
   @tracked placePhotos = [];
   @tracked myContributionEvents = [];
   @tracked profiles = {};
+  @tracked zapReceipts = {};
 
   _profileSub = null;
   _mailboxesSub = null;
@@ -45,6 +46,11 @@ export default class NostrDataService extends Service {
   _photosSub = null;
   _contributionsSub = null;
   _profileModelSubs = new Map();
+
+  _zapReceiptsSub = null;
+  _zapReceiptsNetworkSub = null;
+  _zapRefreshTimer = null;
+  _lastPhotoIds = new Set();
 
   _requestSub = null;
   _cachePromise = null;
@@ -87,7 +93,8 @@ export default class NostrDataService extends Service {
               e.kind === 5 ||
               e.kind === 10002 ||
               e.kind === 10063 ||
-              e.kind === 360
+              e.kind === 360 ||
+              e.kind === 9735
           );
 
           if (toCache.length > 0) {
@@ -247,7 +254,12 @@ export default class NostrDataService extends Service {
       this._photosSub = null;
     }
 
+    this._cleanupZapReceiptSubs();
+    this._clearZapRefreshTimer();
+
     this.placePhotos = [];
+    this.zapReceipts = {};
+    this._lastPhotoIds = new Set();
     this._clearProfileSubs();
     this._currentPlaceEntityId = entityId;
 
@@ -267,6 +279,7 @@ export default class NostrDataService extends Service {
         this.placePhotos = events;
         const pubkeys = [...new Set(events.map((e) => e.pubkey))];
         this.loadProfiles(pubkeys);
+        this._scheduleZapReceiptRefresh(events);
       });
 
     try {
@@ -500,6 +513,109 @@ export default class NostrDataService extends Service {
     }
   }
 
+  _scheduleZapReceiptRefresh(events) {
+    const newIds = new Set(events.map((e) => e.id));
+
+    let changed = false;
+    if (newIds.size !== this._lastPhotoIds.size) {
+      changed = true;
+    } else {
+      for (const id of newIds) {
+        if (!this._lastPhotoIds.has(id)) {
+          changed = true;
+          break;
+        }
+      }
+    }
+
+    if (!changed) return;
+    this._lastPhotoIds = newIds;
+
+    this._clearZapRefreshTimer();
+    this._zapRefreshTimer = setTimeout(() => {
+      this._zapRefreshTimer = null;
+      this._refreshZapReceiptSubscription([...newIds]);
+    }, 100);
+  }
+
+  _clearZapRefreshTimer() {
+    if (this._zapRefreshTimer) {
+      clearTimeout(this._zapRefreshTimer);
+      this._zapRefreshTimer = null;
+    }
+  }
+
+  _refreshZapReceiptSubscription(photoIds) {
+    this._cleanupZapReceiptSubs();
+
+    if (!photoIds || photoIds.length === 0) return;
+
+    // Batch IDs into filters of <=100 to stay under relay REQ limits
+    const BATCH_SIZE = 100;
+    const filters = [];
+    for (let i = 0; i < photoIds.length; i += BATCH_SIZE) {
+      filters.push({
+        kinds: [9735],
+        '#e': photoIds.slice(i, i + BATCH_SIZE),
+      });
+    }
+
+    // Reactive local query — emits whenever matching events are in the store
+    this._zapReceiptsSub = this.store.timeline(filters).subscribe((events) => {
+      this._updateZapReceipts(events);
+    });
+
+    // Load from IDB cache (fire-and-forget — store.add triggers timeline)
+    this._cachePromise
+      .then(() => this.cache.query(filters))
+      .then((cachedEvents) => {
+        if (cachedEvents && cachedEvents.length > 0) {
+          for (const event of cachedEvents) {
+            this.store.add(event);
+          }
+        }
+      })
+      .catch((e) => {
+        console.warn('[nostr-data] Failed to read zap receipts from cache', e);
+      });
+
+    // Network request (fire-and-forget)
+    this._zapReceiptsNetworkSub = this.nostrRelay.pool
+      .request(this.activeReadRelays, filters)
+      .subscribe({
+        next: (event) => {
+          this.store.add(event);
+        },
+        error: (err) => {
+          console.error('[nostr-data] Error fetching zap receipts:', err);
+        },
+      });
+  }
+
+  _updateZapReceipts(events) {
+    const grouped = {};
+    for (const receipt of events) {
+      for (const tag of receipt.tags) {
+        if (tag[0] === 'e' && tag[1]) {
+          if (!grouped[tag[1]]) grouped[tag[1]] = [];
+          grouped[tag[1]].push(receipt);
+        }
+      }
+    }
+    this.zapReceipts = { ...this.zapReceipts, ...grouped };
+  }
+
+  _cleanupZapReceiptSubs() {
+    if (this._zapReceiptsSub) {
+      this._zapReceiptsSub.unsubscribe();
+      this._zapReceiptsSub = null;
+    }
+    if (this._zapReceiptsNetworkSub) {
+      this._zapReceiptsNetworkSub.unsubscribe();
+      this._zapReceiptsNetworkSub = null;
+    }
+  }
+
   _cleanupSubscriptions() {
     if (this._requestSub) {
       this._requestSub.unsubscribe();
@@ -525,6 +641,8 @@ export default class NostrDataService extends Service {
       this._contributionsSub.unsubscribe();
       this._contributionsSub = null;
     }
+    this._cleanupZapReceiptSubs();
+    this._clearZapRefreshTimer();
   }
 
   willDestroy() {
