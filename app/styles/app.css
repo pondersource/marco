@@ -2207,11 +2207,6 @@ button.create-place {
     left: 0.5rem;
   }
 
-  .photo-gallery-overlay .photo-gallery-header .actions-btn-container {
-    width: 48px;
-    justify-content: center;
-  }
-
   .photo-gallery-overlay .photo-gallery-uploader-info {
     flex-direction: row;
     align-items: center;
@@ -2430,4 +2425,150 @@ button.create-place {
   font-size: 0.72rem;
   padding: 2px 6px;
   border-radius: 10px;
+}
+
+/* Generic modal heading reset (shared by all modals) */
+.modal-content h2,
+.modal-content h3 {
+  margin-top: 0;
+}
+
+/* Zap Photo Modal — scoped, nested styles */
+.zap-photo-modal {
+  text-align: left;
+
+  & h2 {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--divider-color);
+  }
+
+  & section.status {
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--divider-color);
+  }
+
+  & section.slider {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  & .amount-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  & .amount-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--default-list-color);
+  }
+
+  & .amount-unit {
+    font-size: 0.9rem;
+    color: var(--body-text-color);
+    opacity: 0.7;
+  }
+
+  & .zap-slider {
+    width: 100%;
+    accent-color: var(--default-list-color);
+    cursor: pointer;
+  }
+
+  & .slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--body-text-color);
+    opacity: 0.5;
+    padding: 0 0.25rem;
+  }
+
+  & .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  & .lightning-address {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  & .lightning-badge {
+    background: var(--default-list-color);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  & .lightning-address-text {
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: var(--body-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  & .zap-pay-prompt {
+    text-align: center;
+  }
+
+  & .qr-code-container {
+    margin-bottom: 1.5rem;
+  }
+
+  & .btn-full + .btn-full {
+    margin-top: 0.75rem;
+  }
+
+  & .alert-error {
+    font-size: 0.95rem;
+  }
+
+  & .meta-info {
+    font-size: 0.95rem;
+  }
+
+  & .centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding-top: 1.5rem;
+  }
+
+  & .success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  & .success-icon {
+    font-size: 3rem;
+  }
+
+  & .success h4 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  & .success p {
+    margin: 0;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--body-text-color);
+  }
 }

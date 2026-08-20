@@ -11,6 +11,7 @@ import or from 'ember-truth-helpers/helpers/or';
 import config from 'marco/config/environment';
 import DropdownMenu from './dropdown-menu';
 import PhotoCarousel from './photo-carousel';
+import ZapPhotoModal from './zap-photo-modal';
 import Icon from './icon';
 import formatRelativeDate from '../helpers/format-relative-date';
 
@@ -40,6 +41,13 @@ const GalleryContent = <template>
               type="button"
               {{on "click" (fn @copyEventId closeMenu)}}
             >Copy Photo Event ID</button>
+            {{#if @canZapPhoto}}
+              <button
+                class="dropdown-item"
+                type="button"
+                {{on "click" (fn @openZap closeMenu)}}
+              >Zap this photo</button>
+            {{/if}}
             {{#if @canDeletePhoto}}
               <button
                 class="dropdown-item text-danger"
@@ -94,6 +102,10 @@ const GalleryContent = <template>
         />
       </div>
     </div>
+
+    {{#if @zapModalOpen}}
+      <ZapPhotoModal @photo={{@currentPhoto}} @onClose={{@closeZap}} />
+    {{/if}}
   </div>
 </template>;
 
@@ -110,10 +122,12 @@ export default class PhotoGallery extends Component {
   @service nostrAuth;
   @service nostrData;
   @service nostrRelay;
+  @service nostrZap;
   @service blossom;
   @service settings;
 
   @tracked currentPhoto = this.args.selectedPhoto || this.args.photos?.[0];
+  @tracked zapModalOpen = false;
 
   get triggerIcon() {
     if (typeof window !== 'undefined' && window.innerWidth <= 768) {
@@ -133,6 +147,14 @@ export default class PhotoGallery extends Component {
   get canDeletePhoto() {
     return (
       this.isCreator && this.settings.experimentalEnablePhotoDeletion === true
+    );
+  }
+
+  get canZapPhoto() {
+    return (
+      !this.isCreator &&
+      this.nostrAuth.isConnected &&
+      !!this.nostrZap.getLightningAddress(this.currentPhoto?.pubkey)
     );
   }
 
@@ -168,7 +190,8 @@ export default class PhotoGallery extends Component {
       e.target.closest('.thumbnail-strip-container') ||
       e.target.closest('.carousel-nav-btn') ||
       e.target.closest('.close-btn') ||
-      e.target.closest('.photo-gallery-header')
+      e.target.closest('.photo-gallery-header') ||
+      e.target.closest('.modal-overlay')
     ) {
       return;
     }
@@ -222,6 +245,18 @@ export default class PhotoGallery extends Component {
       }
     }
     closeMenu();
+  }
+
+  @action
+  openZap(closeMenu, e) {
+    e?.stopPropagation();
+    this.zapModalOpen = true;
+    if (closeMenu) closeMenu();
+  }
+
+  @action
+  closeZap() {
+    this.zapModalOpen = false;
   }
 
   deletePhotoTask = task(async (closeMenu) => {
@@ -308,6 +343,10 @@ export default class PhotoGallery extends Component {
         @uploaderName={{this.uploaderName}}
         @photoDate={{this.photoDate}}
         @triggerIcon={{this.triggerIcon}}
+        @openZap={{this.openZap}}
+        @closeZap={{this.closeZap}}
+        @zapModalOpen={{this.zapModalOpen}}
+        @canZapPhoto={{this.canZapPhoto}}
       />
     {{else}}
       {{#in-element this.destinationElement}}
@@ -327,6 +366,10 @@ export default class PhotoGallery extends Component {
           @uploaderName={{this.uploaderName}}
           @photoDate={{this.photoDate}}
           @triggerIcon={{this.triggerIcon}}
+          @openZap={{this.openZap}}
+          @closeZap={{this.closeZap}}
+          @zapModalOpen={{this.zapModalOpen}}
+          @canZapPhoto={{this.canZapPhoto}}
         />
       {{/in-element}}
     {{/if}}

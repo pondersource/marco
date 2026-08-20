@@ -1,0 +1,499 @@
+import Component from '@glimmer/component';
+import { action } from '@ember/object';
+import { tracked } from '@glimmer/tracking';
+import { on } from '@ember/modifier';
+import { service } from '@ember/service';
+import { task } from 'ember-concurrency';
+import { eq } from 'ember-truth-helpers';
+import qrCode from '../modifiers/qr-code';
+import Icon from './icon';
+import Modal from './modal';
+
+const SLIDER_MIN_SATS = 10;
+const SLIDER_MAX_SATS = 100_000;
+const SLIDER_STEPS = 200;
+
+function sliderToSats(position) {
+  const t = position / SLIDER_STEPS;
+  return Math.round(
+    Math.exp(
+      Math.log(SLIDER_MIN_SATS) +
+        (Math.log(SLIDER_MAX_SATS) - Math.log(SLIDER_MIN_SATS)) * t
+    )
+  );
+}
+
+function satsToSlider(sats) {
+  return Math.round(
+    ((Math.log(sats) - Math.log(SLIDER_MIN_SATS)) /
+      (Math.log(SLIDER_MAX_SATS) - Math.log(SLIDER_MIN_SATS))) *
+      SLIDER_STEPS
+  );
+}
+
+const DEFAULT_SLIDER_POSITION = satsToSlider(100);
+
+export default class ZapPhotoModal extends Component {
+  @service nostrZap;
+  @service nostrAuth;
+  @service nostrData;
+  @service toast;
+
+  @tracked step = 'select-amount';
+  @tracked sliderPosition = DEFAULT_SLIDER_POSITION;
+  @tracked message = '';
+  @tracked error = null;
+  @tracked invoice = null;
+  @tracked lightningAddress = null;
+  @tracked lnurlEndpoint = null;
+  @tracked lnurlLoading = false;
+  @tracked lnurlError = null;
+  @tracked paymentNotDetected = false;
+
+  sliderSteps = SLIDER_STEPS;
+  sliderTicks = ['10', '100', '1k', '10k', '100k'];
+
+  _receiptSub = null;
+  _receiptTimeout = null;
+  _zapRequest = null;
+
+  RECEIPT_TIMEOUT_MS = 5 * 60 * 1000;
+
+  constructor() {
+    super(...arguments);
+    this._loadLightningInfo();
+  }
+
+  get photo() {
+    return this.args.photo;
+  }
+
+  get hasWebLN() {
+    return this.nostrZap.hasWebLN();
+  }
+
+  get effectiveAmount() {
+    return sliderToSats(this.sliderPosition);
+  }
+
+  get amountMsats() {
+    return this.effectiveAmount * 1000;
+  }
+
+  get formattedAmount() {
+    return this.effectiveAmount.toLocaleString();
+  }
+
+  get cannotZap() {
+    return !this.canZap;
+  }
+
+  get canZap() {
+    if (!this.lnurlEndpoint) return false;
+    if (this.lnurlError) return false;
+    if (this.effectiveAmount <= 0) return false;
+    return (
+      this.amountMsats >= this.lnurlEndpoint.minSendable &&
+      this.amountMsats <= this.lnurlEndpoint.maxSendable
+    );
+  }
+
+  get minSats() {
+    return this.lnurlEndpoint
+      ? Math.ceil(this.lnurlEndpoint.minSendable / 1000)
+      : 1;
+  }
+
+  get maxSats() {
+    return this.lnurlEndpoint
+      ? Math.floor(this.lnurlEndpoint.maxSendable / 1000)
+      : SLIDER_MAX_SATS;
+  }
+
+  get lightningUri() {
+    return this.invoice ? `lightning:${this.invoice}` : '';
+  }
+
+  get parsedInvoice() {
+    if (!this.invoice) return null;
+    try {
+      return this.nostrZap.parseInvoice(this.invoice);
+    } catch {
+      return null;
+    }
+  }
+  async _loadLightningInfo() {
+    const pubkey = this.photo?.pubkey;
+    if (!pubkey) return;
+
+    // Pre-warm the recipient relay cache so the zap request
+    // uses the recipient's NIP-65 inbox relays (where they'll
+    // see the zap receipt) instead of the sender's relays
+    this.nostrZap.loadRecipientRelays(pubkey).catch(() => {});
+
+    const address = this.nostrZap.getLightningAddress(pubkey);
+    if (!address) {
+      this.lnurlError =
+        'This user has no lightning address set in their profile';
+      return;
+    }
+
+    this.lightningAddress = address;
+    this.lnurlLoading = true;
+    this.lnurlError = null;
+
+    try {
+      this.lnurlEndpoint = await this.nostrZap.resolveLnurl(address);
+    } catch (err) {
+      this.lnurlError =
+        err instanceof Error ? err.message : 'Failed to fetch lightning info';
+    } finally {
+      this.lnurlLoading = false;
+    }
+  }
+  @action
+  updateSlider(e) {
+    this.sliderPosition = Number(e.target.value);
+  }
+
+  @action
+  updateMessage(e) {
+    this.message = e.target.value;
+  }
+
+  @action
+  handleClose() {
+    if (this.args.onClose) {
+      this.args.onClose();
+    }
+  }
+
+  @action
+  resetAndClose() {
+    this._cleanupReceiptSub();
+    this.step = 'select-amount';
+    this.error = null;
+    this.invoice = null;
+    this.paymentNotDetected = false;
+    this.handleClose();
+  }
+
+  @action
+  retry() {
+    this.step = 'select-amount';
+    this.error = null;
+  }
+
+  @action
+  showInvoice() {
+    this.step = 'awaiting-payment';
+    this.error = null;
+  }
+
+  @action
+  performZap() {
+    this.zapTask.perform();
+  }
+
+  @action
+  performWebLNPay() {
+    this.webLNPayTask.perform();
+  }
+
+  @action
+  copyInvoice() {
+    if (!this.invoice) return;
+    try {
+      navigator.clipboard.writeText(this.invoice);
+      this.toast.show('Invoice copied to clipboard');
+    } catch {
+      // no-op
+    }
+  }
+
+  _startReceiptSubscription(zapRequest) {
+    this._cleanupReceiptSub();
+    this._zapRequest = zapRequest;
+    this.paymentNotDetected = false;
+
+    this._receiptSub = this.nostrZap.subscribeForZapReceipt(
+      zapRequest,
+      this.photo,
+      () => {
+        this.step = 'success';
+        this._cleanupReceiptSub();
+      }
+    );
+
+    this._receiptTimeout = setTimeout(() => {
+      this.paymentNotDetected = true;
+    }, this.RECEIPT_TIMEOUT_MS);
+  }
+
+  _cleanupReceiptSub() {
+    if (this._receiptSub) {
+      this._receiptSub.unsubscribe();
+      this._receiptSub = null;
+    }
+    if (this._receiptTimeout) {
+      clearTimeout(this._receiptTimeout);
+      this._receiptTimeout = null;
+    }
+  }
+
+  zapTask = task(async () => {
+    if (!this.canZap) return;
+
+    this.step = 'fetching-invoice';
+    this.error = null;
+
+    try {
+      const { invoice, zapRequest } = await this.nostrZap.zap(
+        this.photo,
+        this.amountMsats,
+        this.message
+      );
+      this.invoice = invoice;
+      this.step = 'awaiting-payment';
+      this._startReceiptSubscription(zapRequest);
+    } catch (err) {
+      console.error('Zap failed:', err);
+      this.error = err instanceof Error ? err.message : 'Failed to create zap';
+      this.step = 'error';
+    }
+  });
+
+  webLNPayTask = task(async () => {
+    if (!this.invoice) return;
+
+    this.step = 'paying-with-wallet';
+    this.error = null;
+
+    try {
+      await this.nostrZap.payWithWebln(this.invoice);
+      this._cleanupReceiptSub();
+      this.step = 'success';
+    } catch (err) {
+      console.error('WebLN pay failed:', err);
+      this.error =
+        err instanceof Error ? err.message : 'Failed to pay with wallet';
+      this.step = 'wallet-pay-error';
+    }
+  });
+
+  willDestroy() {
+    this._cleanupReceiptSub();
+    super.willDestroy(...arguments);
+  }
+
+  <template>
+    <Modal @inline={{true}} @onClose={{this.resetAndClose}}>
+      <div class="zap-photo-modal">
+        <h2>Zap Photo</h2>
+
+        {{! Lightning address status }}
+        <section class="status">
+          {{#if this.lnurlLoading}}
+            <p class="meta-info">Loading lightning address...</p>
+          {{else if this.lightningAddress}}
+            <div class="lightning-address">
+              <span class="lightning-badge">Lightning</span>
+              <span
+                class="lightning-address-text"
+              >{{this.lightningAddress}}</span>
+            </div>
+          {{/if}}
+          {{#if this.lnurlError}}
+            <div class="alert alert-error">{{this.lnurlError}}</div>
+          {{/if}}
+        </section>
+
+        {{! Step: Select Amount }}
+        {{#if (eq this.step "select-amount")}}
+          <section class="slider">
+            <div class="amount-display">
+              <span
+                class="amount-value zap-amount"
+              >{{this.formattedAmount}}</span>
+              <span class="amount-unit">sats</span>
+            </div>
+
+            <input
+              type="range"
+              class="zap-slider"
+              min="0"
+              max={{this.sliderSteps}}
+              value={{this.sliderPosition}}
+              aria-label="Zap amount in sats"
+              {{on "input" this.updateSlider}}
+            />
+
+            <div class="slider-ticks">
+              {{#each this.sliderTicks as |label|}}
+                <span>{{label}}</span>
+              {{/each}}
+            </div>
+
+          </section>
+
+          <div class="form-group">
+            <label>Message (optional)</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Say something nice..."
+              aria-label="Zap message"
+              value={{this.message}}
+              {{on "input" this.updateMessage}}
+            />
+          </div>
+
+          <div class="edit-actions">
+            <button
+              type="button"
+              class="btn btn-outline"
+              {{on "click" this.resetAndClose}}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              disabled={{this.cannotZap}}
+              {{on "click" this.performZap}}
+            >
+              Zap
+              {{this.formattedAmount}}
+              sats
+            </button>
+          </div>
+        {{/if}}
+
+        {{! Step: Fetching Invoice }}
+        {{#if (eq this.step "fetching-invoice")}}
+          <div class="centered">
+            <Icon @name="loading-ring" @size={{32}} class="spin-animation" />
+            <p>Creating zap request and fetching invoice...</p>
+          </div>
+        {{/if}}
+
+        {{! Step: Awaiting Payment }}
+        {{#if (eq this.step "awaiting-payment")}}
+          <p class="zap-pay-prompt">
+            Scan to pay
+            <strong>{{this.formattedAmount}} sats</strong>
+          </p>
+
+          <div class="qr-code-container">
+            <canvas {{qrCode this.invoice}}></canvas>
+          </div>
+
+          {{#if this.hasWebLN}}
+            <button
+              type="button"
+              class="btn btn-primary btn-full webln-pay-btn"
+              {{on "click" this.performWebLNPay}}
+            >
+              Open in Lightning wallet
+            </button>
+          {{else}}
+            <a href={{this.lightningUri}} class="btn btn-primary btn-full">
+              Open in Lightning wallet
+            </a>
+          {{/if}}
+
+          <button
+            type="button"
+            class="btn btn-outline btn-full copy-invoice-btn"
+            {{on "click" this.copyInvoice}}
+          >
+            Copy payment request
+          </button>
+
+          {{#if this.paymentNotDetected}}
+            <p class="meta-info">
+              Payment not detected yet. Keep the QR code open and try paying
+              again, or use a different Lightning wallet.
+            </p>
+          {{/if}}
+        {{/if}}
+
+        {{! Step: Paying with Wallet }}
+        {{#if (eq this.step "paying-with-wallet")}}
+          <div class="centered">
+            <Icon @name="loading-ring" @size={{32}} class="spin-animation" />
+            <p>Paying invoice with WebLN...</p>
+          </div>
+        {{/if}}
+
+        {{! Step: Wallet Pay Error }}
+        {{#if (eq this.step "wallet-pay-error")}}
+          <div class="alert alert-error">{{this.error}}</div>
+          <p class="meta-info">
+            The WebLN payment failed. You can still scan the QR code with a
+            Lightning wallet.
+          </p>
+          <div class="edit-actions">
+            <button
+              type="button"
+              class="btn btn-outline"
+              {{on "click" this.resetAndClose}}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              {{on "click" this.showInvoice}}
+            >
+              Show Invoice
+            </button>
+          </div>
+        {{/if}}
+
+        {{! Step: Success }}
+        {{#if (eq this.step "success")}}
+          <div class="success zap-success">
+            <div class="success-icon">&#9889;</div>
+            <h4>Zap Sent!</h4>
+            <p>
+              You zapped
+              <strong>{{this.formattedAmount}} sats</strong>
+              {{#if this.message}}
+                with message: "{{this.message}}"
+              {{/if}}
+            </p>
+            <button
+              type="button"
+              class="btn btn-primary"
+              {{on "click" this.resetAndClose}}
+            >
+              Done
+            </button>
+          </div>
+        {{/if}}
+
+        {{! Step: Error }}
+        {{#if (eq this.step "error")}}
+          <div class="alert alert-error">{{this.error}}</div>
+          <div class="edit-actions">
+            <button
+              type="button"
+              class="btn btn-outline"
+              {{on "click" this.resetAndClose}}
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              {{on "click" this.retry}}
+            >
+              Try Again
+            </button>
+          </div>
+        {{/if}}
+      </div>
+    </Modal>
+  </template>
+}

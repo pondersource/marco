@@ -104,6 +104,7 @@
   "dependencies": {
     "@noble/hashes": "^2.3.0",
     "@waysidemapping/pinhead": "^15.25.0",
+    "applesauce-common": "^6.2.0",
     "applesauce-core": "^6.2.0",
     "applesauce-loaders": "^6.2.0",
     "applesauce-relay": "^6.2.1",
@@ -116,5 +117,6 @@
     "oauth2-pkce": "^3.0.0",
     "qrcode": "^1.5.4",
     "rxjs": "^7.8.2"
-  }
+  },
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
 }
