@@ -1093,6 +1093,11 @@ abbr[title] {
 }
 
 .btn {
+  /* TODO: remove this scoped rule in favor of a global box-sizing reset
+     (e.g. `*, *::before, *::after { box-sizing: border-box; }`) at the top
+     of this file. Needed so `width: 100%` .btn elements like <a class="btn-full">
+     include padding within their width like <button> does. */
+  box-sizing: border-box;
   padding: 0.6rem 1.2rem;
   border-radius: 4px;
   cursor: pointer;
