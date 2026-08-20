@@ -37,9 +37,20 @@ export class MockNostrDataService extends Service {
   @tracked blossomServers = [];
   @tracked placePhotos = [];
   @tracked profiles = {};
+  @tracked zapReceipts = {};
 
   store = {
     add: () => {},
+    timeline: () => ({
+      subscribe: () => ({
+        unsubscribe: () => {},
+      }),
+    }),
+    replaceable: () => ({
+      subscribe: () => ({
+        unsubscribe: () => {},
+      }),
+    }),
   };
 
   getProfile(pubkey) {
@@ -150,6 +161,17 @@ export class MockNostrZapService extends Service {
 
   hasWebLN() {
     return this._webLNAvailable;
+  }
+
+  subscribeForZapReceipt(zapRequest, photo, onReceipt) {
+    this._receiptCallback = onReceipt;
+    this._receiptZapRequest = zapRequest;
+    return {
+      unsubscribe: () => {
+        this._receiptCallback = null;
+        this._receiptZapRequest = null;
+      },
+    };
   }
 
   async zap() {

@@ -185,6 +185,35 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
     assert.dom('.zap-success h4').hasText('Zap Sent!', 'success title');
   });
 
+  test('it shows success when a matching zap receipt is received', async function (assert) {
+    await render(
+      <template>
+        <div id="modal-portal"></div>
+        <ZapPhotoModal @photo={{this.photo}} />
+      </template>
+    );
+
+    await click('.zap-modal-actions .btn-primary');
+    await waitFor('.zap-qr-container');
+
+    assert.dom('.zap-qr-container').exists('QR code is shown');
+
+    assert.ok(
+      this.nostrZap._receiptCallback,
+      'receipt subscription was started'
+    );
+
+    this.nostrZap._receiptCallback();
+
+    await waitFor('.zap-success');
+
+    assert.dom('.zap-success').exists('success state is shown after receipt');
+    assert.notOk(
+      this.nostrZap._receiptCallback,
+      'receipt subscription was cleaned up'
+    );
+  });
+
   test('it calls onClose when close button is clicked', async function (assert) {
     let closed = false;
     this.handleClose = () => {

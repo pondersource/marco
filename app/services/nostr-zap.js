@@ -165,6 +165,39 @@ export default class NostrZapService extends Service {
     return parseBolt11(invoice);
   }
 
+  subscribeForZapReceipt(zapRequest, photo, onReceipt) {
+    const eventId = photo.eventId;
+    const relays = this.getZapRelays();
+    const since = Math.floor(Date.now() / 1000) - 10;
+
+    return this.nostrRelay.pool
+      .subscription(relays, {
+        kinds: [9735],
+        '#e': [eventId],
+        since,
+      })
+      .subscribe({
+        next: (event) => {
+          this.nostrData.store.add(event);
+
+          const descTag = event.tags.find((t) => t[0] === 'description');
+          if (!descTag) return;
+
+          try {
+            const req = JSON.parse(descTag[1]);
+            if (req.id === zapRequest.id) {
+              onReceipt(event);
+            }
+          } catch {
+            // Invalid JSON in description tag
+          }
+        },
+        error: (err) => {
+          console.error('[nostr-zap] Receipt subscription error:', err);
+        },
+      });
+  }
+
   hasWebLN() {
     return typeof window !== 'undefined' && typeof window.webln !== 'undefined';
   }

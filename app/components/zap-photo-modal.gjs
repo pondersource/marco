@@ -47,9 +47,16 @@ export default class ZapPhotoModal extends Component {
   @tracked lnurlEndpoint = null;
   @tracked lnurlLoading = false;
   @tracked lnurlError = null;
+  @tracked paymentNotDetected = false;
 
   sliderSteps = SLIDER_STEPS;
   sliderTicks = ['10', '100', '1k', '10k', '100k'];
+
+  _receiptSub = null;
+  _receiptTimeout = null;
+  _zapRequest = null;
+
+  RECEIPT_TIMEOUT_MS = 5 * 60 * 1000;
 
   constructor() {
     super(...arguments);
@@ -162,9 +169,11 @@ export default class ZapPhotoModal extends Component {
 
   @action
   resetAndClose() {
+    this._cleanupReceiptSub();
     this.step = 'select-amount';
     this.error = null;
     this.invoice = null;
+    this.paymentNotDetected = false;
     this.handleClose();
   }
 
@@ -206,6 +215,36 @@ export default class ZapPhotoModal extends Component {
     e.stopPropagation();
   }
 
+  _startReceiptSubscription(zapRequest) {
+    this._cleanupReceiptSub();
+    this._zapRequest = zapRequest;
+    this.paymentNotDetected = false;
+
+    this._receiptSub = this.nostrZap.subscribeForZapReceipt(
+      zapRequest,
+      this.photo,
+      () => {
+        this.step = 'success';
+        this._cleanupReceiptSub();
+      }
+    );
+
+    this._receiptTimeout = setTimeout(() => {
+      this.paymentNotDetected = true;
+    }, this.RECEIPT_TIMEOUT_MS);
+  }
+
+  _cleanupReceiptSub() {
+    if (this._receiptSub) {
+      this._receiptSub.unsubscribe();
+      this._receiptSub = null;
+    }
+    if (this._receiptTimeout) {
+      clearTimeout(this._receiptTimeout);
+      this._receiptTimeout = null;
+    }
+  }
+
   zapTask = task(async () => {
     if (!this.canZap) return;
 
@@ -213,13 +252,14 @@ export default class ZapPhotoModal extends Component {
     this.error = null;
 
     try {
-      const { invoice } = await this.nostrZap.zap(
+      const { invoice, zapRequest } = await this.nostrZap.zap(
         this.photo,
         this.amountMsats,
         this.message
       );
       this.invoice = invoice;
       this.step = 'awaiting-payment';
+      this._startReceiptSubscription(zapRequest);
     } catch (err) {
       console.error('Zap failed:', err);
       this.error = err instanceof Error ? err.message : 'Failed to create zap';
@@ -235,6 +275,7 @@ export default class ZapPhotoModal extends Component {
 
     try {
       await this.nostrZap.payWithWebln(this.invoice);
+      this._cleanupReceiptSub();
       this.step = 'success';
     } catch (err) {
       console.error('WebLN pay failed:', err);
@@ -243,6 +284,11 @@ export default class ZapPhotoModal extends Component {
       this.step = 'wallet-pay-error';
     }
   });
+
+  willDestroy() {
+    this._cleanupReceiptSub();
+    super.willDestroy(...arguments);
+  }
 
   <template>
     {{! template-lint-disable no-invalid-interactive }}
@@ -395,6 +441,13 @@ export default class ZapPhotoModal extends Component {
                 Copy invoice
               </button>
             </div>
+
+            {{#if this.paymentNotDetected}}
+              <p class="zap-modal-hint">
+                Payment not detected yet. Keep the QR code open and try paying
+                again, or use a different Lightning wallet.
+              </p>
+            {{/if}}
 
             <div class="zap-modal-actions">
               <button
