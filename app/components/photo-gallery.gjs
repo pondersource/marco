@@ -180,7 +180,7 @@ export default class PhotoGallery extends Component {
       e.target.closest('.carousel-nav-btn') ||
       e.target.closest('.close-btn') ||
       e.target.closest('.photo-gallery-header') ||
-      e.target.closest('.zap-photo-modal-overlay')
+      e.target.closest('.modal-overlay')
     ) {
       return;
     }

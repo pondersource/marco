@@ -42,11 +42,11 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
     );
 
     assert.dom('.zap-slider').exists('slider is rendered');
-    assert.dom('.zap-amount-value').exists('amount is displayed');
+    assert.dom('.zap-amount').exists('amount is displayed');
     assert
-      .dom('.zap-modal-address-text')
+      .dom('.lightning-address-text')
       .hasText('user@example.com', 'lightning address is shown');
-    assert.dom('.zap-modal-badge').hasText('Lightning', 'badge is shown');
+    assert.dom('.lightning-badge').hasText('Lightning', 'badge is shown');
   });
 
   test('it shows error when user has no lightning address', async function (assert) {
@@ -60,10 +60,10 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
     );
 
     assert
-      .dom('.zap-modal-error-msg')
+      .dom('.alert-error')
       .exists('error message is shown when no lightning address');
     assert
-      .dom('.zap-modal-actions .btn-primary')
+      .dom('.edit-actions .btn-primary')
       .isDisabled('zap button is disabled when no address');
   });
 
@@ -80,11 +80,9 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       </template>
     );
 
+    assert.dom('.alert-error').exists('error shown when allowsNostr is false');
     assert
-      .dom('.zap-modal-error-msg')
-      .exists('error shown when allowsNostr is false');
-    assert
-      .dom('.zap-modal-actions .btn-primary')
+      .dom('.edit-actions .btn-primary')
       .isDisabled('zap button is disabled');
   });
 
@@ -103,10 +101,10 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
     );
 
     assert
-      .dom('.zap-modal-actions .btn-primary')
+      .dom('.edit-actions .btn-primary')
       .isNotDisabled('zap button is enabled when endpoint is valid');
 
-    await click('.zap-modal-actions .btn-primary');
+    await click('.edit-actions .btn-primary');
 
     assert.ok(zapSpy.calledOnce, 'nostrZap.zap was called');
     assert.deepEqual(
@@ -120,9 +118,9 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       'zap amount is 1000 sats in millisats'
     );
 
-    await waitFor('.zap-qr-container');
+    await waitFor('.qr-code-container');
 
-    assert.dom('.zap-qr-container').exists('QR code is shown');
+    assert.dom('.qr-code-container').exists('QR code is shown');
     assert.dom('.zap-pay-prompt').exists('payment prompt is shown');
     assert.notOk(closed, 'modal was not closed by clicking the Zap button');
   });
@@ -137,9 +135,9 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       </template>
     );
 
-    await fillIn('.zap-message-field textarea', 'Great photo!');
+    await fillIn('.form-group textarea', 'Great photo!');
 
-    await click('.zap-modal-actions .btn-primary');
+    await click('.edit-actions .btn-primary');
 
     assert.ok(zapSpy.calledOnce, 'nostrZap.zap was called');
     assert.strictEqual(
@@ -159,10 +157,10 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       </template>
     );
 
-    await click('.zap-modal-actions .btn-primary');
-    await waitFor('.zap-webln-btn');
+    await click('.edit-actions .btn-primary');
+    await waitFor('.webln-pay-btn');
 
-    assert.dom('.zap-webln-btn').exists('WebLN button is shown when available');
+    assert.dom('.webln-pay-btn').exists('WebLN button is shown when available');
   });
 
   test('it shows success after WebLN payment', async function (assert) {
@@ -175,9 +173,9 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       </template>
     );
 
-    await click('.zap-modal-actions .btn-primary');
-    await waitFor('.zap-webln-btn');
-    await click('.zap-webln-btn');
+    await click('.edit-actions .btn-primary');
+    await waitFor('.webln-pay-btn');
+    await click('.webln-pay-btn');
 
     await waitFor('.zap-success');
 
@@ -193,10 +191,10 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       </template>
     );
 
-    await click('.zap-modal-actions .btn-primary');
-    await waitFor('.zap-qr-container');
+    await click('.edit-actions .btn-primary');
+    await waitFor('.qr-code-container');
 
-    assert.dom('.zap-qr-container').exists('QR code is shown');
+    assert.dom('.qr-code-container').exists('QR code is shown');
 
     assert.ok(
       this.nostrZap._receiptCallback,
@@ -227,7 +225,7 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       </template>
     );
 
-    await click('.zap-modal-close');
+    await click('.close-modal-btn');
 
     assert.ok(closed, 'onClose was called');
   });
@@ -245,7 +243,7 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       </template>
     );
 
-    await click('.zap-modal-actions .btn-outline');
+    await click('.edit-actions .btn-outline');
 
     assert.ok(closed, 'onClose was called from Cancel button');
   });
@@ -268,7 +266,7 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
     assert.notOk(closed, 'onClose was not called when clicking inside modal');
   });
 
-  test('it does not close when clicking the overlay background', async function (assert) {
+  test('it closes when clicking the overlay background', async function (assert) {
     let closed = false;
     this.handleClose = () => {
       closed = true;
@@ -281,8 +279,8 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       </template>
     );
 
-    await click('.zap-photo-modal-overlay');
+    await click('.modal-overlay');
 
-    assert.notOk(closed, 'onClose was not called when clicking overlay');
+    assert.ok(closed, 'onClose was called when clicking overlay');
   });
 });

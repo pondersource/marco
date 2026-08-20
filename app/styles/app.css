@@ -2427,259 +2427,113 @@ button.create-place {
   border-radius: 10px;
 }
 
-/* Zap Photo Modal */
-.zap-photo-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 70%);
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
+/* Generic modal heading reset (shared by all modals) */
+.modal-content h2,
+.modal-content h3 {
+  margin-top: 0;
 }
 
+/* Zap Photo Modal — scoped, nested styles */
 .zap-photo-modal {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgb(0 0 0 / 30%);
-  width: 100%;
-  max-width: 420px;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.zap-photo-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--divider-color);
-}
-
-.zap-photo-modal-header h3 {
-  margin: 0;
-}
-
-.zap-modal-close {
-  background: none;
-  border: none;
-  padding: 0.25rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #898989;
-}
-
-.zap-modal-close:hover {
-  color: var(--body-text-color);
-}
-
-.zap-modal-status {
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid var(--divider-color);
-  min-height: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.zap-modal-loading {
-  font-size: 0.85rem;
-  color: #898989;
-}
-
-.zap-modal-address {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.zap-modal-badge {
-  background: #f7b500;
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.zap-modal-address-text {
-  font-family: monospace;
-  font-size: 0.8rem;
-  color: #555;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.zap-modal-error-msg {
-  color: var(--danger-color);
-  font-size: 0.85rem;
-  padding: 0.5rem 0.75rem;
-  background: rgb(234 67 53 / 8%);
-  border-radius: 4px;
-}
-
-.zap-modal-body {
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.zap-modal-center {
-  align-items: center;
   text-align: center;
-}
 
-.zap-amount-display {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.4rem;
-}
-
-.zap-amount-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #f7b500;
-}
-
-.zap-amount-unit {
-  font-size: 0.9rem;
-  color: #898989;
-}
-
-.zap-slider {
-  width: 100%;
-  accent-color: #f7b500;
-  cursor: pointer;
-}
-
-.zap-slider-ticks {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.7rem;
-  color: #aaa;
-  padding: 0 0.25rem;
-}
-
-.zap-min-max {
-  font-size: 0.75rem;
-  color: #898989;
-  text-align: center;
-}
-
-.zap-message-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.zap-message-field label {
-  font-size: 0.8rem;
-  color: #898989;
-}
-
-.zap-message-field textarea {
-  width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 0.5rem;
-  font-family: inherit;
-  font-size: 0.9rem;
-  resize: vertical;
-}
-
-.zap-message-field textarea:focus {
-  outline: none;
-  border-color: var(--link-color);
-}
-
-.zap-modal-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-.zap-modal-hint {
-  font-size: 0.8rem;
-  color: #898989;
-  text-align: center;
-}
-
-.zap-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #eee;
-  border-top-color: #f7b500;
-  border-radius: 50%;
-  animation: zap-spin 0.8s linear infinite;
-}
-
-@keyframes zap-spin {
-  to {
-    transform: rotate(360deg);
+  & h2 {
+    margin-bottom: 1rem;
   }
-}
 
-.zap-pay-prompt {
-  text-align: center;
-  font-size: 0.9rem;
-}
+  & .amount-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.4rem;
+  }
 
-.zap-qr-container {
-  display: flex;
-  justify-content: center;
-}
+  & .amount-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--default-list-color);
+  }
 
-.zap-qr-container canvas {
-  border-radius: 8px;
-  background: white;
-  padding: 8px;
-}
+  & .amount-unit {
+    font-size: 0.9rem;
+    color: var(--body-text-color);
+    opacity: 0.7;
+  }
 
-.zap-qr-container a {
-  display: block;
-}
+  & .zap-slider {
+    width: 100%;
+    accent-color: var(--default-list-color);
+    cursor: pointer;
+  }
 
-.zap-webln-btn {
-  width: 100%;
-}
+  & .slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--body-text-color);
+    opacity: 0.5;
+    padding: 0 0.25rem;
+  }
 
-.zap-open-wallet-link {
-  width: 100%;
-  text-align: center;
-  text-decoration: none;
-}
+  & .min-max {
+    font-size: 0.75rem;
+    color: var(--body-text-color);
+    opacity: 0.7;
+  }
 
-.zap-invoice-details {
-  display: flex;
-  justify-content: center;
-  font-size: 0.8rem;
-}
+  & .lightning-address {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
 
-.zap-success {
-  gap: 0.5rem;
-}
+  & .lightning-badge {
+    background: var(--default-list-color);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
-.zap-success-icon {
-  font-size: 3rem;
-}
+  & .lightning-address-text {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: var(--body-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-.zap-success h4 {
-  margin: 0;
-  font-size: 1.2rem;
-}
+  & .centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
 
-.zap-success p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #555;
+  & .success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  & .success-icon {
+    font-size: 3rem;
+  }
+
+  & .success h4 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  & .success p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--body-text-color);
+  }
 }

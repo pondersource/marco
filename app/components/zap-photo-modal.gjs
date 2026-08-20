@@ -7,6 +7,7 @@ import { task } from 'ember-concurrency';
 import { eq } from 'ember-truth-helpers';
 import qrCode from '../modifiers/qr-code';
 import Icon from './icon';
+import Modal from './modal';
 
 const SLIDER_MIN_SATS = 10;
 const SLIDER_MAX_SATS = 100_000;
@@ -210,11 +211,6 @@ export default class ZapPhotoModal extends Component {
     }
   }
 
-  @action
-  stopPropagation(e) {
-    e.stopPropagation();
-  }
-
   _startReceiptSubscription(zapRequest) {
     this._cleanupReceiptSub();
     this._zapRequest = zapRequest;
@@ -291,215 +287,189 @@ export default class ZapPhotoModal extends Component {
   }
 
   <template>
-    {{! template-lint-disable no-invalid-interactive }}
-    <div
-      class="zap-photo-modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      {{on "click" this.stopPropagation}}
-    >
+    <Modal @inline={{true}} @onClose={{this.resetAndClose}}>
       <div class="zap-photo-modal">
-        <div class="zap-photo-modal-header">
-          <h3>Zap Photo</h3>
-          <button
-            type="button"
-            class="btn-text zap-modal-close"
-            {{on "click" this.resetAndClose}}
-            aria-label="Close"
-          >
-            <Icon @name="x" @size={{20}} />
-          </button>
-        </div>
+        <h2>Zap Photo</h2>
 
         {{! Lightning address status }}
-        <div class="zap-modal-status">
-          {{#if this.lnurlLoading}}
-            <div class="zap-modal-loading">Loading lightning address...</div>
-          {{else if this.lightningAddress}}
-            <div class="zap-modal-address">
-              <span class="zap-modal-badge">Lightning</span>
-              <span
-                class="zap-modal-address-text"
-              >{{this.lightningAddress}}</span>
-            </div>
-          {{/if}}
-          {{#if this.lnurlError}}
-            <div class="zap-modal-error-msg">{{this.lnurlError}}</div>
-          {{/if}}
-        </div>
+        {{#if this.lnurlLoading}}
+          <p class="meta-info">Loading lightning address...</p>
+        {{else if this.lightningAddress}}
+          <div class="lightning-address">
+            <span class="lightning-badge">Lightning</span>
+            <span
+              class="lightning-address-text"
+            >{{this.lightningAddress}}</span>
+          </div>
+        {{/if}}
+        {{#if this.lnurlError}}
+          <div class="alert alert-error">{{this.lnurlError}}</div>
+        {{/if}}
 
         {{! Step: Select Amount }}
         {{#if (eq this.step "select-amount")}}
-          <div class="zap-modal-body">
-            <div class="zap-amount-display">
-              <span class="zap-amount-value">{{this.formattedAmount}}</span>
-              <span class="zap-amount-unit">sats</span>
+          <div class="amount-display">
+            <span
+              class="amount-value zap-amount"
+            >{{this.formattedAmount}}</span>
+            <span class="amount-unit">sats</span>
+          </div>
+
+          <input
+            type="range"
+            class="zap-slider"
+            min="0"
+            max={{this.sliderSteps}}
+            value={{this.sliderPosition}}
+            aria-label="Zap amount in sats"
+            {{on "input" this.updateSlider}}
+          />
+
+          <div class="slider-ticks">
+            {{#each this.sliderTicks as |label|}}
+              <span>{{label}}</span>
+            {{/each}}
+          </div>
+
+          {{#if this.lnurlEndpoint}}
+            <div class="min-max">
+              Min:
+              {{this.minSats}}
+              sats · Max:
+              {{this.maxSats}}
+              sats
             </div>
+          {{/if}}
 
-            <input
-              type="range"
-              min="0"
-              max={{this.sliderSteps}}
-              value={{this.sliderPosition}}
-              aria-label="Zap amount in sats"
-              {{on "input" this.updateSlider}}
-              class="zap-slider"
-            />
+          <div class="form-group">
+            <label>Message (optional)</label>
+            <textarea
+              class="form-control"
+              rows="2"
+              placeholder="Say something nice..."
+              aria-label="Zap message"
+              value={{this.message}}
+              {{on "input" this.updateMessage}}
+            ></textarea>
+          </div>
 
-            <div class="zap-slider-ticks">
-              {{#each this.sliderTicks as |label|}}
-                <span class="zap-tick">{{label}}</span>
-              {{/each}}
-            </div>
-
-            {{#if this.lnurlEndpoint}}
-              <div class="zap-min-max">
-                Min:
-                {{this.minSats}}
-                sats · Max:
-                {{this.maxSats}}
-                sats
-              </div>
-            {{/if}}
-
-            <div class="zap-message-field">
-              <label>Message (optional)</label>
-              <textarea
-                rows="2"
-                placeholder="Say something nice..."
-                aria-label="Zap message"
-                value={{this.message}}
-                {{on "input" this.updateMessage}}
-              ></textarea>
-            </div>
-
-            <div class="zap-modal-actions">
-              <button
-                type="button"
-                class="btn btn-outline"
-                {{on "click" this.resetAndClose}}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary"
-                disabled={{this.cannotZap}}
-                {{on "click" this.performZap}}
-              >
-                Zap
-                {{this.formattedAmount}}
-                sats
-              </button>
-            </div>
+          <div class="edit-actions">
+            <button
+              type="button"
+              class="btn btn-outline"
+              {{on "click" this.resetAndClose}}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              disabled={{this.cannotZap}}
+              {{on "click" this.performZap}}
+            >
+              Zap
+              {{this.formattedAmount}}
+              sats
+            </button>
           </div>
         {{/if}}
 
         {{! Step: Fetching Invoice }}
         {{#if (eq this.step "fetching-invoice")}}
-          <div class="zap-modal-body zap-modal-center">
-            <div class="zap-spinner"></div>
+          <div class="centered">
+            <Icon @name="loading-ring" @size={{32}} class="spin-animation" />
             <p>Creating zap request and fetching invoice...</p>
           </div>
         {{/if}}
 
         {{! Step: Awaiting Payment }}
         {{#if (eq this.step "awaiting-payment")}}
-          <div class="zap-modal-body">
-            <p class="zap-pay-prompt">
-              Scan to pay
-              <strong>{{this.formattedAmount}} sats</strong>
-            </p>
+          <p class="zap-pay-prompt">
+            Scan to pay
+            <strong>{{this.formattedAmount}} sats</strong>
+          </p>
 
-            <div class="zap-qr-container">
-              <canvas {{qrCode this.invoice}}></canvas>
-            </div>
+          <div class="qr-code-container">
+            <canvas {{qrCode this.invoice}}></canvas>
+          </div>
 
-            <a
-              href={{this.lightningUri}}
-              class="btn btn-outline zap-open-wallet-link"
+          <a href={{this.lightningUri}} class="btn btn-outline btn-full">
+            Open in Lightning wallet
+          </a>
+
+          {{#if this.hasWebLN}}
+            <button
+              type="button"
+              class="btn btn-primary btn-full webln-pay-btn"
+              {{on "click" this.performWebLNPay}}
             >
-              Open in Lightning wallet
-            </a>
+              Pay with WebLN
+            </button>
+          {{/if}}
 
-            {{#if this.hasWebLN}}
-              <button
-                type="button"
-                class="btn btn-primary zap-webln-btn"
-                {{on "click" this.performWebLNPay}}
-              >
-                Pay with WebLN
-              </button>
-            {{/if}}
+          <button
+            type="button"
+            class="btn-text copy-invoice-btn"
+            {{on "click" this.copyInvoice}}
+          >
+            Copy invoice
+          </button>
 
-            <div class="zap-invoice-details">
-              <button
-                type="button"
-                class="btn-text"
-                {{on "click" this.copyInvoice}}
-              >
-                Copy invoice
-              </button>
-            </div>
+          {{#if this.paymentNotDetected}}
+            <p class="meta-info">
+              Payment not detected yet. Keep the QR code open and try paying
+              again, or use a different Lightning wallet.
+            </p>
+          {{/if}}
 
-            {{#if this.paymentNotDetected}}
-              <p class="zap-modal-hint">
-                Payment not detected yet. Keep the QR code open and try paying
-                again, or use a different Lightning wallet.
-              </p>
-            {{/if}}
-
-            <div class="zap-modal-actions">
-              <button
-                type="button"
-                class="btn btn-outline"
-                {{on "click" this.resetAndClose}}
-              >
-                Cancel
-              </button>
-            </div>
+          <div class="edit-actions">
+            <button
+              type="button"
+              class="btn btn-outline"
+              {{on "click" this.resetAndClose}}
+            >
+              Cancel
+            </button>
           </div>
         {{/if}}
 
         {{! Step: Paying with Wallet }}
         {{#if (eq this.step "paying-with-wallet")}}
-          <div class="zap-modal-body zap-modal-center">
-            <div class="zap-spinner"></div>
+          <div class="centered">
+            <Icon @name="loading-ring" @size={{32}} class="spin-animation" />
             <p>Paying invoice with WebLN...</p>
           </div>
         {{/if}}
 
         {{! Step: Wallet Pay Error }}
         {{#if (eq this.step "wallet-pay-error")}}
-          <div class="zap-modal-body">
-            <div class="zap-modal-error-msg">{{this.error}}</div>
-            <p class="zap-modal-hint">
-              The WebLN payment failed. You can still scan the QR code with a
-              Lightning wallet.
-            </p>
-            <div class="zap-modal-actions">
-              <button
-                type="button"
-                class="btn btn-outline"
-                {{on "click" this.resetAndClose}}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary"
-                {{on "click" this.showInvoice}}
-              >
-                Show Invoice
-              </button>
-            </div>
+          <div class="alert alert-error">{{this.error}}</div>
+          <p class="meta-info">
+            The WebLN payment failed. You can still scan the QR code with a
+            Lightning wallet.
+          </p>
+          <div class="edit-actions">
+            <button
+              type="button"
+              class="btn btn-outline"
+              {{on "click" this.resetAndClose}}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              {{on "click" this.showInvoice}}
+            >
+              Show Invoice
+            </button>
           </div>
         {{/if}}
 
         {{! Step: Success }}
         {{#if (eq this.step "success")}}
-          <div class="zap-modal-body zap-modal-center zap-success">
-            <div class="zap-success-icon">&#9889;</div>
+          <div class="success zap-success">
+            <div class="success-icon">&#9889;</div>
             <h4>Zap Sent!</h4>
             <p>
               You zapped
@@ -520,27 +490,25 @@ export default class ZapPhotoModal extends Component {
 
         {{! Step: Error }}
         {{#if (eq this.step "error")}}
-          <div class="zap-modal-body">
-            <div class="zap-modal-error-msg">{{this.error}}</div>
-            <div class="zap-modal-actions">
-              <button
-                type="button"
-                class="btn btn-outline"
-                {{on "click" this.resetAndClose}}
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary"
-                {{on "click" this.retry}}
-              >
-                Try Again
-              </button>
-            </div>
+          <div class="alert alert-error">{{this.error}}</div>
+          <div class="edit-actions">
+            <button
+              type="button"
+              class="btn btn-outline"
+              {{on "click" this.resetAndClose}}
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              {{on "click" this.retry}}
+            >
+              Try Again
+            </button>
           </div>
         {{/if}}
       </div>
-    </div>
+    </Modal>
   </template>
 }

@@ -30,6 +30,10 @@ export default class Modal extends Component {
     return config.environment === 'test';
   }
 
+  get shouldPortal() {
+    return !this.isTesting && !this.args.inline;
+  }
+
   get destinationElement() {
     return document.getElementById('modal-portal') || document.body;
   }
@@ -48,15 +52,7 @@ export default class Modal extends Component {
   }
 
   <template>
-    {{#if this.isTesting}}
-      <ModalContent
-        @close={{this.close}}
-        @stopProp={{this.stopProp}}
-        @disableClose={{@disableClose}}
-      >
-        {{yield}}
-      </ModalContent>
-    {{else}}
+    {{#if this.shouldPortal}}
       {{#in-element this.destinationElement}}
         <ModalContent
           @close={{this.close}}
@@ -66,6 +62,14 @@ export default class Modal extends Component {
           {{yield}}
         </ModalContent>
       {{/in-element}}
+    {{else}}
+      <ModalContent
+        @close={{this.close}}
+        @stopProp={{this.stopProp}}
+        @disableClose={{@disableClose}}
+      >
+        {{yield}}
+      </ModalContent>
     {{/if}}
   </template>
 }
