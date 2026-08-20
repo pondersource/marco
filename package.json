@@ -104,6 +104,7 @@
   "dependencies": {
     "@noble/hashes": "^2.3.0",
     "@waysidemapping/pinhead": "^15.25.0",
+    "applesauce-common": "^6.2.0",
     "applesauce-core": "^6.2.0",
     "applesauce-loaders": "^6.2.0",
     "applesauce-relay": "^6.2.1",

@@ -478,4 +478,62 @@ module('Integration | Component | photo-gallery', function (hooks) {
       .dom('.photo-gallery-uploader-name')
       .hasText('Bob', 'falls back to display_name when displayName is missing');
   });
+
+  test('it shows Zap this photo in the dropdown', async function (assert) {
+    this.nostrAuth.pubkey = USER_A;
+    this.selectedPhoto = this.photos[0];
+
+    await render(
+      <template>
+        <div id="test-container">
+          <div id="modal-portal"></div>
+          <PhotoGallery
+            @photos={{this.photos}}
+            @selectedPhoto={{this.selectedPhoto}}
+          />
+        </div>
+      </template>
+    );
+
+    await click('.dropdown-trigger-btn');
+
+    let zapBtn;
+    document.querySelectorAll('.dropdown-item').forEach((item) => {
+      if (item.textContent.includes('Zap this photo')) {
+        zapBtn = item;
+      }
+    });
+
+    assert.ok(zapBtn, 'Zap this photo dropdown item exists');
+  });
+
+  test('it opens zap modal when Zap this photo is clicked', async function (assert) {
+    this.nostrAuth.pubkey = USER_A;
+    this.selectedPhoto = this.photos[0];
+
+    await render(
+      <template>
+        <div id="test-container">
+          <div id="modal-portal"></div>
+          <PhotoGallery
+            @photos={{this.photos}}
+            @selectedPhoto={{this.selectedPhoto}}
+          />
+        </div>
+      </template>
+    );
+
+    await click('.dropdown-trigger-btn');
+
+    let zapBtn;
+    document.querySelectorAll('.dropdown-item').forEach((item) => {
+      if (item.textContent.includes('Zap this photo')) {
+        zapBtn = item;
+      }
+    });
+
+    await click(zapBtn);
+
+    assert.dom('.zap-photo-modal').exists('zap modal is rendered');
+  });
 });

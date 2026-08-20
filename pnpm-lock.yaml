@@ -17,6 +17,9 @@ importers:
       '@waysidemapping/pinhead':
         specifier: ^15.25.0
         version: 15.25.0
+      applesauce-common:
+        specifier: ^6.2.0
+        version: 6.2.0(supports-color@10.2.2)(typescript@5.9.3)
       applesauce-core:
         specifier: ^6.2.0
         version: 6.2.0(supports-color@10.2.2)(typescript@5.9.3)
@@ -2636,6 +2639,9 @@ packages:
     resolution: {integrity: sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==}
     engines: {node: '>= 8'}
 
+  applesauce-common@6.2.0:
+    resolution: {integrity: sha512-meXbDCdqA1LKy1tr04BW7wMfnBBkHetLv+wlXYjAj5iR4Sji5KMxLFdAjUe6cSvrxrk9LxFcP+0P9BcZQxjpaA==}
+
   applesauce-core@6.2.0:
     resolution: {integrity: sha512-O6AlVyzqcuIhTOIuexm6UWmx7mRIa2D98gJP7K7vFGf90YdtvSH78AsKQWZXJ0Pk/K14at+9zkwfCkFr7ghgNw==}
 
@@ -4732,6 +4738,9 @@ packages:
 
   lie@3.1.1:
     resolution: {integrity: sha512-RiNhHysUjhrDQntfYSfY4MU24coXXdEOgw9WGcKHNeEwffDYbF//u87M1EWaMGzuFoSbqW0C9C6lEEhDOAswfw==}
+
+  light-bolt11-decoder@3.2.0:
+    resolution: {integrity: sha512-3QEofgiBOP4Ehs9BI+RkZdXZNtSys0nsJ6fyGeSiAGCBsMwHGUDS/JQlY/sTnWs91A2Nh0S9XXfA8Sy9g6QpuQ==}
 
   lightningcss-android-arm64@1.33.0:
     resolution: {integrity: sha512-gEpRTalKdosp4Bb8qWtc2iOgE5SeIHlpS1up9bFq2wAyYhl1UdTObYiHe98zEM9SQvSoqQZ1IQD0JNpg3Ml5pg==}
@@ -9348,6 +9357,18 @@ snapshots:
       normalize-path: 3.0.0
       picomatch: 2.3.1
 
+  applesauce-common@6.2.0(supports-color@10.2.2)(typescript@5.9.3):
+    dependencies:
+      '@scure/base': 2.2.0
+      applesauce-core: 6.2.0(supports-color@10.2.2)(typescript@5.9.3)
+      hash-sum: 2.0.0
+      light-bolt11-decoder: 3.2.0
+      nanoid: 5.1.9
+      rxjs: 7.8.2
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
   applesauce-core@6.2.0(supports-color@10.2.2)(typescript@5.9.3):
     dependencies:
       debug: 4.4.3(supports-color@10.2.2)
@@ -11973,6 +11994,10 @@ snapshots:
   lie@3.1.1:
     dependencies:
       immediate: 3.0.6
+
+  light-bolt11-decoder@3.2.0:
+    dependencies:
+      '@scure/base': 1.1.1
 
   lightningcss-android-arm64@1.33.0:
     optional: true
