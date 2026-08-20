@@ -2207,11 +2207,6 @@ button.create-place {
     left: 0.5rem;
   }
 
-  .photo-gallery-overlay .photo-gallery-header .actions-btn-container {
-    width: 48px;
-    justify-content: center;
-  }
-
   .photo-gallery-overlay .photo-gallery-uploader-info {
     flex-direction: row;
     align-items: center;
