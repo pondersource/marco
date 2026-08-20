@@ -18,6 +18,12 @@
       "sourceType": "github",
       "skillPath": "skills/nostr/SKILL.md",
       "computedHash": "e1e6834c18d18a5deef4cd9555f6eee0fc0b968acf1c619253999eda76beab8e"
+    },
+    "nostr-zap-integration": {
+      "source": "accolver/skill-maker",
+      "sourceType": "github",
+      "skillPath": "nostr-zap-integration/SKILL.md",
+      "computedHash": "5c0c9a97fb74b6b620340bdc522fc3e813dae34a2af87cfda764733d2632229c"
     }
   }
 }
