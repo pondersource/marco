@@ -135,7 +135,7 @@ module('Integration | Component | zap-photo-modal', function (hooks) {
       </template>
     );
 
-    await fillIn('.form-group textarea', 'Great photo!');
+    await fillIn('.form-group input', 'Great photo!');
 
     await click('.edit-actions .btn-primary');
 

@@ -292,65 +292,60 @@ export default class ZapPhotoModal extends Component {
         <h2>Zap Photo</h2>
 
         {{! Lightning address status }}
-        {{#if this.lnurlLoading}}
-          <p class="meta-info">Loading lightning address...</p>
-        {{else if this.lightningAddress}}
-          <div class="lightning-address">
-            <span class="lightning-badge">Lightning</span>
-            <span
-              class="lightning-address-text"
-            >{{this.lightningAddress}}</span>
-          </div>
-        {{/if}}
-        {{#if this.lnurlError}}
-          <div class="alert alert-error">{{this.lnurlError}}</div>
-        {{/if}}
+        <section class="status">
+          {{#if this.lnurlLoading}}
+            <p class="meta-info">Loading lightning address...</p>
+          {{else if this.lightningAddress}}
+            <div class="lightning-address">
+              <span class="lightning-badge">Lightning</span>
+              <span
+                class="lightning-address-text"
+              >{{this.lightningAddress}}</span>
+            </div>
+          {{/if}}
+          {{#if this.lnurlError}}
+            <div class="alert alert-error">{{this.lnurlError}}</div>
+          {{/if}}
+        </section>
 
         {{! Step: Select Amount }}
         {{#if (eq this.step "select-amount")}}
-          <div class="amount-display">
-            <span
-              class="amount-value zap-amount"
-            >{{this.formattedAmount}}</span>
-            <span class="amount-unit">sats</span>
-          </div>
-
-          <input
-            type="range"
-            class="zap-slider"
-            min="0"
-            max={{this.sliderSteps}}
-            value={{this.sliderPosition}}
-            aria-label="Zap amount in sats"
-            {{on "input" this.updateSlider}}
-          />
-
-          <div class="slider-ticks">
-            {{#each this.sliderTicks as |label|}}
-              <span>{{label}}</span>
-            {{/each}}
-          </div>
-
-          {{#if this.lnurlEndpoint}}
-            <div class="min-max">
-              Min:
-              {{this.minSats}}
-              sats · Max:
-              {{this.maxSats}}
-              sats
+          <section class="slider">
+            <div class="amount-display">
+              <span
+                class="amount-value zap-amount"
+              >{{this.formattedAmount}}</span>
+              <span class="amount-unit">sats</span>
             </div>
-          {{/if}}
+
+            <input
+              type="range"
+              class="zap-slider"
+              min="0"
+              max={{this.sliderSteps}}
+              value={{this.sliderPosition}}
+              aria-label="Zap amount in sats"
+              {{on "input" this.updateSlider}}
+            />
+
+            <div class="slider-ticks">
+              {{#each this.sliderTicks as |label|}}
+                <span>{{label}}</span>
+              {{/each}}
+            </div>
+
+          </section>
 
           <div class="form-group">
             <label>Message (optional)</label>
-            <textarea
+            <input
+              type="text"
               class="form-control"
-              rows="2"
               placeholder="Say something nice..."
               aria-label="Zap message"
               value={{this.message}}
               {{on "input" this.updateMessage}}
-            ></textarea>
+            />
           </div>
 
           <div class="edit-actions">
@@ -393,26 +388,26 @@ export default class ZapPhotoModal extends Component {
             <canvas {{qrCode this.invoice}}></canvas>
           </div>
 
-          <a href={{this.lightningUri}} class="btn btn-outline btn-full">
-            Open in Lightning wallet
-          </a>
-
           {{#if this.hasWebLN}}
             <button
               type="button"
               class="btn btn-primary btn-full webln-pay-btn"
               {{on "click" this.performWebLNPay}}
             >
-              Pay with WebLN
+              Open in Lightning wallet
             </button>
+          {{else}}
+            <a href={{this.lightningUri}} class="btn btn-primary btn-full">
+              Open in Lightning wallet
+            </a>
           {{/if}}
 
           <button
             type="button"
-            class="btn-text copy-invoice-btn"
+            class="btn btn-outline btn-full copy-invoice-btn"
             {{on "click" this.copyInvoice}}
           >
-            Copy invoice
+            Copy payment request
           </button>
 
           {{#if this.paymentNotDetected}}
@@ -421,16 +416,6 @@ export default class ZapPhotoModal extends Component {
               again, or use a different Lightning wallet.
             </p>
           {{/if}}
-
-          <div class="edit-actions">
-            <button
-              type="button"
-              class="btn btn-outline"
-              {{on "click" this.resetAndClose}}
-            >
-              Cancel
-            </button>
-          </div>
         {{/if}}
 
         {{! Step: Paying with Wallet }}
