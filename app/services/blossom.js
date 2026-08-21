@@ -24,14 +24,15 @@ export default class BlossomService extends Service {
   @service settings;
 
   get servers() {
-    const servers = this.nostrData.blossomServers;
-    const allServers = servers.length ? servers : [DEFAULT_BLOSSOM_SERVER];
+    const discovered = this.nostrData.blossomServers;
+    const mainServer = this.settings.nostrMediaServer || DEFAULT_BLOSSOM_SERVER;
+    const fallbacks = discovered.filter((server) => server !== mainServer);
 
     if (!this.settings.nostrPhotoFallbackUploads) {
-      return [allServers[0]];
+      return [mainServer];
     }
 
-    return allServers;
+    return [mainServer, ...fallbacks];
   }
 
   async _getAuthHeader(action, hash, serverUrl) {

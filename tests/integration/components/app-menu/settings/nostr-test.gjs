@@ -8,6 +8,7 @@ import {
   mergeRequiredRelays,
   uniqNormalizedRelays,
 } from 'marco/utils/nostr';
+import { DEFAULT_BLOSSOM_SERVER } from 'marco/services/blossom';
 
 class MockNostrDataService extends Service {
   @service settings;
@@ -17,6 +18,8 @@ class MockNostrDataService extends Service {
 
   mailboxReadRelays = ['wss://mailbox.example.com'];
   mailboxWriteRelays = ['wss://mailbox-write.example.com'];
+
+  blossomServers = [];
 
   get configuredReadRelays() {
     const configured = uniqNormalizedRelays([
@@ -184,5 +187,34 @@ module('Integration | Component | app-menu/settings/nostr', function (hooks) {
     assert.deepEqual(this.settings.nostrWriteRelayExclusions, [
       'wss://mailbox-write.example.com',
     ]);
+  });
+
+  test('media server dropdown shows only the default server when no blossom servers discovered', async function (assert) {
+    const element = await renderAndOpenDetails(this);
+    const select = element.querySelector('#nostr-media-server');
+
+    assert.dom(select).exists();
+    assert.strictEqual(select.options.length, 1);
+    assert.dom(select.options[0]).hasValue(DEFAULT_BLOSSOM_SERVER);
+    assert.dom(select.options[0]).hasText(DEFAULT_BLOSSOM_SERVER);
+    assert.strictEqual(select.value, DEFAULT_BLOSSOM_SERVER);
+    assert
+      .dom('#nostr-photo-fallback-uploads')
+      .doesNotExist('fallback toggle hidden with single media server');
+  });
+
+  test('media server dropdown lists discovered blossom servers', async function (assert) {
+    const servers = ['https://cdn.example.com', 'https://cdn.satellite.earth'];
+    this.owner.lookup('service:nostrData').blossomServers = servers;
+
+    const element = await renderAndOpenDetails(this);
+    const select = element.querySelector('#nostr-media-server');
+
+    assert.strictEqual(select.options.length, servers.length);
+    assert.dom(select.options[0]).hasValue(servers[0]);
+    assert.dom(select.options[1]).hasValue(servers[1]);
+    assert
+      .dom('#nostr-photo-fallback-uploads')
+      .exists('fallback toggle visible with multiple media servers');
   });
 });
