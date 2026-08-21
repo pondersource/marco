@@ -1,12 +1,15 @@
 import Service from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 
+import { DEFAULT_BLOSSOM_SERVER } from './blossom';
+
 const DEFAULT_SETTINGS = {
   overpassApi: 'https://overpass-api.de/api/interpreter',
   mapKinetic: true,
   photonApi: 'https://photon.komoot.io/api/',
   showQuickSearchButtons: true,
   nostrPhotoFallbackUploads: false,
+  nostrMediaServer: DEFAULT_BLOSSOM_SERVER,
   nostrReadRelays: null,
   nostrWriteRelays: null,
   nostrReadRelayExclusions: null,
@@ -21,6 +24,7 @@ export default class SettingsService extends Service {
   @tracked showQuickSearchButtons = DEFAULT_SETTINGS.showQuickSearchButtons;
   @tracked nostrPhotoFallbackUploads =
     DEFAULT_SETTINGS.nostrPhotoFallbackUploads;
+  @tracked nostrMediaServer = DEFAULT_SETTINGS.nostrMediaServer;
   @tracked nostrReadRelays = DEFAULT_SETTINGS.nostrReadRelays;
   @tracked nostrWriteRelays = DEFAULT_SETTINGS.nostrWriteRelays;
   @tracked nostrReadRelayExclusions = DEFAULT_SETTINGS.nostrReadRelayExclusions;
@@ -114,6 +118,7 @@ export default class SettingsService extends Service {
     this.photonApi = finalSettings.photonApi;
     this.showQuickSearchButtons = finalSettings.showQuickSearchButtons;
     this.nostrPhotoFallbackUploads = finalSettings.nostrPhotoFallbackUploads;
+    this.nostrMediaServer = finalSettings.nostrMediaServer;
     this.nostrReadRelays = finalSettings.nostrReadRelays;
     this.nostrWriteRelays = finalSettings.nostrWriteRelays;
     this.nostrReadRelayExclusions = finalSettings.nostrReadRelayExclusions;
@@ -132,6 +137,7 @@ export default class SettingsService extends Service {
       photonApi: this.photonApi,
       showQuickSearchButtons: this.showQuickSearchButtons,
       nostrPhotoFallbackUploads: this.nostrPhotoFallbackUploads,
+      nostrMediaServer: this.nostrMediaServer,
       nostrReadRelays: this.nostrReadRelays,
       nostrWriteRelays: this.nostrWriteRelays,
       nostrReadRelayExclusions: this.nostrReadRelayExclusions,

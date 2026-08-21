@@ -15,6 +15,7 @@ import {
   uniqNormalizedRelays,
 } from '../utils/nostr';
 import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
+import { DEFAULT_BLOSSOM_SERVER } from './blossom';
 
 const DIRECTORY_RELAYS = [
   'wss://relay.primal.net',
@@ -436,6 +437,16 @@ export default class NostrDataService extends Service {
             .map((t) => t[1]);
         } else {
           this.blossomServers = [];
+        }
+
+        if (this.blossomServers.length > 0) {
+          const current = this.settings.nostrMediaServer;
+          if (
+            current === DEFAULT_BLOSSOM_SERVER ||
+            !this.blossomServers.includes(current)
+          ) {
+            this.settings.update('nostrMediaServer', this.blossomServers[0]);
+          }
         }
       });
 

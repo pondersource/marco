@@ -4,12 +4,14 @@ import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { fn } from '@ember/helper';
+import eq from 'ember-truth-helpers/helpers/eq';
 import Icon from '#components/icon';
 import {
   excludeRequiredRelays,
   mergeRequiredRelays,
   normalizeRelayUrl,
 } from '../../../utils/nostr';
+import { DEFAULT_BLOSSOM_SERVER } from '../../../services/blossom';
 
 const stripProtocol = (url) => (url ? url.replace(/^wss?:\/\//, '') : '');
 
@@ -87,6 +89,15 @@ export default class AppMenuSettingsNostr extends Component {
         isRequired: this.requiredWriteRelaySet.has(url),
       };
     });
+  }
+
+  get mediaServerOptions() {
+    const servers = this.nostrData.blossomServers;
+    return servers.length ? servers : [DEFAULT_BLOSSOM_SERVER];
+  }
+
+  get hasMultipleMediaServers() {
+    return this.mediaServerOptions.length > 1;
   }
 
   @action
@@ -342,30 +353,56 @@ export default class AppMenuSettingsNostr extends Component {
         </div>
 
         <div class="form-group">
-          <label for="nostr-photo-fallback-uploads">Upload photos to fallback
-            servers</label>
+          <label for="nostr-media-server">Media server</label>
           <select
-            id="nostr-photo-fallback-uploads"
+            id="nostr-media-server"
             class="form-control"
-            {{on "change" (fn @onChange "nostrPhotoFallbackUploads")}}
+            {{on "change" (fn @onChange "nostrMediaServer")}}
           >
-            <option
-              value="true"
-              selected={{if this.settings.nostrPhotoFallbackUploads "selected"}}
-            >
-              Yes
-            </option>
-            <option
-              value="false"
-              selected={{unless
-                this.settings.nostrPhotoFallbackUploads
-                "selected"
-              }}
-            >
-              No
-            </option>
+            {{#each this.mediaServerOptions as |server|}}
+              <option
+                value={{server}}
+                selected={{if
+                  (eq server this.settings.nostrMediaServer)
+                  "selected"
+                }}
+              >
+                {{server}}
+              </option>
+            {{/each}}
           </select>
         </div>
+
+        {{#if this.hasMultipleMediaServers}}
+          <div class="form-group">
+            <label for="nostr-photo-fallback-uploads">Upload photos to fallback
+              servers</label>
+            <select
+              id="nostr-photo-fallback-uploads"
+              class="form-control"
+              {{on "change" (fn @onChange "nostrPhotoFallbackUploads")}}
+            >
+              <option
+                value="true"
+                selected={{if
+                  this.settings.nostrPhotoFallbackUploads
+                  "selected"
+                }}
+              >
+                Yes
+              </option>
+              <option
+                value="false"
+                selected={{unless
+                  this.settings.nostrPhotoFallbackUploads
+                  "selected"
+                }}
+              >
+                No
+              </option>
+            </select>
+          </div>
+        {{/if}}
 
         <div class="form-group">
           <label>Cached data</label>
