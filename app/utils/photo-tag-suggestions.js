@@ -2,11 +2,11 @@ import { POI_CATEGORIES } from './poi-categories';
 import { getMatchingPoiCategoryIds } from './poi-category-matcher';
 
 export const CATEGORY_TAGS = {
-  restaurants: ['food', 'menu', 'vibe', 'front'],
-  coffee: ['food', 'menu', 'vibe', 'front'],
-  groceries: ['front', 'food'],
-  'things-to-do': ['architecture', 'amenities', 'vibe', 'front'],
-  accommodation: ['rooms', 'amenities', 'food', 'vibe', 'front'],
+  restaurants: ['front', 'food', 'drinks', 'menu', 'vibe'],
+  coffee: ['front', 'food', 'drinks', 'menu', 'vibe'],
+  groceries: ['front', 'products'],
+  'things-to-do': ['front', 'architecture', 'amenities', 'vibe'],
+  accommodation: ['front', 'rooms', 'amenities', 'food', 'drinks', 'vibe'],
 };
 
 export function getSuggestedPhotoTags(place) {
