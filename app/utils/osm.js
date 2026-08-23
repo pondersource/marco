@@ -34,13 +34,13 @@ export function getLocalizedName(tags, defaultName = 'Untitled Place') {
 }
 
 const PLACE_TYPE_KEYS = [
+  'craft',
   'amenity',
   'shop',
   'tourism',
   'historic',
   'leisure',
   'office',
-  'craft',
   'building',
   'landuse',
   'public_transport',
