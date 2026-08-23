@@ -9,6 +9,8 @@ export const POI_ICON_RULES = [
   { tags: { cuisine: 'coffee_shop' }, icon: 'coffee-bean' },
   { tags: { cuisine: 'coffee' }, icon: 'coffee-bean' },
 
+  { tags: { craft: 'brewery' }, icon: 'barrel-with-bunghole' },
+
   // General Amenity/Shop Types
   { tags: { amenity: 'ice_cream' }, icon: 'ice-cream-on-cone' },
   { tags: { cuisine: 'ice_cream' }, icon: 'ice-cream-on-cone' },
@@ -26,14 +28,24 @@ export const POI_ICON_RULES = [
   { tags: { amenity: 'social_facility' }, icon: 'family-restroom-symbol' },
 
   { tags: { amenity: 'bank' }, icon: 'banknote' },
+  { tags: { amenity: 'atm' }, icon: 'banknote-in-slot' },
+  { tags: { amenity: 'bureau_de_change' }, icon: 'dollar-swap-to-euro' },
   { tags: { amenity: 'place_of_worship' }, icon: 'place-of-worship-building' },
   { tags: { amenity: 'townhall' }, icon: 'classical-building-with-clock' },
   { tags: { building: 'townhall' }, icon: 'classical-building-with-clock' },
   { tags: { amenity: 'fire_station' }, icon: 'badge-shield-with-fire' },
   { tags: { amenity: 'police' }, icon: 'police-officer-with-stop-arm' },
   { tags: { amenity: 'toilets' }, icon: 'womens-and-mens-restroom-symbol' },
+  { tags: { amenity: 'smoking_area' }, icon: 'cigarette-with-smoke-curl' },
+  { tags: { amenity: 'lounge' }, icon: 'couch' },
+  {
+    tags: { amenity: 'drinking_water' },
+    icon: 'water-standpipe-with-handle-and-drinking-glass',
+  },
   { tags: { amenity: 'school' }, icon: 'open-book' },
   { tags: { amenity: 'driving_school' }, icon: 'car' },
+  { tags: { amenity: 'car_wash' }, icon: 'car-between-roller-brushes' },
+  { tags: { amenity: 'fuel' }, icon: 'gasoline-pump' },
 
   { tags: { shop: 'coffee' }, icon: 'coffee-bean' },
   { tags: { shop: 'tea' }, icon: 'coffee-bean' },
@@ -85,9 +97,12 @@ export const POI_ICON_RULES = [
   { tags: { natural: 'beach' }, icon: 'beach-umbrella-in-ground' },
   { tags: { leisure: 'park' }, icon: 'tree-and-bench-with-backrest' },
   { tags: { leisure: 'playground' }, icon: 'play-structure-with-slide' },
+  { tags: { leisure: 'marina' }, icon: 'anchor' },
+  { tags: { landuse: 'vineyard' }, icon: 'grapes' },
 
   // Transport
   { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
+  { tags: { aeroway: 'terminal' }, icon: 'airport-terminal' },
   { tags: { aeroway: 'heliport' }, icon: 'plane-top-right' },
   { tags: { aeroway: 'helipad' }, icon: 'plane-top-right' },
   { tags: { highway: 'bus_stop' }, icon: 'bus' },
@@ -187,6 +202,7 @@ export const POI_ICON_RULES = [
   // Buildings
   { tags: { building: 'commercial' }, icon: 'commercial-building' },
   { tags: { building: 'apartments' }, icon: 'lowrise-building' },
+  { tags: { building: 'office' }, icon: 'lowrise-building' },
 ];
 
 /**

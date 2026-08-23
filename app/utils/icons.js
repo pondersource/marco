@@ -47,9 +47,13 @@ import zap from 'feather-icons/dist/icons/zap.svg?raw';
  * Pinhead icons
  */
 import angelfish from '@waysidemapping/pinhead/dist/icons/angelfish.svg?raw';
+import anchor from '@waysidemapping/pinhead/dist/icons/anchor.svg?raw';
+import airportTerminal from '@waysidemapping/pinhead/dist/icons/airport_terminal.svg?raw';
 import barbell from '@waysidemapping/pinhead/dist/icons/barbell.svg?raw';
+import barrelWithBunghole from '@waysidemapping/pinhead/dist/icons/barrel_with_bunghole.svg?raw';
 import climbingWall from '@waysidemapping/pinhead/dist/icons/climbing_wall.svg?raw';
 import banknote from '@waysidemapping/pinhead/dist/icons/banknote.svg?raw';
+import banknoteInSlot from '@waysidemapping/pinhead/dist/icons/banknote_in_slot.svg?raw';
 import badgeShieldWithFire from '@waysidemapping/pinhead/dist/icons/badge_shield_with_fire.svg?raw';
 import beachUmbrellaInGround from '@waysidemapping/pinhead/dist/icons/beach_umbrella_in_ground.svg?raw';
 import beerMugWithFoam from '@waysidemapping/pinhead/dist/icons/beer_mug_with_foam.svg?raw';
@@ -60,6 +64,7 @@ import camera from '@waysidemapping/pinhead/dist/icons/camera.svg?raw';
 import boxingGloveUp from '@waysidemapping/pinhead/dist/icons/boxing_glove_up.svg?raw';
 import car from '@waysidemapping/pinhead/dist/icons/car.svg?raw';
 import carAndWrench from '@waysidemapping/pinhead/dist/icons/car_and_wrench.svg?raw';
+import carBetweenRollerBrushes from '@waysidemapping/pinhead/dist/icons/car_between_roller_brushes.svg?raw';
 import castleKeep from '@waysidemapping/pinhead/dist/icons/castle_keep.svg?raw';
 import cigaretteWithSmokeCurl from '@waysidemapping/pinhead/dist/icons/cigarette_with_smoke_curl.svg?raw';
 import cityGate from '@waysidemapping/pinhead/dist/icons/city_gate.svg?raw';
@@ -72,11 +77,13 @@ import clothesHanger from '@waysidemapping/pinhead/dist/icons/clothes_hanger.svg
 import cleaver from '@waysidemapping/pinhead/dist/icons/cleaver.svg?raw';
 import cloth from '@waysidemapping/pinhead/dist/icons/cloth.svg?raw';
 import cocktail from '@waysidemapping/pinhead/dist/icons/cocktail.svg?raw';
+import couch from '@waysidemapping/pinhead/dist/icons/couch.svg?raw';
 import coffeeBean from '@waysidemapping/pinhead/dist/icons/coffee_bean.svg?raw';
 import comedyMaskAndTragedyMask from '@waysidemapping/pinhead/dist/icons/comedy_mask_and_tragedy_mask.svg?raw';
 import croissant from '@waysidemapping/pinhead/dist/icons/croissant.svg?raw';
 import cupAndSaucer from '@waysidemapping/pinhead/dist/icons/cup_and_saucer.svg?raw';
 import donut from '@waysidemapping/pinhead/dist/icons/donut.svg?raw';
+import dollarSwapToEuro from '@waysidemapping/pinhead/dist/icons/dollar_swap_to_euro.svg?raw';
 import eyeglasses from '@waysidemapping/pinhead/dist/icons/eyeglasses.svg?raw';
 import fancyMirrorWithReflectionAndStars from '@waysidemapping/pinhead/dist/icons/fancy_mirror_with_reflection_and_stars.svg?raw';
 import familyRestroomSymbol from '@waysidemapping/pinhead/dist/icons/family_restroom_symbol.svg?raw';
@@ -90,6 +97,8 @@ import forkAndKnife from '@waysidemapping/pinhead/dist/icons/fork_and_knife.svg?
 import gravestone from '@waysidemapping/pinhead/dist/icons/gravestone.svg?raw';
 import grecianVase from '@waysidemapping/pinhead/dist/icons/grecian_vase.svg?raw';
 import greekCross from '@waysidemapping/pinhead/dist/icons/greek_cross.svg?raw';
+import grapes from '@waysidemapping/pinhead/dist/icons/grapes.svg?raw';
+import gasolinePump from '@waysidemapping/pinhead/dist/icons/gasoline_pump.svg?raw';
 import iceCreamOnCone from '@waysidemapping/pinhead/dist/icons/ice_cream_on_cone.svg?raw';
 import industrialBuilding from '@waysidemapping/pinhead/dist/icons/industrial_building.svg?raw';
 import infoI from '@waysidemapping/pinhead/dist/icons/info_i.svg?raw';
@@ -131,6 +140,7 @@ import treeAndBenchWithBackrest from '@waysidemapping/pinhead/dist/icons/tree_an
 import villageBuildings from '@waysidemapping/pinhead/dist/icons/village_buildings.svg?raw';
 import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/wall_hanging_with_mountains_and_sun.svg?raw';
 import windingWayWide from '@waysidemapping/pinhead/dist/icons/winding_way_wide.svg?raw';
+import waterStandpipeWithHandleAndDrinkingGlass from '@waysidemapping/pinhead/dist/icons/water_standpipe_with_handle_and_drinking_glass.svg?raw';
 import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/womens_and_mens_restroom_symbol.svg?raw';
 
 /*
@@ -145,9 +155,13 @@ import wikipedia from '../icons/wikipedia.svg?raw';
 const ICONS = {
   activity,
   angelfish,
+  anchor,
+  'airport-terminal': airportTerminal,
   'arrow-left': arrowLeft,
   barbell,
+  'barrel-with-bunghole': barrelWithBunghole,
   banknote,
+  'banknote-in-slot': banknoteInSlot,
   'badge-shield-with-fire': badgeShieldWithFire,
   'beach-umbrella-in-ground': beachUmbrellaInGround,
   'beer-mug-with-foam': beerMugWithFoam,
@@ -176,6 +190,7 @@ const ICONS = {
   cleaver,
   cloth,
   cocktail,
+  couch,
   clock,
   'coffee-bean': coffeeBean,
   'comedy-mask-and-tragedy-mask': comedyMaskAndTragedyMask,
@@ -183,6 +198,7 @@ const ICONS = {
   'cup-and-saucer': cupAndSaucer,
   database,
   donut,
+  'dollar-swap-to-euro': dollarSwapToEuro,
   edit,
   eyeglasses,
   facebook,
@@ -195,8 +211,10 @@ const ICONS = {
   'flower-bouquet': flowerBouquet,
   'fork-and-knife': forkAndKnife,
   fort,
+  'gasoline-pump': gasolinePump,
   gift,
   globe,
+  grapes,
   gravestone,
   'grecian-vase': grecianVase,
   'greek-cross': greekCross,
@@ -268,9 +286,12 @@ const ICONS = {
   whatsapp,
   wikipedia,
   winding_way_wide: windingWayWide,
+  'water-standpipe-with-handle-and-drinking-glass':
+    waterStandpipeWithHandleAndDrinkingGlass,
   parking_p: parkingP,
   car,
   'car-and-wrench': carAndWrench,
+  'car-between-roller-brushes': carBetweenRollerBrushes,
   'castle-keep': castleKeep,
   x,
   zap,
