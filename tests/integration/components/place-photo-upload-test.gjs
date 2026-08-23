@@ -49,7 +49,7 @@ module('Integration | Component | place-photo-upload', function (hooks) {
 
     assert.dom('.photo-tag-suggestions').exists();
     assert.dom('.photo-tag-chip').exists();
-    assert.dom('.photo-tag-chip').includesText('Food');
+    assert.dom('.photo-tag-chip').includesText('Front');
   });
 
   test('it only allows one selected tag at a time', async function (assert) {
