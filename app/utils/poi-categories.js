@@ -45,7 +45,7 @@ export const POI_CATEGORIES = [
     filter: [
       '["tourism"~"^(museum|gallery|attraction|viewpoint|zoo|theme_park|aquarium|artwork|information)$"]',
       '["amenity"~"^(cinema|theatre|arts_centre|planetarium)$"]',
-      '["leisure"~"^(sports_centre|stadium|water_park)$"]',
+      '["leisure"~"^(sports_centre|stadium|water_park|golf_course|marina)$"]',
       '["historic"]',
       '["shop"="flea_market"]',
     ],
