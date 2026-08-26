@@ -113,6 +113,17 @@ export default class PlaceDetails extends Component {
     }));
   }
 
+  get hasUntrustedContent() {
+    return (
+      this.nostrData.untrustedContentCount > 0 &&
+      !this.nostrData.showUntrustedContent
+    );
+  }
+
+  get hasMultipleUntrusted() {
+    return this.nostrData.untrustedContentCount > 1;
+  }
+
   @action
   startEditing() {
     if (!this.isSaved) return; // Only allow editing saved places
@@ -618,6 +629,23 @@ export default class PlaceDetails extends Component {
               </button>
             </span>
           </p>
+          {{#if this.hasUntrustedContent}}
+            <p class="content-with-icon">
+              <Icon @name="shield" />
+              <span>
+                <button
+                  type="button"
+                  class="btn-link"
+                  {{on "click" this.nostrData.toggleShowUntrustedContent}}
+                >
+                  Show
+                  {{this.nostrData.untrustedContentCount}}
+                  hidden photo{{if this.hasMultipleUntrusted "s" ""}}
+                  (untrusted relays)
+                </button>
+              </span>
+            </p>
+          {{/if}}
         </div>
       {{/if}}
     </div>

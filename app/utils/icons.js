@@ -34,6 +34,7 @@ import plus from 'feather-icons/dist/icons/plus.svg?raw';
 import search from 'feather-icons/dist/icons/search.svg?raw';
 import server from 'feather-icons/dist/icons/server.svg?raw';
 import settings from 'feather-icons/dist/icons/settings.svg?raw';
+import shield from 'feather-icons/dist/icons/shield.svg?raw';
 import target from 'feather-icons/dist/icons/target.svg?raw';
 import trash2 from 'feather-icons/dist/icons/trash-2.svg?raw';
 import uploadCloud from 'feather-icons/dist/icons/upload-cloud.svg?raw';
@@ -295,6 +296,7 @@ const ICONS = {
   'castle-keep': castleKeep,
   x,
   zap,
+  shield,
   'loading-ring': loadingRing,
 };
 

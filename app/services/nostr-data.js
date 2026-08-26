@@ -1,17 +1,20 @@
 import Service, { service } from '@ember/service';
+import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
-import { EMPTY, from } from 'rxjs';
+import { EMPTY, from, timeout, filter, connect, take, takeUntil } from 'rxjs';
 import { EventStore } from 'applesauce-core/event-store';
 import { ProfileModel } from 'applesauce-core/models/profile';
 import { MailboxesModel } from 'applesauce-core/models/mailboxes';
 import { npubEncode } from 'applesauce-core/helpers/pointers';
 import { persistEventsToCache } from 'applesauce-core/helpers/event-cache';
 import { createEventLoaderForStore } from 'applesauce-loaders/loaders';
+import { RelayGroup } from 'applesauce-relay';
 import { NostrIDB, openDB } from 'nostr-idb';
 import {
   excludeRequiredRelays,
   mergeRequiredRelays,
   normalizeRelayUrl,
+  relayUrlMatches,
   uniqNormalizedRelays,
 } from '../utils/nostr';
 import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
@@ -24,12 +27,30 @@ const DIRECTORY_RELAYS = [
 ];
 
 const DEFAULT_READ_RELAYS = ['wss://nostr.kosmos.org'];
-const DEFAULT_WRITE_RELAYS = [];
+const DEFAULT_WRITE_RELAYS = []; // TODO nostr.kosmos.org/marco
+
+// Content event kinds subject to relay-trust filtering. Adding `30360`
+// (place reviews) here is the only change needed to extend the feature.
+const TRUSTED_CONTENT_KINDS = [360];
+
+// localforage store name for persisted relay provenance.
+const PROVENANCE_STORE = 'event-relay-provenance';
+
+// Replicates applesauce-relay's `completeWhen`: completes the source when the
+// `operator` emits a truthy value. `completeWhen` is used internally by
+// RelayGroup but not re-exported, so we recreate it from rxjs primitives.
+function completeWhen(operator) {
+  return connect((shared$) => {
+    const complete$ = shared$.pipe(operator, filter(Boolean), take(1));
+    return shared$.pipe(takeUntil(complete$));
+  });
+}
 
 export default class NostrDataService extends Service {
   @service nostrRelay;
   @service nostrAuth;
   @service settings;
+  @service localForage;
 
   store = new EventStore();
 
@@ -41,11 +62,26 @@ export default class NostrDataService extends Service {
   @tracked profiles = {};
   @tracked zapReceipts = {};
 
+  // Relay-provenance trust state. `_eventRelays` maps eventId -> Set<relayUrl>
+  // and accumulates every relay an event was seen on (unconditionally, so an
+  // event first seen on an untrusted relay can be upgraded to trusted when it
+  // later arrives from a trusted one). Hydrated from IDB at init so cached
+  // events render with correct trust state instantly.
+  _eventRelays = new Map();
+  _provenanceReady = null;
+
+  // Session-only reveal toggle for untrusted content. Not persisted.
+  @tracked showUntrustedContent = false;
+  // Count of currently-hidden (untrusted) place photos for the selected place.
+  @tracked untrustedContentCount = 0;
+  _allPlacePhotos = [];
+
   _profileSub = null;
   _mailboxesSub = null;
   _blossomSub = null;
   _photosSub = null;
   _contributionsSub = null;
+  _deletionsSub = null;
   _profileModelSubs = new Map();
 
   _zapReceiptsSub = null;
@@ -108,6 +144,25 @@ export default class NostrDataService extends Service {
         }
       );
     });
+
+    // Hydrate relay provenance from IDB so cached events can be trust-checked
+    // instantly without waiting for relay connections.
+    this._provenanceReady = this._hydrateProvenance();
+
+    // Centralized kind-5 deletion handling: when a deletion event enters the
+    // store, drop the provenance entries for the events it deletes so the
+    // trust map and IDB don't accumulate dead entries.
+    this._deletionsSub = this.store
+      .timeline([{ kinds: [5] }])
+      .subscribe((events) => {
+        for (const event of events) {
+          for (const tag of event.tags || []) {
+            if (tag[0] === 'e' && tag[1]) {
+              this._removeProvenance(tag[1]);
+            }
+          }
+        }
+      });
 
     // Feed events from the relay pool into the event store
     this.nostrRelay.pool.relays$.subscribe(() => {
@@ -174,6 +229,130 @@ export default class NostrDataService extends Service {
     );
   }
 
+  // Relays treated as "moderated" for content-trust filtering. Always includes
+  // the required read relays (e.g. nostr.kosmos.org); `nostrTrustedRelays`
+  // adds user-marked custom relays on top. Default (null) = required relays
+  // only, so the app only surfaces content verified by those relays.
+  get trustedRelays() {
+    const configured = this.settings.nostrTrustedRelays || [];
+    return uniqNormalizedRelays([...this.requiredReadRelays, ...configured]);
+  }
+
+  /**
+   * Returns true if an event should be considered trusted:
+   *   - authored by the connected user (own uploads), OR
+   *   - seen on at least one trusted (moderated) relay.
+   */
+  isTrustedEvent(event) {
+    if (!event) return false;
+    const myPubkey = this.nostrAuth?.pubkey;
+    if (myPubkey && event.pubkey === myPubkey) return true;
+
+    const relays = this._eventRelays.get(event.id);
+    if (!relays || relays.size === 0) return false;
+    const trusted = this.trustedRelays;
+    for (const url of relays) {
+      if (relayUrlMatches(url, trusted)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Splits content events into trusted / untrusted buckets. Non-content kinds
+   * (e.g. kind 5 deletions) are always treated as trusted so they pass through.
+   */
+  partitionByTrust(events) {
+    const trusted = [];
+    const untrusted = [];
+    for (const event of events) {
+      if (
+        !TRUSTED_CONTENT_KINDS.includes(event.kind) ||
+        this.isTrustedEvent(event)
+      ) {
+        trusted.push(event);
+      } else {
+        untrusted.push(event);
+      }
+    }
+    return { trusted, untrusted };
+  }
+
+  // Hydrate the in-memory provenance map from the IDB store.
+  async _hydrateProvenance() {
+    try {
+      await this.localForage.iterate(PROVENANCE_STORE, (value, key) => {
+        this._eventRelays.set(key, new Set(value || []));
+      });
+    } catch (e) {
+      console.debug('[nostr-data] Failed to hydrate relay provenance', e);
+    }
+  }
+
+  // Record that `eventId` was seen on `relayUrl`. Merges into the existing
+  // set (accumulates across sightings) and persists fire-and-forget.
+  _recordProvenance(eventId, relayUrl) {
+    if (!eventId || !relayUrl) return;
+    let set = this._eventRelays.get(eventId);
+    if (!set) {
+      set = new Set();
+      this._eventRelays.set(eventId, set);
+    }
+    if (set.has(relayUrl)) return;
+    set.add(relayUrl);
+    const urls = Array.from(set);
+    // Fire-and-forget persistence; never blocks the render path.
+    this.localForage.set(PROVENANCE_STORE, eventId, urls).catch((e) => {
+      console.debug('[nostr-data] Failed to persist relay provenance', e);
+    });
+  }
+
+  // Remove provenance for a deleted event (called on kind-5 processing).
+  _removeProvenance(eventId) {
+    if (!eventId) return;
+    if (!this._eventRelays.delete(eventId)) return;
+    this.localForage.remove(PROVENANCE_STORE, eventId).catch((e) => {
+      console.debug('[nostr-data] Failed to remove relay provenance', e);
+    });
+  }
+
+  /**
+   * Request content events from relays while capturing full provenance.
+   *
+   * This mirrors `RelayGroup.request()` completion semantics (wait for the
+   * first relay EOSE + 5s grace period, or all relays EOSE; 30s hard
+   * timeout) but uses `pool.req()` so each `EVENT` message retains its
+   * `from` relay URL. Every sighting is recorded in the provenance map
+   * (unconditionally, including duplicates) so an event first seen on an
+   * untrusted relay can be upgraded to trusted when it later arrives from
+   * a trusted one. Events are always added to the store regardless of trust
+   * status; filtering happens at presentation time.
+   */
+  _requestContentWithProvenance(relays, filters, errorLabel) {
+    const complete = RelayGroup.completeOnAny(
+      RelayGroup.completeAfterFirstRelay(5_000),
+      RelayGroup.completeOnAllEose()
+    );
+    return this.nostrRelay.pool
+      .req(relays, filters)
+      .pipe(
+        completeWhen(complete),
+        timeout({ first: 30_000 }),
+        // Only EVENT messages carry content; ignore OPEN/EOSE/CLOSED/ERROR.
+        // We deliberately do NOT dedupe so we see every relay's copy and can
+        // accumulate full provenance across relays.
+        filter((message) => message.type === 'EVENT')
+      )
+      .subscribe({
+        next: (message) => {
+          this._recordProvenance(message.event.id, message.from);
+          this.store.add(message.event);
+        },
+        error: (err) => {
+          console.error(errorLabel, err);
+        },
+      });
+  }
+
   async loadPlacesInBounds(bbox) {
     const requiredPrefixes = getGeohashPrefixesInBbox(bbox);
 
@@ -212,25 +391,13 @@ export default class NostrDataService extends Service {
       );
     }
 
-    // Fire network request for new prefixes
-    this.nostrRelay.pool
-      .request(this.activeReadRelays, [
-        {
-          kinds: [360],
-          '#g': missingPrefixes,
-        },
-      ])
-      .subscribe({
-        next: (event) => {
-          this.store.add(event);
-        },
-        error: (err) => {
-          console.error(
-            '[nostr-data] Error fetching place photos by geohash:',
-            err
-          );
-        },
-      });
+    // Fire network request for new prefixes (captures relay provenance for
+    // trust filtering; events are added to the store regardless of trust).
+    this._requestContentWithProvenance(
+      this.activeReadRelays,
+      [{ kinds: [360], '#g': missingPrefixes }],
+      '[nostr-data] Error fetching place photos by geohash:'
+    );
 
     for (const p of missingPrefixes) {
       this.loadedGeohashPrefixes.add(p);
@@ -277,7 +444,8 @@ export default class NostrDataService extends Service {
         },
       ])
       .subscribe((events) => {
-        this.placePhotos = events;
+        this._allPlacePhotos = events;
+        this._updatePlacePhotos();
         const pubkeys = [...new Set(events.map((e) => e.pubkey))];
         this.loadProfiles(pubkeys);
         this._scheduleZapReceiptRefresh(events);
@@ -305,25 +473,28 @@ export default class NostrDataService extends Service {
       );
     }
 
-    // Fire network request specifically for this place
-    this.nostrRelay.pool
-      .request(this.activeReadRelays, [
-        {
-          kinds: [360, 5],
-          '#i': [entityId],
-        },
-      ])
-      .subscribe({
-        next: (event) => {
-          this.store.add(event);
-        },
-        error: (err) => {
-          console.error(
-            '[nostr-data] Error fetching place photos for place:',
-            err
-          );
-        },
-      });
+    // Fire network request specifically for this place (captures provenance).
+    this._requestContentWithProvenance(
+      this.activeReadRelays,
+      [{ kinds: [360, 5], '#i': [entityId] }],
+      '[nostr-data] Error fetching place photos for place:'
+    );
+  }
+
+  // Recompute `placePhotos` from `_allPlacePhotos` applying the trust filter
+  // and the session-only reveal toggle. Called whenever the timeline emits or
+  // the user flips `showUntrustedContent`.
+  _updatePlacePhotos() {
+    const events = this._allPlacePhotos;
+    const { trusted, untrusted } = this.partitionByTrust(events);
+    this.untrustedContentCount = untrusted.length;
+    this.placePhotos = this.showUntrustedContent ? events : trusted;
+  }
+
+  @action
+  toggleShowUntrustedContent() {
+    this.showUntrustedContent = !this.showUntrustedContent;
+    this._updatePlacePhotos();
   }
 
   async loadMyContributions(pubkey) {
@@ -363,18 +534,13 @@ export default class NostrDataService extends Service {
       );
     }
 
-    // 3. Request fresh events from the network in the background
-    this.nostrRelay.pool.request(this.activeReadRelays, filters).subscribe({
-      next: (event) => {
-        this.store.add(event);
-      },
-      error: (err) => {
-        console.error(
-          '[nostr-data] Error fetching my contribution events:',
-          err
-        );
-      },
-    });
+    // 3. Request fresh events from the network in the background (captures
+    // provenance; own-author events bypass trust filtering anyway).
+    this._requestContentWithProvenance(
+      this.activeReadRelays,
+      filters,
+      '[nostr-data] Error fetching my contribution events:'
+    );
   }
 
   loadProfiles(pubkeys) {

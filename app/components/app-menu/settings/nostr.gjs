@@ -10,6 +10,7 @@ import {
   excludeRequiredRelays,
   mergeRequiredRelays,
   normalizeRelayUrl,
+  uniqNormalizedRelays,
 } from '../../../utils/nostr';
 import { DEFAULT_BLOSSOM_SERVER } from '../../../services/blossom';
 
@@ -49,6 +50,10 @@ export default class AppMenuSettingsNostr extends Component {
     return new Set(this.nostrData.requiredReadRelays.filter(Boolean));
   }
 
+  get trustedRelaySet() {
+    return new Set(this.nostrData.trustedRelays.filter(Boolean));
+  }
+
   get requiredWriteRelaySet() {
     return new Set(this.nostrData.requiredWriteRelays.filter(Boolean));
   }
@@ -78,6 +83,7 @@ export default class AppMenuSettingsNostr extends Component {
       return {
         url,
         isRequired: this.requiredReadRelaySet.has(url),
+        isTrusted: this.trustedRelaySet.has(url),
       };
     });
   }
@@ -183,6 +189,26 @@ export default class AppMenuSettingsNostr extends Component {
   }
 
   @action
+  toggleRelayTrust(url) {
+    const normalized = normalizeRelayUrl(url);
+    if (!normalized) return;
+    // Required relays are always trusted and cannot be untrusted.
+    if (this.requiredReadRelaySet.has(normalized)) return;
+
+    const current = uniqNormalizedRelays(
+      this.settings.nostrTrustedRelays || []
+    );
+    const idx = current.indexOf(normalized);
+    let next;
+    if (idx >= 0) {
+      next = current.filter((r) => r !== normalized);
+    } else {
+      next = [...current, normalized];
+    }
+    this.settings.update('nostrTrustedRelays', next.length > 0 ? next : null);
+  }
+
+  @action
   addWriteRelay() {
     const url = normalizeRelayUrl(this.newWriteRelay);
     if (!url) return;
@@ -260,21 +286,51 @@ export default class AppMenuSettingsNostr extends Component {
       <div class="details-content form-layout">
         <div class="form-group">
           <label for="new-read-relay">Read Relays</label>
+          <p class="relay-list-hint">Mark relays as trusted to show photos and
+            reviews from them. Required relays are always trusted.</p>
           <ul class="relay-list">
             {{#each this.readRelaysForDisplay as |relay|}}
               <li>
                 <span>{{stripProtocol relay.url}}</span>
-                {{#unless relay.isRequired}}
+                <div class="relay-actions">
+                  <button
+                    type="button"
+                    class="btn-trust-relay {{if relay.isTrusted 'is-trusted'}}"
+                    title={{if
+                      relay.isRequired
+                      "Required relay — always trusted"
+                      (if
+                        relay.isTrusted
+                        "Trusted: show all content from this relay"
+                        "Untrusted: hide content only seen here"
+                      )
+                    }}
+                    aria-label="Toggle trust"
+                    disabled={{relay.isRequired}}
+                    {{on "click" (fn this.toggleRelayTrust relay.url)}}
+                  >
+                    <Icon
+                      @name="shield"
+                      @size={{14}}
+                      @color="currentColor"
+                      @filled={{relay.isTrusted}}
+                    />
+                  </button>
                   <button
                     type="button"
                     class="btn-remove-relay"
-                    title="Remove relay"
+                    title={{if
+                      relay.isRequired
+                      "Required relays cannot be removed"
+                      "Remove relay"
+                    }}
                     aria-label="Remove"
+                    disabled={{relay.isRequired}}
                     {{on "click" (fn this.removeReadRelay relay.url)}}
                   >
                     <Icon @name="x" @size={{14}} @color="currentColor" />
                   </button>
-                {{/unless}}
+                </div>
               </li>
             {{/each}}
           </ul>
@@ -311,17 +367,22 @@ export default class AppMenuSettingsNostr extends Component {
             {{#each this.writeRelaysForDisplay as |relay|}}
               <li>
                 <span>{{stripProtocol relay.url}}</span>
-                {{#unless relay.isRequired}}
+                <div class="relay-actions">
                   <button
                     type="button"
                     class="btn-remove-relay"
-                    title="Remove relay"
+                    title={{if
+                      relay.isRequired
+                      "Required relays cannot be removed"
+                      "Remove relay"
+                    }}
                     aria-label="Remove"
+                    disabled={{relay.isRequired}}
                     {{on "click" (fn this.removeWriteRelay relay.url)}}
                   >
                     <Icon @name="x" @size={{14}} @color="currentColor" />
                   </button>
-                {{/unless}}
+                </div>
               </li>
             {{/each}}
           </ul>

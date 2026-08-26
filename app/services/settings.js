@@ -14,6 +14,10 @@ const DEFAULT_SETTINGS = {
   nostrWriteRelays: null,
   nostrReadRelayExclusions: null,
   nostrWriteRelayExclusions: null,
+  // Relays treated as "moderated" for content-trust filtering. When null,
+  // the app falls back to the required read relays (e.g. nostr.kosmos.org),
+  // so default behavior only surfaces content verified by those relays.
+  nostrTrustedRelays: null,
   experimentalEnablePhotoDeletion: false,
 };
 
@@ -30,6 +34,7 @@ export default class SettingsService extends Service {
   @tracked nostrReadRelayExclusions = DEFAULT_SETTINGS.nostrReadRelayExclusions;
   @tracked nostrWriteRelayExclusions =
     DEFAULT_SETTINGS.nostrWriteRelayExclusions;
+  @tracked nostrTrustedRelays = DEFAULT_SETTINGS.nostrTrustedRelays;
   @tracked experimentalEnablePhotoDeletion =
     DEFAULT_SETTINGS.experimentalEnablePhotoDeletion;
 
@@ -123,6 +128,7 @@ export default class SettingsService extends Service {
     this.nostrWriteRelays = finalSettings.nostrWriteRelays;
     this.nostrReadRelayExclusions = finalSettings.nostrReadRelayExclusions;
     this.nostrWriteRelayExclusions = finalSettings.nostrWriteRelayExclusions;
+    this.nostrTrustedRelays = finalSettings.nostrTrustedRelays;
     this.experimentalEnablePhotoDeletion =
       finalSettings.experimentalEnablePhotoDeletion;
 
@@ -142,6 +148,7 @@ export default class SettingsService extends Service {
       nostrWriteRelays: this.nostrWriteRelays,
       nostrReadRelayExclusions: this.nostrReadRelayExclusions,
       nostrWriteRelayExclusions: this.nostrWriteRelayExclusions,
+      nostrTrustedRelays: this.nostrTrustedRelays,
       experimentalEnablePhotoDeletion: this.experimentalEnablePhotoDeletion,
     };
     localStorage.setItem('marco:settings', JSON.stringify(settings));

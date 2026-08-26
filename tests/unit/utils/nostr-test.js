@@ -4,6 +4,7 @@ import {
   mergeRequiredRelays,
   normalizeRelayUrl,
   parsePlacePhotos,
+  relayUrlMatches,
   uniqNormalizedRelays,
 } from 'marco/utils/nostr';
 
@@ -323,5 +324,45 @@ module('Unit | Utility | nostr', function () {
       'wss://required.example.com',
       'wss://custom.example.com',
     ]);
+  });
+
+  test('relayUrlMatches returns true for normalized trusted relays', function (assert) {
+    const trusted = ['wss://nostr.kosmos.org', 'wss://relay.damus.io'];
+
+    assert.true(
+      relayUrlMatches('wss://nostr.kosmos.org', trusted),
+      'exact match'
+    );
+    assert.true(
+      relayUrlMatches('wss://nostr.kosmos.org/', trusted),
+      'trailing slash normalized'
+    );
+    assert.true(
+      relayUrlMatches('WSS://Nostr.Kosmos.org/', trusted),
+      'case-insensitive'
+    );
+    assert.true(
+      relayUrlMatches('nostr.kosmos.org', trusted),
+      'bare hostname gets wss:// prefix'
+    );
+  });
+
+  test('relayUrlMatches returns false for non-trusted relays', function (assert) {
+    const trusted = ['wss://nostr.kosmos.org'];
+
+    assert.false(
+      relayUrlMatches('wss://spam.example.com', trusted),
+      'untrusted relay'
+    );
+    assert.false(relayUrlMatches('', trusted), 'empty url');
+    assert.false(relayUrlMatches(null, trusted), 'null url');
+    assert.false(
+      relayUrlMatches('wss://nostr.kosmos.org', []),
+      'empty trust list'
+    );
+    assert.false(
+      relayUrlMatches('wss://nostr.kosmos.org', null),
+      'null trust list'
+    );
   });
 });
