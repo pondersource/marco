@@ -63,16 +63,30 @@ function makeDeletionEvent(pubkey, eventIds, opts = {}) {
   };
 }
 
+function makeZapReceiptEvent(pubkey, photoEventIds, opts = {}) {
+  const id = opts.id || makeEventId(600);
+  return {
+    id,
+    pubkey,
+    kind: 9735,
+    created_at: opts.created_at || 6000,
+    tags: photoEventIds.map((eid) => ['e', eid]),
+    content: '',
+    sig: 'sig',
+  };
+}
+
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-module('Unit | Service | nostr-data | contacts', function (hooks) {
+function setupNostrDataService(hooks) {
   setupTest(hooks);
 
   hooks.beforeEach(function () {
-    this.requestedFilters = [];
-    const requestedFilters = this.requestedFilters;
+    const requestedFilters = [];
+    const reqCalls = [];
+    const reqMessages = new Subject();
 
     class StubNostrRelayService extends Service {
       pool = {
@@ -81,24 +95,38 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
           requestedFilters.push(...filters);
           return EMPTY;
         },
-        req: () => EMPTY,
+        req: (_relays, filters) => {
+          reqCalls.push(true);
+          requestedFilters.push(...filters);
+          return reqMessages;
+        },
         publish: () => Promise.resolve([{ ok: true }]),
       };
     }
 
     this.owner.register('service:nostrRelay', StubNostrRelayService);
     this.owner.register('service:nostrData', NostrDataService);
+
+    this.requestedFilters = requestedFilters;
+    this.reqCalls = reqCalls;
+    this.reqMessages = reqMessages;
+
+    const service = this.owner.lookup('service:nostr-data');
+    service.store.verifyEvent = undefined;
   });
 
   hooks.afterEach(async function () {
-    // Clear the real IDB cache between tests to prevent cross-test contamination
     const service = this.owner.lookup('service:nostr-data');
     await service.clearCache();
+    await service.localForage.clear('event-relay-provenance');
   });
+}
+
+module('Unit | Service | nostr-data | contacts', function (hooks) {
+  setupNostrDataService(hooks);
 
   test('loadProfile populates contacts from store via ContactsModel', async function (assert) {
     const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
 
     const pubkey = makePubkey(1);
     const contactA = makePubkey(2);
@@ -120,7 +148,6 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
 
   test('loadProfile tears down previous contacts subscription when called with a different pubkey', async function (assert) {
     const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
 
     const pubkeyA = makePubkey(1);
     const pubkeyB = makePubkey(4);
@@ -150,7 +177,7 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
     });
     service.store.add(newerEvent);
 
-    // Give the subscription a tick to propagate
+    // Give the subscriptions a tick to propagate
     await new Promise((r) => setTimeout(r, 50));
 
     assert.deepEqual(
@@ -162,7 +189,6 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
 
   test('loadProfile network request includes kind 3', async function (assert) {
     const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
 
     const pubkey = makePubkey(1);
     await service.loadProfile(pubkey);
@@ -181,7 +207,6 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
 
   test('kind 3 events are persisted to IDB cache', async function (assert) {
     const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
 
     // Wait for the IDB cache to be ready before adding events
     await service._cachePromise;
@@ -201,173 +226,10 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
     assert.strictEqual(cached.length, 1, 'kind 3 event is in IDB cache');
     assert.strictEqual(cached[0].id, event.id, 'cached event id matches');
   });
-
-  test('isTrustedEvent trusts content from followed contacts', async function (assert) {
-    const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
-
-    const userPubkey = makePubkey(1);
-    const followedPubkey = makePubkey(2);
-
-    // User follows followedPubkey
-    service.store.add(makeContactsEvent(userPubkey, [followedPubkey]));
-    await service.loadProfile(userPubkey);
-
-    // Photo from followed contact (no trusted relay provenance)
-    const photoEvent = makePhotoEvent(followedPubkey, 'osm:node:123', {
-      id: makeEventId(200),
-    });
-    service.store.add(photoEvent);
-
-    assert.true(
-      service.isTrustedEvent(photoEvent),
-      'photo from followed contact is trusted'
-    );
-  });
-
-  test('isTrustedEvent does not trust content from unfollowed pubkeys', async function (assert) {
-    const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
-
-    const userPubkey = makePubkey(1);
-    const followedPubkey = makePubkey(2);
-    const unfollowedPubkey = makePubkey(3);
-
-    // User follows followedPubkey (but NOT unfollowedPubkey)
-    service.store.add(makeContactsEvent(userPubkey, [followedPubkey]));
-    await service.loadProfile(userPubkey);
-
-    // Photo from unfollowed pubkey (no trusted relay provenance)
-    const photoEvent = makePhotoEvent(unfollowedPubkey, 'osm:node:123', {
-      id: makeEventId(201),
-    });
-    service.store.add(photoEvent);
-
-    assert.false(
-      service.isTrustedEvent(photoEvent),
-      'photo from unfollowed pubkey is not trusted'
-    );
-  });
-
-  test('isTrustedEvent still trusts own content (regression)', async function (assert) {
-    const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
-
-    const userPubkey = makePubkey(1);
-    service.nostrAuth = { pubkey: userPubkey };
-
-    await service.loadProfile(userPubkey);
-
-    // Photo from the user themselves
-    const photoEvent = makePhotoEvent(userPubkey, 'osm:node:123', {
-      id: makeEventId(202),
-    });
-    service.store.add(photoEvent);
-
-    assert.true(service.isTrustedEvent(photoEvent), 'own photo is trusted');
-  });
-
-  test('isTrustedEvent still trusts content from trusted relays (regression)', async function (assert) {
-    const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
-
-    const userPubkey = makePubkey(1);
-    const randomPubkey = makePubkey(99);
-
-    await service.loadProfile(userPubkey);
-
-    // Photo from random pubkey
-    const photoEvent = makePhotoEvent(randomPubkey, 'osm:node:123', {
-      id: makeEventId(203),
-    });
-    service.store.add(photoEvent);
-
-    // Simulate provenance: photo was seen on a trusted relay
-    const trustedRelay = 'wss://nostr.kosmos.org';
-    service._recordProvenance(photoEvent.id, trustedRelay);
-
-    assert.true(
-      service.isTrustedEvent(photoEvent),
-      'photo from trusted relay is trusted'
-    );
-  });
-
-  test('isTrustedEvent re-evaluates when contacts change', async function (assert) {
-    const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
-
-    const userPubkey = makePubkey(1);
-    const followedPubkey = makePubkey(2);
-
-    // Load profile first (no contacts yet)
-    await service.loadProfile(userPubkey);
-
-    // Create a photo from followedPubkey (who is not yet followed)
-    const photoEvent = makePhotoEvent(followedPubkey, 'osm:node:456', {
-      id: makeEventId(204),
-    });
-
-    // Photo should be untrusted initially (no contacts loaded yet)
-    assert.false(
-      service.isTrustedEvent(photoEvent),
-      'photo is untrusted before contacts load'
-    );
-
-    // Now load contacts (user follows followedPubkey)
-    service.store.add(
-      makeContactsEvent(userPubkey, [followedPubkey], {
-        id: makeEventId(300),
-        created_at: 3000,
-      })
-    );
-
-    // Give the contacts subscription a tick to propagate
-    await new Promise((r) => setTimeout(r, 50));
-
-    // Photo should now be trusted (contacts loaded)
-    assert.true(
-      service.isTrustedEvent(photoEvent),
-      'photo is trusted after contacts load'
-    );
-  });
 });
 
-module('Unit | Service | nostr-data | relays and trust', function (hooks) {
-  setupTest(hooks);
-
-  hooks.beforeEach(function () {
-    const requestedFilters = [];
-    const reqMessages = new Subject();
-
-    class StubNostrRelayService extends Service {
-      pool = {
-        relays$: new Subject(),
-        request: (_relays, filters) => {
-          requestedFilters.push(...filters);
-          return EMPTY;
-        },
-        req: () => reqMessages,
-        publish: () => Promise.resolve([{ ok: true }]),
-      };
-    }
-
-    this.owner.register('service:nostrRelay', StubNostrRelayService);
-    this.owner.register('service:nostrData', NostrDataService);
-
-    this.requestedFilters = requestedFilters;
-    this.reqMessages = reqMessages;
-
-    const service = this.owner.lookup('service:nostr-data');
-    service.store.verifyEvent = undefined;
-  });
-
-  hooks.afterEach(async function () {
-    const service = this.owner.lookup('service:nostr-data');
-    await service.clearCache();
-    await service.localForage.clear('event-relay-provenance');
-  });
-
-  // ─── Relay getters ─────────────────────────────────────────────────────────
+module('Unit | Service | nostr-data | relay configuration', function (hooks) {
+  setupNostrDataService(hooks);
 
   test('mailboxReadRelays normalizes mailbox inbox URLs', function (assert) {
     const service = this.owner.lookup('service:nostr-data');
@@ -490,8 +352,10 @@ module('Unit | Service | nostr-data | relays and trust', function (hooks) {
       'merges custom trusted relays'
     );
   });
+});
 
-  // ─── Provenance ────────────────────────────────────────────────────────────
+module('Unit | Service | nostr-data | provenance', function (hooks) {
+  setupNostrDataService(hooks);
 
   test('_recordProvenance accumulates relays for an event and persists them', async function (assert) {
     const service = this.owner.lookup('service:nostr-data');
@@ -582,8 +446,134 @@ module('Unit | Service | nostr-data | relays and trust', function (hooks) {
     );
     assert.true(service.store.hasEvent(eventId), 'event added to store');
   });
+});
 
-  // ─── partitionByTrust ──────────────────────────────────────────────────────
+module('Unit | Service | nostr-data | trust evaluation', function (hooks) {
+  setupNostrDataService(hooks);
+
+  test('isTrustedEvent trusts content from followed contacts', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const followedPubkey = makePubkey(2);
+
+    // User follows followedPubkey
+    service.store.add(makeContactsEvent(userPubkey, [followedPubkey]));
+    await service.loadProfile(userPubkey);
+
+    // Photo from followed contact (no trusted relay provenance)
+    const photoEvent = makePhotoEvent(followedPubkey, 'osm:node:123', {
+      id: makeEventId(200),
+    });
+    service.store.add(photoEvent);
+
+    assert.true(
+      service.isTrustedEvent(photoEvent),
+      'photo from followed contact is trusted'
+    );
+  });
+
+  test('isTrustedEvent does not trust content from unfollowed pubkeys', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const followedPubkey = makePubkey(2);
+    const unfollowedPubkey = makePubkey(3);
+
+    // User follows followedPubkey (but NOT unfollowedPubkey)
+    service.store.add(makeContactsEvent(userPubkey, [followedPubkey]));
+    await service.loadProfile(userPubkey);
+
+    // Photo from unfollowed pubkey (no trusted relay provenance)
+    const photoEvent = makePhotoEvent(unfollowedPubkey, 'osm:node:123', {
+      id: makeEventId(201),
+    });
+    service.store.add(photoEvent);
+
+    assert.false(
+      service.isTrustedEvent(photoEvent),
+      'photo from unfollowed pubkey is not trusted'
+    );
+  });
+
+  test('isTrustedEvent still trusts own content (regression)', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    service.nostrAuth = { pubkey: userPubkey };
+
+    await service.loadProfile(userPubkey);
+
+    // Photo from the user themselves
+    const photoEvent = makePhotoEvent(userPubkey, 'osm:node:123', {
+      id: makeEventId(202),
+    });
+    service.store.add(photoEvent);
+
+    assert.true(service.isTrustedEvent(photoEvent), 'own photo is trusted');
+  });
+
+  test('isTrustedEvent still trusts content from trusted relays (regression)', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const randomPubkey = makePubkey(99);
+
+    await service.loadProfile(userPubkey);
+
+    // Photo from random pubkey
+    const photoEvent = makePhotoEvent(randomPubkey, 'osm:node:123', {
+      id: makeEventId(203),
+    });
+    service.store.add(photoEvent);
+
+    // Simulate provenance: photo was seen on a trusted relay
+    const trustedRelay = 'wss://nostr.kosmos.org';
+    service._recordProvenance(photoEvent.id, trustedRelay);
+
+    assert.true(
+      service.isTrustedEvent(photoEvent),
+      'photo from trusted relay is trusted'
+    );
+  });
+
+  test('isTrustedEvent re-evaluates when contacts change', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const followedPubkey = makePubkey(2);
+
+    // Load profile first (no contacts yet)
+    await service.loadProfile(userPubkey);
+
+    // Create a photo from followedPubkey (who is not yet followed)
+    const photoEvent = makePhotoEvent(followedPubkey, 'osm:node:456', {
+      id: makeEventId(204),
+    });
+
+    // Photo should be untrusted initially (no contacts loaded yet)
+    assert.false(
+      service.isTrustedEvent(photoEvent),
+      'photo is untrusted before contacts load'
+    );
+
+    // Now load contacts (user follows followedPubkey)
+    service.store.add(
+      makeContactsEvent(userPubkey, [followedPubkey], {
+        id: makeEventId(300),
+        created_at: 3000,
+      })
+    );
+
+    // Give the contacts subscription a tick to propagate
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Photo should now be trusted (contacts loaded)
+    assert.true(
+      service.isTrustedEvent(photoEvent),
+      'photo is trusted after contacts load'
+    );
+  });
 
   test('partitionByTrust always passes kind 5 deletions through as trusted', function (assert) {
     const service = this.owner.lookup('service:nostr-data');
@@ -609,263 +599,314 @@ module('Unit | Service | nostr-data | relays and trust', function (hooks) {
   });
 });
 
-module(
-  'Unit | Service | nostr-data | loading and presentation',
-  function (hooks) {
-    setupTest(hooks);
+module('Unit | Service | nostr-data | geohash loading', function (hooks) {
+  setupNostrDataService(hooks);
 
-    const BERLIN_BBOX = {
-      minLat: 52.5,
-      minLon: 13.4,
-      maxLat: 52.55,
-      maxLon: 13.45,
-    };
+  const BERLIN_BBOX = {
+    minLat: 52.5,
+    minLon: 13.4,
+    maxLat: 52.55,
+    maxLon: 13.45,
+  };
 
-    hooks.beforeEach(function () {
-      const requestedFilters = [];
-      const reqCalls = [];
-      const reqMessages = new Subject();
+  test('requests kind 360 events for missing geohash prefixes and marks them loaded', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const expected = getGeohashPrefixesInBbox(BERLIN_BBOX);
+    assert.ok(expected.length > 0, 'bbox produces prefixes');
 
-      class StubNostrRelayService extends Service {
-        pool = {
-          relays$: new Subject(),
-          request: (_relays, filters) => {
-            requestedFilters.push(...filters);
-            return EMPTY;
-          },
-          req: (_relays, filters) => {
-            reqCalls.push(true);
-            requestedFilters.push(...filters);
-            return reqMessages;
-          },
-          publish: () => Promise.resolve([{ ok: true }]),
-        };
-      }
+    await service.loadPlacesInBounds(BERLIN_BBOX);
 
-      this.owner.register('service:nostrRelay', StubNostrRelayService);
-      this.owner.register('service:nostrData', NostrDataService);
-
-      this.requestedFilters = requestedFilters;
-      this.reqCalls = reqCalls;
-      this.reqMessages = reqMessages;
-
-      const service = this.owner.lookup('service:nostr-data');
-      service.store.verifyEvent = undefined;
-    });
-
-    hooks.afterEach(async function () {
-      const service = this.owner.lookup('service:nostr-data');
-      await service.clearCache();
-      await service.localForage.clear('event-relay-provenance');
-    });
-
-    // ─── loadPlacesInBounds ────────────────────────────────────────────────
-
-    test('requests kind 360 events for missing geohash prefixes and marks them loaded', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-      const expected = getGeohashPrefixesInBbox(BERLIN_BBOX);
-      assert.ok(expected.length > 0, 'bbox produces prefixes');
-
-      await service.loadPlacesInBounds(BERLIN_BBOX);
-
-      assert.strictEqual(this.reqCalls.length, 1, 'one network request made');
-      const filter = this.requestedFilters.find((f) => f['#g']);
-      assert.ok(filter, 'geohash filter was requested');
-      assert.deepEqual(filter.kinds, [360], 'requests kind 360');
-      assert.deepEqual(
-        filter['#g'].sort(),
-        expected.sort(),
-        'covers all prefixes'
-      );
-      for (const p of expected) {
-        assert.true(
-          service.loadedGeohashPrefixes.has(p),
-          `prefix ${p} marked loaded`
-        );
-      }
-    });
-
-    test('skips prefixes that were already loaded', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-
-      await service.loadPlacesInBounds(BERLIN_BBOX);
-      const firstReqCalls = this.reqCalls.length;
-
-      await service.loadPlacesInBounds(BERLIN_BBOX);
-
-      assert.strictEqual(
-        this.reqCalls.length,
-        firstReqCalls,
-        'no additional network request'
-      );
-    });
-
-    test('hydrates matching cached photos into the store', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-      await service._cachePromise;
-
-      const pk = makePubkey(80);
-      const geohash = getGeohashPrefixesInBbox(BERLIN_BBOX)[0];
-      const cached = makePhotoEventWithGeohash(pk, 'osm:node:700', geohash, {
-        id: makeEventId(700),
-        created_at: 4000,
-      });
-      await service.cache.add(cached);
-
-      await service.loadPlacesInBounds(BERLIN_BBOX);
-
+    assert.strictEqual(this.reqCalls.length, 1, 'one network request made');
+    const filter = this.requestedFilters.find((f) => f['#g']);
+    assert.ok(filter, 'geohash filter was requested');
+    assert.deepEqual(filter.kinds, [360], 'requests kind 360');
+    assert.deepEqual(
+      filter['#g'].sort(),
+      expected.sort(),
+      'covers all prefixes'
+    );
+    for (const p of expected) {
       assert.true(
-        service.store.hasEvent(cached.id),
-        'cached photo added to store'
+        service.loadedGeohashPrefixes.has(p),
+        `prefix ${p} marked loaded`
       );
+    }
+  });
+
+  test('skips prefixes that were already loaded', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    await service.loadPlacesInBounds(BERLIN_BBOX);
+    const firstReqCalls = this.reqCalls.length;
+
+    await service.loadPlacesInBounds(BERLIN_BBOX);
+
+    assert.strictEqual(
+      this.reqCalls.length,
+      firstReqCalls,
+      'no additional network request'
+    );
+  });
+
+  test('hydrates matching cached photos into the store', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    await service._cachePromise;
+
+    const pk = makePubkey(80);
+    const geohash = getGeohashPrefixesInBbox(BERLIN_BBOX)[0];
+    const cached = makePhotoEventWithGeohash(pk, 'osm:node:700', geohash, {
+      id: makeEventId(700),
+      created_at: 4000,
+    });
+    await service.cache.add(cached);
+
+    await service.loadPlacesInBounds(BERLIN_BBOX);
+
+    assert.true(
+      service.store.hasEvent(cached.id),
+      'cached photo added to store'
+    );
+  });
+});
+
+module('Unit | Service | nostr-data | place photos', function (hooks) {
+  setupNostrDataService(hooks);
+
+  test('sets entity id and streams photos for the place', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const pk = makePubkey(81);
+    const photoId = makeEventId(800);
+
+    await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+    assert.strictEqual(
+      service._currentPlaceEntityId,
+      'osm:node:800',
+      'entity id set'
+    );
+
+    service._recordProvenance(photoId, 'wss://nostr.kosmos.org');
+    service.store.add(makePhotoEvent(pk, 'osm:node:800', { id: photoId }));
+
+    assert.strictEqual(service.placePhotos.length, 1, 'photo visible');
+  });
+
+  test('calling with the same place twice does not tear down subscriptions', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+    const firstSub = service._photosSub;
+
+    await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+
+    assert.strictEqual(
+      service._photosSub,
+      firstSub,
+      'same subscription retained'
+    );
+  });
+
+  test('switching places resets state and re-subscribes', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const pk = makePubkey(82);
+    const idA = makeEventId(801);
+    const idB = makeEventId(802);
+
+    await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+    service._recordProvenance(idA, 'wss://nostr.kosmos.org');
+    service.store.add(makePhotoEvent(pk, 'osm:node:800', { id: idA }));
+    assert.strictEqual(service.placePhotos.length, 1, 'place 800 has photo');
+
+    await service.loadPhotosForPlace({ osmId: '801', osmType: 'node' });
+    assert.deepEqual(service.placePhotos, [], 'photos cleared');
+    assert.strictEqual(
+      service._currentPlaceEntityId,
+      'osm:node:801',
+      'entity id updated'
+    );
+
+    service._recordProvenance(idB, 'wss://nostr.kosmos.org');
+    service.store.add(makePhotoEvent(pk, 'osm:node:801', { id: idB }));
+    assert.strictEqual(service.placePhotos.length, 1, 'new place has photo');
+    assert.strictEqual(service.placePhotos[0].id, idB);
+  });
+
+  test('null place clears state and tears down subscription', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const pk = makePubkey(83);
+    const idA = makeEventId(803);
+
+    await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+    service._recordProvenance(idA, 'wss://nostr.kosmos.org');
+    service.store.add(makePhotoEvent(pk, 'osm:node:800', { id: idA }));
+    assert.strictEqual(service.placePhotos.length, 1);
+
+    await service.loadPhotosForPlace(null);
+
+    assert.deepEqual(service.placePhotos, [], 'photos cleared');
+    assert.strictEqual(
+      service._currentPlaceEntityId,
+      null,
+      'entity id cleared'
+    );
+    assert.strictEqual(service._photosSub, null, 'subscription torn down');
+  });
+
+  test('placePhotos hides untrusted photos by default and counts them', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const pkA = makePubkey(84);
+    const pkB = makePubkey(85);
+    const trustedId = makeEventId(900);
+    const untrustedId = makeEventId(901);
+
+    await service.loadPhotosForPlace({ osmId: '900', osmType: 'node' });
+
+    service._recordProvenance(trustedId, 'wss://nostr.kosmos.org');
+    service.store.add(makePhotoEvent(pkA, 'osm:node:900', { id: trustedId }));
+    service.store.add(makePhotoEvent(pkB, 'osm:node:900', { id: untrustedId }));
+
+    assert.deepEqual(
+      service.placePhotos.map((e) => e.id),
+      [trustedId],
+      'only trusted shown'
+    );
+    assert.strictEqual(service.untrustedContentCount, 1, 'untrusted counted');
+  });
+
+  test('toggleShowUntrustedContent reveals all photos and toggles back', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const pkA = makePubkey(86);
+    const pkB = makePubkey(87);
+    const trustedId = makeEventId(902);
+    const untrustedId = makeEventId(903);
+
+    await service.loadPhotosForPlace({ osmId: '901', osmType: 'node' });
+
+    service._recordProvenance(trustedId, 'wss://nostr.kosmos.org');
+    service.store.add(makePhotoEvent(pkA, 'osm:node:901', { id: trustedId }));
+    service.store.add(makePhotoEvent(pkB, 'osm:node:901', { id: untrustedId }));
+
+    service.toggleShowUntrustedContent();
+    assert.strictEqual(service.placePhotos.length, 2, 'all photos shown');
+    assert.strictEqual(service.untrustedContentCount, 1, 'count unchanged');
+
+    service.toggleShowUntrustedContent();
+    assert.strictEqual(service.placePhotos.length, 1, 'back to trusted only');
+  });
+
+  test('own photos are shown without provenance', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const myPubkey = makePubkey(95);
+    service.nostrAuth = { pubkey: myPubkey };
+    const ownId = makeEventId(950);
+
+    await service.loadPhotosForPlace({ osmId: '950', osmType: 'node' });
+    service.store.add(makePhotoEvent(myPubkey, 'osm:node:950', { id: ownId }));
+
+    assert.strictEqual(
+      service.placePhotos.length,
+      1,
+      'own photo shown without provenance'
+    );
+    assert.strictEqual(service.untrustedContentCount, 0);
+  });
+});
+
+module('Unit | Service | nostr-data | my contributions', function (hooks) {
+  setupNostrDataService(hooks);
+
+  test('returns early when pubkey is null', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    await service.loadMyContributions(null);
+
+    assert.deepEqual(service.myContributionEvents, [], 'no events loaded');
+    assert.strictEqual(
+      service._contributionsSub,
+      null,
+      'no subscription created'
+    );
+  });
+
+  test('loads own photos from store into myContributionEvents', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const myPk = makePubkey(60);
+    const photoId = makeEventId(600);
+
+    service.store.add(makePhotoEvent(myPk, 'osm:node:600', { id: photoId }));
+
+    await service.loadMyContributions(myPk);
+
+    assert.strictEqual(
+      service.myContributionEvents.length,
+      1,
+      'photo in contributions'
+    );
+    assert.strictEqual(service.myContributionEvents[0].id, photoId);
+  });
+
+  test('requests own contributions from network with correct filter', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const myPk = makePubkey(61);
+
+    await service.loadMyContributions(myPk);
+
+    const filter = this.requestedFilters.find((f) => f.authors?.includes(myPk));
+    assert.ok(filter, 'filter for own pubkey requested');
+    assert.deepEqual(filter.kinds.sort(), [360, 5].sort(), 'kinds 360 and 5');
+  });
+});
+
+module('Unit | Service | nostr-data | zap receipts', function (hooks) {
+  setupNostrDataService(hooks);
+
+  test('_refreshZapReceiptSubscription batches >100 IDs into multiple filters', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const photoIds = Array.from({ length: 250 }, (_, i) =>
+      makeEventId(1000 + i)
+    );
+
+    service._refreshZapReceiptSubscription(photoIds);
+
+    const filters = this.requestedFilters.filter((f) =>
+      f.kinds?.includes(9735)
+    );
+    assert.strictEqual(filters.length, 3, '250 IDs → 3 filters (100+100+50)');
+    assert.strictEqual(filters[0]['#e'].length, 100);
+    assert.strictEqual(filters[1]['#e'].length, 100);
+    assert.strictEqual(filters[2]['#e'].length, 50);
+  });
+
+  test('_updateZapReceipts groups receipts by photo event id', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const photoA = makeEventId(2000);
+    const photoB = makeEventId(2001);
+
+    const receipt1 = makeZapReceiptEvent(makePubkey(70), [photoA], {
+      id: makeEventId(2100),
+    });
+    const receipt2 = makeZapReceiptEvent(makePubkey(71), [photoA, photoB], {
+      id: makeEventId(2101),
+    });
+    const receipt3 = makeZapReceiptEvent(makePubkey(72), [photoB], {
+      id: makeEventId(2102),
     });
 
-    // ─── loadPhotosForPlace ────────────────────────────────────────────────
+    service._updateZapReceipts([receipt1, receipt2, receipt3]);
 
-    test('sets entity id and streams photos for the place', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-      const pk = makePubkey(81);
-      const photoId = makeEventId(800);
-
-      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
-      assert.strictEqual(
-        service._currentPlaceEntityId,
-        'osm:node:800',
-        'entity id set'
-      );
-
-      service._recordProvenance(photoId, 'wss://nostr.kosmos.org');
-      service.store.add(makePhotoEvent(pk, 'osm:node:800', { id: photoId }));
-
-      assert.strictEqual(service.placePhotos.length, 1, 'photo visible');
-    });
-
-    test('calling with the same place twice does not tear down subscriptions', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-
-      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
-      const firstSub = service._photosSub;
-
-      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
-
-      assert.strictEqual(
-        service._photosSub,
-        firstSub,
-        'same subscription retained'
-      );
-    });
-
-    test('switching places resets state and re-subscribes', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-      const pk = makePubkey(82);
-      const idA = makeEventId(801);
-      const idB = makeEventId(802);
-
-      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
-      service._recordProvenance(idA, 'wss://nostr.kosmos.org');
-      service.store.add(makePhotoEvent(pk, 'osm:node:800', { id: idA }));
-      assert.strictEqual(service.placePhotos.length, 1, 'place 800 has photo');
-
-      await service.loadPhotosForPlace({ osmId: '801', osmType: 'node' });
-      assert.deepEqual(service.placePhotos, [], 'photos cleared');
-      assert.strictEqual(
-        service._currentPlaceEntityId,
-        'osm:node:801',
-        'entity id updated'
-      );
-
-      service._recordProvenance(idB, 'wss://nostr.kosmos.org');
-      service.store.add(makePhotoEvent(pk, 'osm:node:801', { id: idB }));
-      assert.strictEqual(service.placePhotos.length, 1, 'new place has photo');
-      assert.strictEqual(service.placePhotos[0].id, idB);
-    });
-
-    test('null place clears state and tears down subscription', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-      const pk = makePubkey(83);
-      const idA = makeEventId(803);
-
-      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
-      service._recordProvenance(idA, 'wss://nostr.kosmos.org');
-      service.store.add(makePhotoEvent(pk, 'osm:node:800', { id: idA }));
-      assert.strictEqual(service.placePhotos.length, 1);
-
-      await service.loadPhotosForPlace(null);
-
-      assert.deepEqual(service.placePhotos, [], 'photos cleared');
-      assert.strictEqual(
-        service._currentPlaceEntityId,
-        null,
-        'entity id cleared'
-      );
-      assert.strictEqual(service._photosSub, null, 'subscription torn down');
-    });
-
-    // ─── _updatePlacePhotos / trust presentation ───────────────────────────
-
-    test('placePhotos hides untrusted photos by default and counts them', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-      const pkA = makePubkey(84);
-      const pkB = makePubkey(85);
-      const trustedId = makeEventId(900);
-      const untrustedId = makeEventId(901);
-
-      await service.loadPhotosForPlace({ osmId: '900', osmType: 'node' });
-
-      service._recordProvenance(trustedId, 'wss://nostr.kosmos.org');
-      service.store.add(makePhotoEvent(pkA, 'osm:node:900', { id: trustedId }));
-      service.store.add(
-        makePhotoEvent(pkB, 'osm:node:900', { id: untrustedId })
-      );
-
-      assert.deepEqual(
-        service.placePhotos.map((e) => e.id),
-        [trustedId],
-        'only trusted shown'
-      );
-      assert.strictEqual(service.untrustedContentCount, 1, 'untrusted counted');
-    });
-
-    test('toggleShowUntrustedContent reveals all photos and toggles back', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-      const pkA = makePubkey(86);
-      const pkB = makePubkey(87);
-      const trustedId = makeEventId(902);
-      const untrustedId = makeEventId(903);
-
-      await service.loadPhotosForPlace({ osmId: '901', osmType: 'node' });
-
-      service._recordProvenance(trustedId, 'wss://nostr.kosmos.org');
-      service.store.add(makePhotoEvent(pkA, 'osm:node:901', { id: trustedId }));
-      service.store.add(
-        makePhotoEvent(pkB, 'osm:node:901', { id: untrustedId })
-      );
-
-      service.toggleShowUntrustedContent();
-      assert.strictEqual(service.placePhotos.length, 2, 'all photos shown');
-      assert.strictEqual(service.untrustedContentCount, 1, 'count unchanged');
-
-      service.toggleShowUntrustedContent();
-      assert.strictEqual(service.placePhotos.length, 1, 'back to trusted only');
-    });
-
-    test('own photos are shown without provenance', async function (assert) {
-      const service = this.owner.lookup('service:nostr-data');
-      const myPubkey = makePubkey(95);
-      service.nostrAuth = { pubkey: myPubkey };
-      const ownId = makeEventId(950);
-
-      await service.loadPhotosForPlace({ osmId: '950', osmType: 'node' });
-      service.store.add(
-        makePhotoEvent(myPubkey, 'osm:node:950', { id: ownId })
-      );
-
-      assert.strictEqual(
-        service.placePhotos.length,
-        1,
-        'own photo shown without provenance'
-      );
-      assert.strictEqual(service.untrustedContentCount, 0);
-    });
-  }
-);
+    assert.strictEqual(
+      service.zapReceipts[photoA].length,
+      2,
+      'photoA has 2 receipts'
+    );
+    assert.strictEqual(
+      service.zapReceipts[photoB].length,
+      2,
+      'photoB has 2 receipts'
+    );
+    assert.deepEqual(
+      service.zapReceipts[photoA].map((r) => r.id).sort(),
+      [makeEventId(2100), makeEventId(2101)],
+      'receipts for photoA match'
+    );
+  });
+});
