@@ -715,6 +715,29 @@ body {
   opacity: 0.6;
 }
 
+.tooltip {
+  position: fixed;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--body-text-color);
+  color: var(--primary-background-color);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9999;
+  animation: tooltip-fade-in 0.15s ease;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes details-slide-down {
   from {
     opacity: 0;

@@ -13,6 +13,7 @@ import {
   uniqNormalizedRelays,
 } from '../../../utils/nostr';
 import { DEFAULT_BLOSSOM_SERVER } from '../../../services/blossom';
+import tooltip from '../../../modifiers/tooltip';
 
 const stripProtocol = (url) => (url ? url.replace(/^wss?:\/\//, '') : '');
 
@@ -277,7 +278,7 @@ export default class AppMenuSettingsNostr extends Component {
   }
 
   <template>
-    {{! template-lint-disable no-nested-interactive }}
+    {{! template-lint-disable no-nested-interactive no-unsupported-role-attributes }}
     <details>
       <summary>
         <Icon @name="zap" @size={{20}} />
@@ -286,8 +287,11 @@ export default class AppMenuSettingsNostr extends Component {
       <div class="details-content form-layout">
         <div class="form-group">
           <label for="new-read-relay">Read Relays</label>
-          <p class="relay-list-hint">Mark relays as trusted to show photos and
-            reviews from them. Required relays are always trusted.</p>
+          <p class="relay-list-hint">
+            Mark relays as trusted to show
+            <strong>all</strong>
+            photos and reviews from them by default (risk of spam).
+          </p>
           <ul class="relay-list">
             {{#each this.readRelaysForDisplay as |relay|}}
               <li>
@@ -296,17 +300,18 @@ export default class AppMenuSettingsNostr extends Component {
                   <button
                     type="button"
                     class="btn-trust-relay {{if relay.isTrusted 'is-trusted'}}"
-                    title={{if
+                    aria-label="Toggle trust"
+                    aria-description={{if
                       relay.isRequired
                       "Required relay — always trusted"
                       (if
                         relay.isTrusted
                         "Trusted: show all content from this relay"
-                        "Untrusted: hide content only seen here"
+                        "Untrusted: hide content from outside of my circles"
                       )
                     }}
-                    aria-label="Toggle trust"
                     disabled={{relay.isRequired}}
+                    {{tooltip}}
                     {{on "click" (fn this.toggleRelayTrust relay.url)}}
                   >
                     <Icon
@@ -319,13 +324,14 @@ export default class AppMenuSettingsNostr extends Component {
                   <button
                     type="button"
                     class="btn-remove-relay"
-                    title={{if
+                    aria-label="Remove"
+                    aria-description={{if
                       relay.isRequired
                       "Required relays cannot be removed"
                       "Remove relay"
                     }}
-                    aria-label="Remove"
                     disabled={{relay.isRequired}}
+                    {{tooltip}}
                     {{on "click" (fn this.removeReadRelay relay.url)}}
                   >
                     <Icon @name="x" @size={{14}} @color="currentColor" />
@@ -371,13 +377,14 @@ export default class AppMenuSettingsNostr extends Component {
                   <button
                     type="button"
                     class="btn-remove-relay"
-                    title={{if
+                    aria-label="Remove"
+                    aria-description={{if
                       relay.isRequired
                       "Required relays cannot be removed"
                       "Remove relay"
                     }}
-                    aria-label="Remove"
                     disabled={{relay.isRequired}}
+                    {{tooltip}}
                     {{on "click" (fn this.removeWriteRelay relay.url)}}
                   >
                     <Icon @name="x" @size={{14}} @color="currentColor" />

@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'marco/tests/helpers';
-import { click, fillIn, render } from '@ember/test-helpers';
+import { click, fillIn, render, settled } from '@ember/test-helpers';
 import Service, { service } from '@ember/service';
 import AppMenuSettingsNostr from 'marco/components/app-menu/settings/nostr';
 import {
@@ -117,7 +117,7 @@ module('Integration | Component | app-menu/settings/nostr', function (hooks) {
     assert.dom(requiredRemoveBtn).exists();
     assert.true(requiredRemoveBtn.disabled, 'required relay cannot be removed');
     assert.strictEqual(
-      requiredRemoveBtn.title,
+      requiredRemoveBtn.getAttribute('aria-description'),
       'Required relays cannot be removed'
     );
 
@@ -281,5 +281,26 @@ module('Integration | Component | app-menu/settings/nostr', function (hooks) {
       null,
       'empty list collapses to null'
     );
+  });
+
+  test('tooltip appears on hover and disappears on mouseleave', async function (assert) {
+    const element = await renderAndOpenDetails(this);
+    const mailboxRow = rowByText(readRows(element), 'mailbox.example.com');
+    const removeBtn = mailboxRow.querySelector('.btn-remove-relay');
+
+    assert.dom('.tooltip', document.body).doesNotExist('no tooltip initially');
+
+    removeBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    await settled();
+
+    assert.dom('.tooltip', document.body).exists('tooltip appears on hover');
+    assert.dom('.tooltip', document.body).hasText('Remove relay');
+
+    removeBtn.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    await settled();
+
+    assert
+      .dom('.tooltip', document.body)
+      .doesNotExist('tooltip removed on mouseleave');
   });
 });
