@@ -3,6 +3,7 @@ import { setupTest } from 'marco/tests/helpers';
 import { Subject, EMPTY } from 'rxjs';
 import Service from '@ember/service';
 import NostrDataService from 'marco/services/nostr-data';
+import { getGeohashPrefixesInBbox } from 'marco/utils/geohash-coverage';
 
 function makePubkey(n) {
   return n.toString(16).padStart(64, '0');
@@ -41,6 +42,12 @@ function makePhotoEvent(pubkey, placeId, opts = {}) {
     content: '',
     sig: 'sig',
   };
+}
+
+function makePhotoEventWithGeohash(pubkey, placeId, geohash, opts = {}) {
+  const event = makePhotoEvent(pubkey, placeId, opts);
+  event.tags.push(['g', geohash]);
+  return event;
 }
 
 function makeDeletionEvent(pubkey, eventIds, opts = {}) {
@@ -601,3 +608,264 @@ module('Unit | Service | nostr-data | relays and trust', function (hooks) {
     assert.strictEqual(untrusted[0].kind, 360, 'photo is untrusted');
   });
 });
+
+module(
+  'Unit | Service | nostr-data | loading and presentation',
+  function (hooks) {
+    setupTest(hooks);
+
+    const BERLIN_BBOX = {
+      minLat: 52.5,
+      minLon: 13.4,
+      maxLat: 52.55,
+      maxLon: 13.45,
+    };
+
+    hooks.beforeEach(function () {
+      const requestedFilters = [];
+      const reqCalls = [];
+      const reqMessages = new Subject();
+
+      class StubNostrRelayService extends Service {
+        pool = {
+          relays$: new Subject(),
+          request: (_relays, filters) => {
+            requestedFilters.push(...filters);
+            return EMPTY;
+          },
+          req: (_relays, filters) => {
+            reqCalls.push(true);
+            requestedFilters.push(...filters);
+            return reqMessages;
+          },
+          publish: () => Promise.resolve([{ ok: true }]),
+        };
+      }
+
+      this.owner.register('service:nostrRelay', StubNostrRelayService);
+      this.owner.register('service:nostrData', NostrDataService);
+
+      this.requestedFilters = requestedFilters;
+      this.reqCalls = reqCalls;
+      this.reqMessages = reqMessages;
+
+      const service = this.owner.lookup('service:nostr-data');
+      service.store.verifyEvent = undefined;
+    });
+
+    hooks.afterEach(async function () {
+      const service = this.owner.lookup('service:nostr-data');
+      await service.clearCache();
+      await service.localForage.clear('event-relay-provenance');
+    });
+
+    // ─── loadPlacesInBounds ────────────────────────────────────────────────
+
+    test('requests kind 360 events for missing geohash prefixes and marks them loaded', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+      const expected = getGeohashPrefixesInBbox(BERLIN_BBOX);
+      assert.ok(expected.length > 0, 'bbox produces prefixes');
+
+      await service.loadPlacesInBounds(BERLIN_BBOX);
+
+      assert.strictEqual(this.reqCalls.length, 1, 'one network request made');
+      const filter = this.requestedFilters.find((f) => f['#g']);
+      assert.ok(filter, 'geohash filter was requested');
+      assert.deepEqual(filter.kinds, [360], 'requests kind 360');
+      assert.deepEqual(
+        filter['#g'].sort(),
+        expected.sort(),
+        'covers all prefixes'
+      );
+      for (const p of expected) {
+        assert.true(
+          service.loadedGeohashPrefixes.has(p),
+          `prefix ${p} marked loaded`
+        );
+      }
+    });
+
+    test('skips prefixes that were already loaded', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+
+      await service.loadPlacesInBounds(BERLIN_BBOX);
+      const firstReqCalls = this.reqCalls.length;
+
+      await service.loadPlacesInBounds(BERLIN_BBOX);
+
+      assert.strictEqual(
+        this.reqCalls.length,
+        firstReqCalls,
+        'no additional network request'
+      );
+    });
+
+    test('hydrates matching cached photos into the store', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+      await service._cachePromise;
+
+      const pk = makePubkey(80);
+      const geohash = getGeohashPrefixesInBbox(BERLIN_BBOX)[0];
+      const cached = makePhotoEventWithGeohash(pk, 'osm:node:700', geohash, {
+        id: makeEventId(700),
+        created_at: 4000,
+      });
+      await service.cache.add(cached);
+
+      await service.loadPlacesInBounds(BERLIN_BBOX);
+
+      assert.true(
+        service.store.hasEvent(cached.id),
+        'cached photo added to store'
+      );
+    });
+
+    // ─── loadPhotosForPlace ────────────────────────────────────────────────
+
+    test('sets entity id and streams photos for the place', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+      const pk = makePubkey(81);
+      const photoId = makeEventId(800);
+
+      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+      assert.strictEqual(
+        service._currentPlaceEntityId,
+        'osm:node:800',
+        'entity id set'
+      );
+
+      service._recordProvenance(photoId, 'wss://nostr.kosmos.org');
+      service.store.add(makePhotoEvent(pk, 'osm:node:800', { id: photoId }));
+
+      assert.strictEqual(service.placePhotos.length, 1, 'photo visible');
+    });
+
+    test('calling with the same place twice does not tear down subscriptions', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+
+      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+      const firstSub = service._photosSub;
+
+      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+
+      assert.strictEqual(
+        service._photosSub,
+        firstSub,
+        'same subscription retained'
+      );
+    });
+
+    test('switching places resets state and re-subscribes', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+      const pk = makePubkey(82);
+      const idA = makeEventId(801);
+      const idB = makeEventId(802);
+
+      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+      service._recordProvenance(idA, 'wss://nostr.kosmos.org');
+      service.store.add(makePhotoEvent(pk, 'osm:node:800', { id: idA }));
+      assert.strictEqual(service.placePhotos.length, 1, 'place 800 has photo');
+
+      await service.loadPhotosForPlace({ osmId: '801', osmType: 'node' });
+      assert.deepEqual(service.placePhotos, [], 'photos cleared');
+      assert.strictEqual(
+        service._currentPlaceEntityId,
+        'osm:node:801',
+        'entity id updated'
+      );
+
+      service._recordProvenance(idB, 'wss://nostr.kosmos.org');
+      service.store.add(makePhotoEvent(pk, 'osm:node:801', { id: idB }));
+      assert.strictEqual(service.placePhotos.length, 1, 'new place has photo');
+      assert.strictEqual(service.placePhotos[0].id, idB);
+    });
+
+    test('null place clears state and tears down subscription', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+      const pk = makePubkey(83);
+      const idA = makeEventId(803);
+
+      await service.loadPhotosForPlace({ osmId: '800', osmType: 'node' });
+      service._recordProvenance(idA, 'wss://nostr.kosmos.org');
+      service.store.add(makePhotoEvent(pk, 'osm:node:800', { id: idA }));
+      assert.strictEqual(service.placePhotos.length, 1);
+
+      await service.loadPhotosForPlace(null);
+
+      assert.deepEqual(service.placePhotos, [], 'photos cleared');
+      assert.strictEqual(
+        service._currentPlaceEntityId,
+        null,
+        'entity id cleared'
+      );
+      assert.strictEqual(service._photosSub, null, 'subscription torn down');
+    });
+
+    // ─── _updatePlacePhotos / trust presentation ───────────────────────────
+
+    test('placePhotos hides untrusted photos by default and counts them', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+      const pkA = makePubkey(84);
+      const pkB = makePubkey(85);
+      const trustedId = makeEventId(900);
+      const untrustedId = makeEventId(901);
+
+      await service.loadPhotosForPlace({ osmId: '900', osmType: 'node' });
+
+      service._recordProvenance(trustedId, 'wss://nostr.kosmos.org');
+      service.store.add(makePhotoEvent(pkA, 'osm:node:900', { id: trustedId }));
+      service.store.add(
+        makePhotoEvent(pkB, 'osm:node:900', { id: untrustedId })
+      );
+
+      assert.deepEqual(
+        service.placePhotos.map((e) => e.id),
+        [trustedId],
+        'only trusted shown'
+      );
+      assert.strictEqual(service.untrustedContentCount, 1, 'untrusted counted');
+    });
+
+    test('toggleShowUntrustedContent reveals all photos and toggles back', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+      const pkA = makePubkey(86);
+      const pkB = makePubkey(87);
+      const trustedId = makeEventId(902);
+      const untrustedId = makeEventId(903);
+
+      await service.loadPhotosForPlace({ osmId: '901', osmType: 'node' });
+
+      service._recordProvenance(trustedId, 'wss://nostr.kosmos.org');
+      service.store.add(makePhotoEvent(pkA, 'osm:node:901', { id: trustedId }));
+      service.store.add(
+        makePhotoEvent(pkB, 'osm:node:901', { id: untrustedId })
+      );
+
+      service.toggleShowUntrustedContent();
+      assert.strictEqual(service.placePhotos.length, 2, 'all photos shown');
+      assert.strictEqual(service.untrustedContentCount, 1, 'count unchanged');
+
+      service.toggleShowUntrustedContent();
+      assert.strictEqual(service.placePhotos.length, 1, 'back to trusted only');
+    });
+
+    test('own photos are shown without provenance', async function (assert) {
+      const service = this.owner.lookup('service:nostr-data');
+      const myPubkey = makePubkey(95);
+      service.nostrAuth = { pubkey: myPubkey };
+      const ownId = makeEventId(950);
+
+      await service.loadPhotosForPlace({ osmId: '950', osmType: 'node' });
+      service.store.add(
+        makePhotoEvent(myPubkey, 'osm:node:950', { id: ownId })
+      );
+
+      assert.strictEqual(
+        service.placePhotos.length,
+        1,
+        'own photo shown without provenance'
+      );
+      assert.strictEqual(service.untrustedContentCount, 0);
+    });
+  }
+);
