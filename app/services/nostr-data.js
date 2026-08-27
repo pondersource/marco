@@ -72,6 +72,10 @@ export default class NostrDataService extends Service {
   _eventRelays = new Map();
   _provenanceReady = null;
 
+  // Set of pubkeys from the user's follow list (kind 3 contacts) for O(1)
+  // trust lookups. Rebuilt whenever contacts change.
+  _contactPubkeys = null;
+
   // Session-only reveal toggle for untrusted content. Not persisted.
   @tracked showUntrustedContent = false;
   // Count of currently-hidden (untrusted) place photos for the selected place.
@@ -245,12 +249,15 @@ export default class NostrDataService extends Service {
   /**
    * Returns true if an event should be considered trusted:
    *   - authored by the connected user (own uploads), OR
+   *   - authored by a pubkey the user follows (kind 3 contacts), OR
    *   - seen on at least one trusted (moderated) relay.
    */
   isTrustedEvent(event) {
     if (!event) return false;
     const myPubkey = this.nostrAuth?.pubkey;
     if (myPubkey && event.pubkey === myPubkey) return true;
+
+    if (this._contactPubkeys?.has(event.pubkey)) return true;
 
     const relays = this._eventRelays.get(event.id);
     if (!relays || relays.size === 0) return false;
@@ -581,6 +588,7 @@ export default class NostrDataService extends Service {
     this.profile = null;
     this.mailboxes = null;
     this.contacts = null;
+    this._contactPubkeys = null;
     this.blossomServers = [];
 
     this._cleanupSubscriptions();
@@ -603,6 +611,8 @@ export default class NostrDataService extends Service {
       .model(ContactsModel, pubkey)
       .subscribe((contacts) => {
         this.contacts = contacts;
+        this._contactPubkeys = new Set(contacts.map((c) => c.pubkey));
+        this._updatePlacePhotos();
       });
 
     this._blossomSub = this.store
@@ -820,6 +830,7 @@ export default class NostrDataService extends Service {
     if (this._contactsSub) {
       this._contactsSub.unsubscribe();
       this._contactsSub = null;
+      this._contactPubkeys = null;
     }
     if (this._blossomSub) {
       this._blossomSub.unsubscribe();

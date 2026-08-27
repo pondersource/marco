@@ -26,6 +26,23 @@ function makeContactsEvent(pubkey, contactPubkeys, opts = {}) {
   };
 }
 
+function makePhotoEvent(pubkey, placeId, opts = {}) {
+  const id = opts.id || makeEventId(100);
+  const createdAt = opts.created_at || 2000;
+  return {
+    id,
+    pubkey,
+    kind: 360,
+    created_at: createdAt,
+    tags: [
+      ['i', placeId],
+      ['imeta', 'url https://example.com/photo.jpg', 'dim 800x600'],
+    ],
+    content: '',
+    sig: 'sig',
+  };
+}
+
 module('Unit | Service | nostr-data | contacts', function (hooks) {
   setupTest(hooks);
 
@@ -47,6 +64,12 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
 
     this.owner.register('service:nostrRelay', StubNostrRelayService);
     this.owner.register('service:nostrData', NostrDataService);
+  });
+
+  hooks.afterEach(async function () {
+    // Clear the real IDB cache between tests to prevent cross-test contamination
+    const service = this.owner.lookup('service:nostr-data');
+    await service.clearCache();
   });
 
   test('loadProfile populates contacts from store via ContactsModel', async function (assert) {
@@ -153,5 +176,134 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
     ]);
     assert.strictEqual(cached.length, 1, 'kind 3 event is in IDB cache');
     assert.strictEqual(cached[0].id, event.id, 'cached event id matches');
+  });
+
+  test('isTrustedEvent trusts content from followed contacts', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    service.store.verifyEvent = undefined;
+
+    const userPubkey = makePubkey(1);
+    const followedPubkey = makePubkey(2);
+
+    // User follows followedPubkey
+    service.store.add(makeContactsEvent(userPubkey, [followedPubkey]));
+    await service.loadProfile(userPubkey);
+
+    // Photo from followed contact (no trusted relay provenance)
+    const photoEvent = makePhotoEvent(followedPubkey, 'osm:node:123', {
+      id: makeEventId(200),
+    });
+    service.store.add(photoEvent);
+
+    assert.true(
+      service.isTrustedEvent(photoEvent),
+      'photo from followed contact is trusted'
+    );
+  });
+
+  test('isTrustedEvent does not trust content from unfollowed pubkeys', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    service.store.verifyEvent = undefined;
+
+    const userPubkey = makePubkey(1);
+    const followedPubkey = makePubkey(2);
+    const unfollowedPubkey = makePubkey(3);
+
+    // User follows followedPubkey (but NOT unfollowedPubkey)
+    service.store.add(makeContactsEvent(userPubkey, [followedPubkey]));
+    await service.loadProfile(userPubkey);
+
+    // Photo from unfollowed pubkey (no trusted relay provenance)
+    const photoEvent = makePhotoEvent(unfollowedPubkey, 'osm:node:123', {
+      id: makeEventId(201),
+    });
+    service.store.add(photoEvent);
+
+    assert.false(
+      service.isTrustedEvent(photoEvent),
+      'photo from unfollowed pubkey is not trusted'
+    );
+  });
+
+  test('isTrustedEvent still trusts own content (regression)', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    service.store.verifyEvent = undefined;
+
+    const userPubkey = makePubkey(1);
+    service.nostrAuth = { pubkey: userPubkey };
+
+    await service.loadProfile(userPubkey);
+
+    // Photo from the user themselves
+    const photoEvent = makePhotoEvent(userPubkey, 'osm:node:123', {
+      id: makeEventId(202),
+    });
+    service.store.add(photoEvent);
+
+    assert.true(service.isTrustedEvent(photoEvent), 'own photo is trusted');
+  });
+
+  test('isTrustedEvent still trusts content from trusted relays (regression)', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    service.store.verifyEvent = undefined;
+
+    const userPubkey = makePubkey(1);
+    const randomPubkey = makePubkey(99);
+
+    await service.loadProfile(userPubkey);
+
+    // Photo from random pubkey
+    const photoEvent = makePhotoEvent(randomPubkey, 'osm:node:123', {
+      id: makeEventId(203),
+    });
+    service.store.add(photoEvent);
+
+    // Simulate provenance: photo was seen on a trusted relay
+    const trustedRelay = 'wss://nostr.kosmos.org';
+    service._recordProvenance(photoEvent.id, trustedRelay);
+
+    assert.true(
+      service.isTrustedEvent(photoEvent),
+      'photo from trusted relay is trusted'
+    );
+  });
+
+  test('isTrustedEvent re-evaluates when contacts change', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    service.store.verifyEvent = undefined;
+
+    const userPubkey = makePubkey(1);
+    const followedPubkey = makePubkey(2);
+
+    // Load profile first (no contacts yet)
+    await service.loadProfile(userPubkey);
+
+    // Create a photo from followedPubkey (who is not yet followed)
+    const photoEvent = makePhotoEvent(followedPubkey, 'osm:node:456', {
+      id: makeEventId(204),
+    });
+
+    // Photo should be untrusted initially (no contacts loaded yet)
+    assert.false(
+      service.isTrustedEvent(photoEvent),
+      'photo is untrusted before contacts load'
+    );
+
+    // Now load contacts (user follows followedPubkey)
+    service.store.add(
+      makeContactsEvent(userPubkey, [followedPubkey], {
+        id: makeEventId(300),
+        created_at: 3000,
+      })
+    );
+
+    // Give the contacts subscription a tick to propagate
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Photo should now be trusted (contacts loaded)
+    assert.true(
+      service.isTrustedEvent(photoEvent),
+      'photo is trusted after contacts load'
+    );
   });
 });
