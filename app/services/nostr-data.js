@@ -5,6 +5,7 @@ import { EMPTY, from, timeout, filter, connect, take, takeUntil } from 'rxjs';
 import { EventStore } from 'applesauce-core/event-store';
 import { ProfileModel } from 'applesauce-core/models/profile';
 import { MailboxesModel } from 'applesauce-core/models/mailboxes';
+import { ContactsModel } from 'applesauce-core/models/contacts';
 import { npubEncode } from 'applesauce-core/helpers/pointers';
 import { persistEventsToCache } from 'applesauce-core/helpers/event-cache';
 import { createEventLoaderForStore } from 'applesauce-loaders/loaders';
@@ -56,6 +57,7 @@ export default class NostrDataService extends Service {
 
   @tracked profile = null;
   @tracked mailboxes = null;
+  @tracked contacts = null;
   @tracked blossomServers = [];
   @tracked placePhotos = [];
   @tracked myContributionEvents = [];
@@ -78,6 +80,7 @@ export default class NostrDataService extends Service {
 
   _profileSub = null;
   _mailboxesSub = null;
+  _contactsSub = null;
   _blossomSub = null;
   _photosSub = null;
   _contributionsSub = null;
@@ -123,10 +126,11 @@ export default class NostrDataService extends Service {
       this._stopPersisting = persistEventsToCache(
         this.store,
         async (events) => {
-          // Only cache profiles, mailboxes, blossom servers, and place photos, and deletions
+          // Only cache profiles, mailboxes, contacts, blossom servers, place photos, and deletions
           const toCache = events.filter(
             (e) =>
               e.kind === 0 ||
+              e.kind === 3 ||
               e.kind === 5 ||
               e.kind === 10002 ||
               e.kind === 10063 ||
@@ -576,6 +580,7 @@ export default class NostrDataService extends Service {
     // Reset state
     this.profile = null;
     this.mailboxes = null;
+    this.contacts = null;
     this.blossomServers = [];
 
     this._cleanupSubscriptions();
@@ -592,6 +597,12 @@ export default class NostrDataService extends Service {
       .model(MailboxesModel, pubkey)
       .subscribe((mailboxesData) => {
         this.mailboxes = mailboxesData;
+      });
+
+    this._contactsSub = this.store
+      .model(ContactsModel, pubkey)
+      .subscribe((contacts) => {
+        this.contacts = contacts;
       });
 
     this._blossomSub = this.store
@@ -623,7 +634,7 @@ export default class NostrDataService extends Service {
       const cachedEvents = await this.cache.query([
         {
           authors: [pubkey],
-          kinds: [0, 10002, 10063],
+          kinds: [0, 3, 10002, 10063],
         },
       ]);
 
@@ -644,7 +655,7 @@ export default class NostrDataService extends Service {
       .request(profileRelays, [
         {
           authors: [pubkey],
-          kinds: [0, 10002, 10063],
+          kinds: [0, 3, 10002, 10063],
         },
       ])
       .subscribe({
@@ -805,6 +816,10 @@ export default class NostrDataService extends Service {
     if (this._mailboxesSub) {
       this._mailboxesSub.unsubscribe();
       this._mailboxesSub = null;
+    }
+    if (this._contactsSub) {
+      this._contactsSub.unsubscribe();
+      this._contactsSub = null;
     }
     if (this._blossomSub) {
       this._blossomSub.unsubscribe();
