@@ -39,6 +39,27 @@ export function excludeRequiredRelays(customRelays = [], requiredRelays = []) {
 }
 
 /**
+ * Returns true if `relayUrl` matches any entry in `trustedRelays`.
+ *
+ * Comparison is performed on normalized relay URLs (lowercased, `wss://`
+ * scheme ensured, trailing slashes stripped) via `normalizeRelayUrl`, so
+ * callers may pass raw `wss://` URLs received from relays or bare hostnames.
+ *
+ * @param {string} relayUrl The relay URL a content event was seen on
+ * @param {Array<string>} trustedRelays List of trusted relay URLs
+ * @returns {boolean}
+ */
+export function relayUrlMatches(relayUrl, trustedRelays = []) {
+  if (!relayUrl) return false;
+  const target = normalizeRelayUrl(relayUrl);
+  if (!target) return false;
+  const trustedSet = new Set(
+    uniqNormalizedRelays(trustedRelays || []).filter(Boolean)
+  );
+  return trustedSet.has(target);
+}
+
+/**
  * Extracts and normalizes photo data from NIP-360 (Place Photos) events.
  * Sorts chronologically and guarantees the first landscape photo (or first portrait) is at index 0.
  *

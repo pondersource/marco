@@ -13,6 +13,10 @@
   --danger-color: var(--marker-color-primary);
   --danger-color-dark: var(--marker-color-dark);
   --default-list-color: #fc3;
+  --secondary-text-color: #898989;
+  --border-color: #d8d8d8;
+  --success-color: #2e7d32;
+  --secondary-background-color: #f0f0f0;
 }
 
 html,
@@ -611,12 +615,26 @@ body {
 
 .relay-list li {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   padding: 0.25rem 0;
   border-radius: 4px;
   font-size: 0.9rem;
   word-break: break-all;
+}
+
+.relay-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.relay-list-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
 }
 
 .btn-remove-relay {
@@ -639,10 +657,17 @@ body {
   stroke: currentcolor;
 }
 
-.btn-remove-relay:hover,
-.btn-remove-relay:active {
+.btn-remove-relay:hover:not(:disabled),
+.btn-remove-relay:active:not(:disabled) {
   background-color: var(--danger-color);
   color: var(--primary-background-color);
+}
+
+.btn-remove-relay:disabled {
+  border-color: var(--border-color);
+  color: var(--secondary-text-color);
+  cursor: default;
+  opacity: 0.6;
 }
 
 .add-relay-input {
@@ -653,6 +678,64 @@ body {
 .btn-link.reset-relays {
   margin-top: 0.75rem;
   font-size: 0.85rem;
+}
+
+.btn-trust-relay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--primary-background-color);
+  border: 1px solid var(--border-color);
+  color: var(--secondary-text-color);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.1s ease;
+  flex-shrink: 0;
+}
+
+.btn-trust-relay svg {
+  stroke: currentcolor;
+}
+
+.btn-trust-relay.is-trusted {
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.btn-trust-relay:hover,
+.btn-trust-relay:active {
+  background-color: var(--secondary-background-color);
+}
+
+.btn-trust-relay:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.tooltip {
+  position: fixed;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--body-text-color);
+  color: var(--primary-background-color);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9999;
+  animation: tooltip-fade-in 0.15s ease;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes details-slide-down {

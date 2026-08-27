@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'marco/tests/helpers';
-import { click, fillIn, render } from '@ember/test-helpers';
+import { click, fillIn, render, settled } from '@ember/test-helpers';
 import Service, { service } from '@ember/service';
 import AppMenuSettingsNostr from 'marco/components/app-menu/settings/nostr';
 import {
@@ -59,6 +59,11 @@ class MockNostrDataService extends Service {
     );
   }
 
+  get trustedRelays() {
+    const configured = this.settings.nostrTrustedRelays || [];
+    return uniqNormalizedRelays([...this.requiredReadRelays, ...configured]);
+  }
+
   async clearCache() {}
 }
 
@@ -108,8 +113,17 @@ module('Integration | Component | app-menu/settings/nostr', function (hooks) {
     const requiredRow = rowByText(rows, 'nostr.kosmos.org');
     const mailboxRow = rowByText(rows, 'mailbox.example.com');
 
-    assert.dom(requiredRow.querySelector('.btn-remove-relay')).doesNotExist();
-    assert.dom(mailboxRow.querySelector('.btn-remove-relay')).exists();
+    const requiredRemoveBtn = requiredRow.querySelector('.btn-remove-relay');
+    assert.dom(requiredRemoveBtn).exists();
+    assert.true(requiredRemoveBtn.disabled, 'required relay cannot be removed');
+    assert.strictEqual(
+      requiredRemoveBtn.getAttribute('aria-description'),
+      'Required relays cannot be removed'
+    );
+
+    const mailboxRemoveBtn = mailboxRow.querySelector('.btn-remove-relay');
+    assert.dom(mailboxRemoveBtn).exists();
+    assert.false(mailboxRemoveBtn.disabled);
   });
 
   test('removing mailbox read relay stores exclusion override', async function (assert) {
@@ -216,5 +230,77 @@ module('Integration | Component | app-menu/settings/nostr', function (hooks) {
     assert
       .dom('#nostr-photo-fallback-uploads')
       .exists('fallback toggle visible with multiple media servers');
+  });
+
+  test('required read relay is trusted and its trust toggle is disabled', async function (assert) {
+    const element = await renderAndOpenDetails(this);
+    const requiredRow = rowByText(readRows(element), 'nostr.kosmos.org');
+
+    const trustBtn = requiredRow.querySelector('.btn-trust-relay');
+    assert.dom(trustBtn).exists('trust toggle renders for required relay');
+    assert.true(trustBtn.classList.contains('is-trusted'));
+    assert.true(trustBtn.disabled, 'required relay toggle is disabled');
+  });
+
+  test('toggling trust on a custom read relay marks it trusted', async function (assert) {
+    this.settings.update('nostrReadRelays', ['wss://custom.example.com']);
+
+    const element = await renderAndOpenDetails(this);
+    const customRow = rowByText(readRows(element), 'custom.example.com');
+
+    const trustBtn = customRow.querySelector('.btn-trust-relay');
+    assert.false(trustBtn.classList.contains('is-trusted'), 'starts untrusted');
+    assert.strictEqual(this.settings.nostrTrustedRelays, null);
+
+    await click(trustBtn);
+
+    assert.deepEqual(this.settings.nostrTrustedRelays, [
+      'wss://custom.example.com',
+    ]);
+    const updatedBtn = rowByText(
+      readRows(element),
+      'custom.example.com'
+    ).querySelector('.btn-trust-relay');
+    assert.true(updatedBtn.classList.contains('is-trusted'), 'now trusted');
+  });
+
+  test('toggling trust off removes relay from trusted list', async function (assert) {
+    this.settings.update('nostrReadRelays', ['wss://custom.example.com']);
+    this.settings.update('nostrTrustedRelays', ['wss://custom.example.com']);
+
+    const element = await renderAndOpenDetails(this);
+    const customRow = rowByText(readRows(element), 'custom.example.com');
+    const trustBtn = customRow.querySelector('.btn-trust-relay');
+
+    assert.true(trustBtn.classList.contains('is-trusted'));
+
+    await click(trustBtn);
+
+    assert.strictEqual(
+      this.settings.nostrTrustedRelays,
+      null,
+      'empty list collapses to null'
+    );
+  });
+
+  test('tooltip appears on hover and disappears on mouseleave', async function (assert) {
+    const element = await renderAndOpenDetails(this);
+    const mailboxRow = rowByText(readRows(element), 'mailbox.example.com');
+    const removeBtn = mailboxRow.querySelector('.btn-remove-relay');
+
+    assert.dom('.tooltip', document.body).doesNotExist('no tooltip initially');
+
+    removeBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    await settled();
+
+    assert.dom('.tooltip', document.body).exists('tooltip appears on hover');
+    assert.dom('.tooltip', document.body).hasText('Remove relay');
+
+    removeBtn.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    await settled();
+
+    assert
+      .dom('.tooltip', document.body)
+      .doesNotExist('tooltip removed on mouseleave');
   });
 });
