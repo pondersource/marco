@@ -6,7 +6,7 @@ import { EventStore } from 'applesauce-core/event-store';
 import { ProfileModel } from 'applesauce-core/models/profile';
 import { MailboxesModel } from 'applesauce-core/models/mailboxes';
 import { ContactsModel } from 'applesauce-core/models/contacts';
-import { npubEncode } from 'applesauce-core/helpers/pointers';
+import { isEventPointer, npubEncode } from 'applesauce-core/helpers/pointers';
 import { persistEventsToCache } from 'applesauce-core/helpers/event-cache';
 import { createEventLoaderForStore } from 'applesauce-loaders/loaders';
 import { RelayGroup } from 'applesauce-relay';
@@ -157,20 +157,17 @@ export default class NostrDataService extends Service {
     // instantly without waiting for relay connections.
     this._provenanceReady = this._hydrateProvenance();
 
-    // Centralized kind-5 deletion handling: when a deletion event enters the
-    // store, drop the provenance entries for the events it deletes so the
-    // trust map and IDB don't accumulate dead entries.
-    this._deletionsSub = this.store
-      .timeline([{ kinds: [5] }])
-      .subscribe((events) => {
-        for (const event of events) {
-          for (const tag of event.tags || []) {
-            if (tag[0] === 'e' && tag[1]) {
-              this._removeProvenance(tag[1]);
-            }
-          }
+    // Centralized kind-5 deletion handling: the store routes kind-5 events to
+    // its DeleteManager (never into the event database), so listen to the
+    // deletion stream rather than a timeline. Drop provenance entries for
+    // deleted events so the trust map and IDB don't accumulate dead entries.
+    this._deletionsSub = this.store.deletes.deleted$.subscribe(
+      ({ pointer }) => {
+        if (isEventPointer(pointer)) {
+          this._removeProvenance(pointer.id);
         }
-      });
+      }
+    );
 
     // Feed events from the relay pool into the event store
     this.nostrRelay.pool.relays$.subscribe(() => {
@@ -852,6 +849,11 @@ export default class NostrDataService extends Service {
     super.willDestroy(...arguments);
     this._cleanupSubscriptions();
     this._clearProfileSubs();
+
+    if (this._deletionsSub) {
+      this._deletionsSub.unsubscribe();
+      this._deletionsSub = null;
+    }
 
     if (this._stopPersisting) {
       this._stopPersisting();

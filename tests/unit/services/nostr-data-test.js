@@ -43,6 +43,23 @@ function makePhotoEvent(pubkey, placeId, opts = {}) {
   };
 }
 
+function makeDeletionEvent(pubkey, eventIds, opts = {}) {
+  const id = opts.id || makeEventId(50);
+  return {
+    id,
+    pubkey,
+    kind: 5,
+    created_at: opts.created_at || 5000,
+    tags: eventIds.map((eid) => ['e', eid]),
+    content: '',
+    sig: 'sig',
+  };
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 module('Unit | Service | nostr-data | contacts', function (hooks) {
   setupTest(hooks);
 
@@ -305,5 +322,282 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
       service.isTrustedEvent(photoEvent),
       'photo is trusted after contacts load'
     );
+  });
+});
+
+module('Unit | Service | nostr-data | relays and trust', function (hooks) {
+  setupTest(hooks);
+
+  hooks.beforeEach(function () {
+    const requestedFilters = [];
+    const reqMessages = new Subject();
+
+    class StubNostrRelayService extends Service {
+      pool = {
+        relays$: new Subject(),
+        request: (_relays, filters) => {
+          requestedFilters.push(...filters);
+          return EMPTY;
+        },
+        req: () => reqMessages,
+        publish: () => Promise.resolve([{ ok: true }]),
+      };
+    }
+
+    this.owner.register('service:nostrRelay', StubNostrRelayService);
+    this.owner.register('service:nostrData', NostrDataService);
+
+    this.requestedFilters = requestedFilters;
+    this.reqMessages = reqMessages;
+
+    const service = this.owner.lookup('service:nostr-data');
+    service.store.verifyEvent = undefined;
+  });
+
+  hooks.afterEach(async function () {
+    const service = this.owner.lookup('service:nostr-data');
+    await service.clearCache();
+    await service.localForage.clear('event-relay-provenance');
+  });
+
+  // ─── Relay getters ─────────────────────────────────────────────────────────
+
+  test('mailboxReadRelays normalizes mailbox inbox URLs', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    assert.deepEqual(service.mailboxReadRelays, [], 'empty when no mailboxes');
+
+    service.mailboxes = {
+      inboxes: ['WSS://Relay.Example.COM/', 'relay.two.example'],
+      outboxes: [],
+    };
+
+    assert.deepEqual(
+      service.mailboxReadRelays,
+      ['wss://relay.example.com', 'wss://relay.two.example'],
+      'normalizes and filters invalid URLs'
+    );
+  });
+
+  test('mailboxWriteRelays returns empty array without mailboxes', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    assert.deepEqual(service.mailboxWriteRelays, [], 'empty when no mailboxes');
+
+    service.mailboxes = {
+      inboxes: [],
+      outboxes: ['WSS://Outbox.Example.COM/'],
+    };
+
+    assert.deepEqual(
+      service.mailboxWriteRelays,
+      ['wss://outbox.example.com'],
+      'normalizes outbox URLs'
+    );
+  });
+
+  test('configuredReadRelays merges mailbox and custom relays with dedupe and exclusions', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    service.mailboxes = { inboxes: ['wss://a.example'], outboxes: [] };
+    service.settings.nostrReadRelays = ['wss://a.example/', 'wss://b.example'];
+
+    assert.deepEqual(
+      service.configuredReadRelays,
+      ['wss://a.example', 'wss://b.example'],
+      'merges and deduplicates (normalized)'
+    );
+
+    service.settings.nostrReadRelayExclusions = ['wss://a.example'];
+
+    assert.deepEqual(
+      service.configuredReadRelays,
+      ['wss://b.example'],
+      'exclusions remove mailbox relays'
+    );
+  });
+
+  test('configuredWriteRelays merges mailbox outboxes with custom write relays', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    service.mailboxes = { inboxes: [], outboxes: ['wss://out.example'] };
+    service.settings.nostrWriteRelays = ['wss://custom.example'];
+
+    assert.deepEqual(
+      service.configuredWriteRelays,
+      ['wss://out.example', 'wss://custom.example'],
+      'merges mailbox and custom write relays'
+    );
+
+    service.settings.nostrWriteRelayExclusions = ['wss://out.example'];
+
+    assert.deepEqual(
+      service.configuredWriteRelays,
+      ['wss://custom.example'],
+      'exclusions apply to write relays'
+    );
+  });
+
+  test('activeReadRelays puts required relays first and appends custom', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    assert.deepEqual(
+      service.activeReadRelays,
+      ['wss://nostr.kosmos.org'],
+      'default is required only'
+    );
+
+    service.settings.nostrReadRelays = ['wss://custom.example'];
+
+    assert.deepEqual(
+      service.activeReadRelays,
+      ['wss://nostr.kosmos.org', 'wss://custom.example'],
+      'required first, custom appended'
+    );
+  });
+
+  test('activeWriteRelays returns empty when nothing configured', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    assert.deepEqual(
+      service.activeWriteRelays,
+      [],
+      'no required write relays by default'
+    );
+  });
+
+  test('trustedRelays includes required read relays plus user-marked trusted relays', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    assert.deepEqual(
+      service.trustedRelays,
+      ['wss://nostr.kosmos.org'],
+      'default is required read relays only'
+    );
+
+    service.settings.nostrTrustedRelays = ['wss://custom.example'];
+
+    assert.deepEqual(
+      service.trustedRelays,
+      ['wss://nostr.kosmos.org', 'wss://custom.example'],
+      'merges custom trusted relays'
+    );
+  });
+
+  // ─── Provenance ────────────────────────────────────────────────────────────
+
+  test('_recordProvenance accumulates relays for an event and persists them', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const eventId = makeEventId(900);
+
+    service._recordProvenance(eventId, 'wss://one.example');
+    service._recordProvenance(eventId, 'wss://two.example');
+    service._recordProvenance(eventId, 'wss://one.example'); // duplicate
+
+    const relays = service._eventRelays.get(eventId);
+    assert.strictEqual(relays.size, 2, 'accumulates unique relays');
+    assert.true(relays.has('wss://one.example'), 'has first relay');
+    assert.true(relays.has('wss://two.example'), 'has second relay');
+
+    const persisted = await service.localForage.get(
+      'event-relay-provenance',
+      eventId
+    );
+    assert.deepEqual(
+      persisted.sort(),
+      ['wss://one.example', 'wss://two.example'],
+      'persists to localForage'
+    );
+  });
+
+  test('kind 5 deletion events remove provenance for referenced events', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const deadId = makeEventId(901);
+    const author = makePubkey(50);
+
+    service._recordProvenance(deadId, 'wss://one.example');
+
+    // The store routes kind-5 events to its DeleteManager, which emits
+    // deleted$ synchronously from add() — provenance is dropped immediately.
+    service.store.add(makeDeletionEvent(author, [deadId]));
+
+    assert.false(
+      service._eventRelays.has(deadId),
+      'provenance removed from memory'
+    );
+    const persisted = await service.localForage.get(
+      'event-relay-provenance',
+      deadId
+    );
+    assert.strictEqual(persisted, null, 'provenance removed from localForage');
+  });
+
+  test('_hydrateProvenance restores persisted provenance', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const eventId = makeEventId(902);
+
+    await service.localForage.set('event-relay-provenance', eventId, [
+      'wss://x.example',
+    ]);
+
+    await service._hydrateProvenance();
+
+    const relays = service._eventRelays.get(eventId);
+    assert.ok(relays, 'provenance restored');
+    assert.true(relays.has('wss://x.example'), 'contains the relay');
+  });
+
+  test('_requestContentWithProvenance records provenance and adds events to the store', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const eventId = makeEventId(903);
+    const pubkey = makePubkey(60);
+
+    service._requestContentWithProvenance(
+      ['wss://relay.test'],
+      [{ kinds: [360] }],
+      'test'
+    );
+
+    const photoEvent = makePhotoEvent(pubkey, 'osm:node:1', { id: eventId });
+    this.reqMessages.next({
+      type: 'EVENT',
+      event: photoEvent,
+      from: 'wss://relay.test',
+    });
+
+    await wait(50);
+
+    const relays = service._eventRelays.get(eventId);
+    assert.ok(relays, 'provenance recorded');
+    assert.true(
+      relays.has('wss://relay.test'),
+      'contains the relay the event came from'
+    );
+    assert.true(service.store.hasEvent(eventId), 'event added to store');
+  });
+
+  // ─── partitionByTrust ──────────────────────────────────────────────────────
+
+  test('partitionByTrust always passes kind 5 deletions through as trusted', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const untrustedPk = makePubkey(70);
+    const authorPk = makePubkey(71);
+
+    const untrustedPhoto = makePhotoEvent(untrustedPk, 'osm:node:1', {
+      id: makeEventId(904),
+    });
+    const deletion = makeDeletionEvent(authorPk, [untrustedPhoto.id], {
+      id: makeEventId(905),
+    });
+
+    const { trusted, untrusted } = service.partitionByTrust([
+      untrustedPhoto,
+      deletion,
+    ]);
+
+    assert.strictEqual(trusted.length, 1, 'one trusted event');
+    assert.strictEqual(trusted[0].kind, 5, 'deletion is trusted');
+    assert.strictEqual(untrusted.length, 1, 'one untrusted event');
+    assert.strictEqual(untrusted[0].kind, 360, 'photo is untrusted');
   });
 });
