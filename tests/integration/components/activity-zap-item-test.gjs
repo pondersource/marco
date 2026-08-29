@@ -145,4 +145,85 @@ module('Integration | Component | activity-zap-item', function (hooks) {
 
     assert.strictEqual(selected, this.item);
   });
+
+  test('it shows resolved place name when placeName is set', async function (assert) {
+    this.item = new ActivityEntry({
+      photoEventId: 'photo-1',
+      photo: null,
+      placeIdentifier: 'osm:node:12345',
+      senderPubkey: 'b'.repeat(64),
+      amountSats: 21,
+      message: null,
+      createdAt: 1000,
+    });
+    this.item.senderName = 'Alice';
+    this.item.senderProfileLoading = false;
+    this.item.placeName = 'Café Central';
+    this.item.placeNameLoading = false;
+
+    await render(
+      <template>
+        <ActivityZapItem @item={{this.item}} @onSelect={{this.noop}} />
+      </template>
+    );
+
+    assert
+      .dom('.zap-context-text')
+      .includesText('Café Central', 'Resolved place name is displayed');
+    assert
+      .dom('.contribution-name-loading')
+      .doesNotExist('No loading/fallback text shown');
+  });
+
+  test('it shows "Loading…" when placeNameLoading is true', async function (assert) {
+    this.item = new ActivityEntry({
+      photoEventId: 'photo-1',
+      photo: null,
+      placeIdentifier: 'osm:node:12345',
+      senderPubkey: 'b'.repeat(64),
+      amountSats: 21,
+      message: null,
+      createdAt: 1000,
+    });
+    this.item.senderName = 'Alice';
+    this.item.senderProfileLoading = false;
+    this.item.placeName = null;
+    this.item.placeNameLoading = true;
+
+    await render(
+      <template>
+        <ActivityZapItem @item={{this.item}} @onSelect={{this.noop}} />
+      </template>
+    );
+
+    assert
+      .dom('.zap-context-text .contribution-name-loading')
+      .hasText('Loading…', 'Loading state is displayed');
+  });
+
+  test('it shows "Unnamed place" when not loading and no placeName', async function (assert) {
+    this.item = new ActivityEntry({
+      photoEventId: 'photo-1',
+      photo: null,
+      placeIdentifier: 'osm:node:12345',
+      senderPubkey: 'b'.repeat(64),
+      amountSats: 21,
+      message: null,
+      createdAt: 1000,
+    });
+    this.item.senderName = 'Alice';
+    this.item.senderProfileLoading = false;
+    this.item.placeName = null;
+    this.item.placeNameLoading = false;
+
+    await render(
+      <template>
+        <ActivityZapItem @item={{this.item}} @onSelect={{this.noop}} />
+      </template>
+    );
+
+    assert
+      .dom('.zap-context-text .contribution-name-loading')
+      .hasText('Unnamed place', 'Fallback name is displayed');
+  });
 });

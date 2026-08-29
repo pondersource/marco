@@ -19,14 +19,17 @@ import { parsePhotoFromEvent } from './contributions';
 /**
  * A single activity timeline entry.
  *
- * `senderName`, `senderAvatar`, and `senderProfileLoading` are tracked so the
- * row re-renders when the sender's profile is resolved asynchronously.
+ * `senderName`, `senderAvatar`, `senderProfileLoading`, `placeName`,
+ * and `placeNameLoading` are tracked so the row re-renders when the sender's
+ * profile or place name is resolved asynchronously.
  */
 export class ActivityEntry {
   type = 'zap';
   photoEventId;
   photo;
   placeIdentifier;
+  osmType;
+  osmId;
   senderPubkey;
   amountSats;
   message;
@@ -34,6 +37,8 @@ export class ActivityEntry {
   @tracked senderName = null;
   @tracked senderAvatar = null;
   @tracked senderProfileLoading = true;
+  @tracked placeName = null;
+  @tracked placeNameLoading = true;
 
   constructor({
     photoEventId,
@@ -125,5 +130,13 @@ export function enrichWithPhoto(entry, store, userPubkey) {
 
   entry.photo = photo;
   entry.placeIdentifier = photo.placeIdentifier || null;
+
+  // Parse osmType and osmId from placeIdentifier (e.g. "osm:node:123" → "node", "123")
+  if (entry.placeIdentifier) {
+    const [, osmType, osmId] = entry.placeIdentifier.split(':');
+    entry.osmType = osmType;
+    entry.osmId = osmId;
+  }
+
   return true;
 }

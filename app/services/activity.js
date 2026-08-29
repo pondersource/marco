@@ -16,11 +16,13 @@ import { parseZapReceipt, enrichWithPhoto } from '../utils/activity';
  *      user's own kind 360 photos.
  *   3. Resolve sender profiles asynchronously via a per-sender `ProfileModel`
  *      subscription, updating the tracked entry fields when they load.
- *   4. Update `@tracked items` so the UI renders progressively.
+ *   4. Resolve place names via the shared `placeNameResolver` service.
+ *   5. Update `@tracked items` so the UI renders progressively.
  */
 export default class ActivityService extends Service {
   @service nostrData;
   @service nostrAuth;
+  @service placeNameResolver;
 
   @tracked items = [];
 
@@ -76,6 +78,7 @@ export default class ActivityService extends Service {
     this._cleanupProfileSubs();
     this.items = [];
     this._userPubkey = null;
+    this.placeNameResolver.reset();
   }
 
   willDestroy() {
@@ -110,7 +113,27 @@ export default class ActivityService extends Service {
       pubkey,
     });
 
+    // 2. Bookmark lookup is synchronous — resolve those immediately so the
+    //    first render shows bookmarked place names without a "Loading…" flicker.
+    for (const entry of entries) {
+      if (entry.osmId) {
+        const bookmarkName = this.placeNameResolver.resolveBookmark(
+          entry.osmId
+        );
+        if (bookmarkName) {
+          entry.placeName = bookmarkName;
+          entry.placeNameLoading = false;
+        }
+      }
+    }
+
     this.items = entries;
+
+    // 3. Async-resolve remaining entries from the IndexedDB name cache and OSM
+    //    cache, then fall through to the network batch for the rest.
+    void this.placeNameResolver.resolveInBackground(entries).then(() => {
+      this.items = [...this.items];
+    });
   }
 
   _resolveSender(entry) {
@@ -119,7 +142,7 @@ export default class ActivityService extends Service {
 
     // Set up a ProfileModel subscription for this sender so the entry's
     // tracked fields update when the profile arrives from cache or network.
-    // The event loader (configured in nostr-data) auto-fetches missing kind 0
+    // The event loader (configured in nostrData) auto-fetches missing kind 0
     // events from the IDB cache and relays.
     if (!this._profileSubs.has(pubkey)) {
       const sub = this.nostrData.store

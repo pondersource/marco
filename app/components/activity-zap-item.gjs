@@ -38,8 +38,12 @@ export default class ActivityZapItem extends Component {
     return this.item?.photo?.thumbUrl || this.item?.photo?.url;
   }
 
-  get placeIdentifier() {
-    return this.item?.placeIdentifier;
+  get placeName() {
+    return this.item?.placeName;
+  }
+
+  get placeNameLoading() {
+    return this.item?.placeNameLoading;
   }
 
   <template>
@@ -79,8 +83,12 @@ export default class ActivityZapItem extends Component {
             {{/if}}
           </div>
           <span class="zap-context-text">
-            {{#if this.placeIdentifier}}
-              {{this.placeIdentifier}}
+            {{#if this.placeName}}
+              {{this.placeName}}
+            {{else if this.placeNameLoading}}
+              <span class="contribution-name-loading">Loading…</span>
+            {{else}}
+              <span class="contribution-name-loading">Unnamed place</span>
             {{/if}}
             ·
             {{formatRelativeDate @item.createdAt}}
