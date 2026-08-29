@@ -329,7 +329,7 @@ module('Unit | Service | osm', function (hooks) {
     );
   });
 
-  test('fetchOsmObjectsBatch does not write to the general OSM cache', async function (assert) {
+  test('fetchOsmObjectsBatch writes complete results to the general OSM cache', async function (assert) {
     let service = this.owner.lookup('service:osm');
 
     service.fetchWithRetry = async () => ({
@@ -343,13 +343,38 @@ module('Unit | Service | osm', function (hooks) {
 
     await service.fetchOsmObjectsBatch([{ osmType: 'node', osmId: '100' }]);
 
-    assert.false(
+    assert.true(
       service.cachedPlaces.has('node:100'),
-      'Batch fetch does not write to the in-memory OSM cache'
+      'Batch fetch writes complete results (with lat/lon) to the in-memory OSM cache'
+    );
+    assert.ok(
+      await service.localForage.get('osm-cache', 'node:100'),
+      'Batch fetch writes complete results to the persistent OSM cache'
+    );
+  });
+
+  test('fetchOsmObjectsBatch does NOT cache incomplete results without lat/lon', async function (assert) {
+    let service = this.owner.lookup('service:osm');
+
+    // Way without child nodes in the response -> no lat/lon in normalized result
+    service.fetchWithRetry = async () => ({
+      ok: true,
+      json: async () => ({
+        elements: [
+          { id: 200, type: 'way', nodes: [], tags: { name: 'Way 200' } },
+        ],
+      }),
+    });
+
+    await service.fetchOsmObjectsBatch([{ osmType: 'way', osmId: '200' }]);
+
+    assert.false(
+      service.cachedPlaces.has('way:200'),
+      'Batch fetch does NOT cache incomplete results (ways without child nodes)'
     );
     assert.notOk(
-      await service.localForage.get('osm-cache', 'node:100'),
-      'Batch fetch does not write to the persistent OSM cache'
+      await service.localForage.get('osm-cache', 'way:200'),
+      'Batch fetch does NOT write incomplete results to persistent cache'
     );
   });
 

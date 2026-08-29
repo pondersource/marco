@@ -457,11 +457,11 @@ out center;
     // request using comma-separated IDs (max ~50 per request).
     //
     // Note: the multi-fetch endpoint returns ways/relations WITHOUT their child
-    // nodes, so normalized data may lack lat/lon and geometry. We intentionally
-    // do NOT write these results to the general OSM cache — only the returned
-    // Map is used by the caller (the contributions service manages its own
-    // name cache). This prevents incomplete data from breaking place detail
-    // navigation, which needs the full single-object endpoint.
+    // nodes, so normalized data may lack lat/lon and geometry.
+    // We only write complete results (those with lat/lon) to the general OSM
+    // cache. Nodes from the batch endpoint always include coordinates, so they
+    // are cached. Ways/relations without child node coordinates are not cached,
+    // preserving the full single-object endpoint for place detail navigation.
     const MAX_IDS_PER_REQUEST = 50;
 
     for (let i = 0; i < group.length; i += MAX_IDS_PER_REQUEST) {
@@ -488,6 +488,21 @@ out center;
           );
           if (normalized) {
             result.set(item.cacheKey, normalized);
+            // Warm the OSM cache for complete results (nodes always have
+            // lat/lon from the batch endpoint; ways/relations only when
+            // child nodes are included in the response).
+            if (
+              normalized.lat != null &&
+              normalized.lon != null &&
+              normalized.title
+            ) {
+              this._storeInMemoryAndLocalStorage(
+                item.cacheKey,
+                osmType,
+                item.osmId,
+                normalized
+              );
+            }
           }
         }
       } catch (e) {
