@@ -82,17 +82,18 @@ export default class ActivityZapItem extends Component {
               </div>
             {{/if}}
           </div>
-          <span class="zap-context-text">
-            {{#if this.placeName}}
-              {{this.placeName}}
-            {{else if this.placeNameLoading}}
-              <span class="contribution-name-loading">Loading…</span>
-            {{else}}
-              <span class="contribution-name-loading">Unnamed place</span>
-            {{/if}}
-            ·
-            {{formatRelativeDate @item.createdAt}}
-          </span>
+          <div class="zap-context-text">
+            <span class="zap-place-name">
+              {{#if this.placeName}}
+                {{this.placeName}}
+              {{else if this.placeNameLoading}}
+                <span class="contribution-name-loading">Loading…</span>
+              {{else}}
+                <span class="contribution-name-loading">Unnamed place</span>
+              {{/if}}
+            </span>
+            <span class="zap-date">{{formatRelativeDate @item.createdAt}}</span>
+          </div>
         </div>
 
         {{#if this.item.message}}

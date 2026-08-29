@@ -2793,9 +2793,24 @@ button.create-place {
     }
 
     & .zap-context-text {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      flex: 1 1 auto;
+      min-width: 0;
+
+      & .zap-place-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      & .zap-date {
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
     }
   }
 }

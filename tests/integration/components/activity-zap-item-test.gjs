@@ -226,4 +226,71 @@ module('Integration | Component | activity-zap-item', function (hooks) {
       .dom('.zap-context-text .contribution-name-loading')
       .hasText('Unnamed place', 'Fallback name is displayed');
   });
+
+  test('it displays place name in zap-place-name and date in zap-date', async function (assert) {
+    this.item = new ActivityEntry({
+      photoEventId: 'photo-1',
+      photo: null,
+      placeIdentifier: 'osm:node:12345',
+      senderPubkey: 'b'.repeat(64),
+      amountSats: 21,
+      message: null,
+      createdAt: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago
+    });
+    this.item.senderName = 'Alice';
+    this.item.senderProfileLoading = false;
+    this.item.placeName = 'Café Central';
+    this.item.placeNameLoading = false;
+
+    await render(
+      <template>
+        <ActivityZapItem @item={{this.item}} @onSelect={{this.noop}} />
+      </template>
+    );
+
+    const placeNameEl = this.element.querySelector('.zap-place-name');
+    const dateEl = this.element.querySelector('.zap-date');
+
+    assert.ok(placeNameEl, 'zap-place-name element exists');
+    assert.ok(dateEl, 'zap-date element exists');
+    assert.ok(
+      placeNameEl.textContent.includes('Café Central'),
+      'Place name is in zap-place-name'
+    );
+    assert.ok(dateEl.textContent.includes('hr ago'), 'Date contains hr ago');
+    assert.notOk(
+      placeNameEl.textContent.includes('hr ago'),
+      'Place name does not contain date'
+    );
+    assert.notOk(
+      dateEl.textContent.includes('Café Central'),
+      'Date does not contain place name'
+    );
+  });
+
+  test('it truncates long place names with ellipsis while keeping date visible', async function (assert) {
+    this.item = new ActivityEntry({
+      photoEventId: 'photo-1',
+      photo: null,
+      placeIdentifier: 'osm:node:12345',
+      senderPubkey: 'b'.repeat(64),
+      amountSats: 21,
+      message: null,
+      createdAt: Math.floor(Date.now() / 1000) - 3600,
+    });
+    this.item.senderName = 'Alice';
+    this.item.senderProfileLoading = false;
+    this.item.placeName =
+      'A Very Long Place Name That Should Be Truncated With Ellipsis';
+    this.item.placeNameLoading = false;
+
+    await render(
+      <template>
+        <ActivityZapItem @item={{this.item}} @onSelect={{this.noop}} />
+      </template>
+    );
+
+    assert.dom('.zap-place-name').exists('zap-place-name element exists');
+    assert.dom('.zap-date').hasText('1 hr ago', 'Date is still visible');
+  });
 });

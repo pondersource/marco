@@ -55,12 +55,34 @@ module('Unit | Utility | format-text', function () {
 
   test('formatRelativeDate returns an absolute date for timestamps older than a week', function (assert) {
     const now = Math.floor(Date.now() / 1000);
-    const oldTimestamp = now - 86400 * 30; // 30 days ago
+    const oldTimestamp = now - 86400 * 400; // 400 days ago (previous year)
     const result = formatRelativeDate(oldTimestamp);
     // The exact format depends on the locale, but it should contain a year
     assert.ok(
-      result.includes(String(new Date().getFullYear())),
-      'Contains the year'
+      result.includes(String(new Date().getFullYear() - 1)),
+      'Contains the previous year'
     );
+  });
+
+  test('formatRelativeDate omits year for same-year dates older than a week', function (assert) {
+    const now = Math.floor(Date.now() / 1000);
+    const sameYearTimestamp = now - 86400 * 30; // 30 days ago (same year)
+    const result = formatRelativeDate(sameYearTimestamp);
+    // Should NOT contain the current year
+    assert.notOk(
+      result.includes(String(new Date().getFullYear())),
+      'Does not contain the current year'
+    );
+    // Should contain month and day
+    const expectedMonth = new Date(sameYearTimestamp * 1000).toLocaleDateString(
+      undefined,
+      { month: 'short' }
+    );
+    const expectedDay = new Date(sameYearTimestamp * 1000).toLocaleDateString(
+      undefined,
+      { day: 'numeric' }
+    );
+    assert.ok(result.includes(expectedMonth), 'Contains month');
+    assert.ok(result.includes(expectedDay), 'Contains day');
   });
 });
