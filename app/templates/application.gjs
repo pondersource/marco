@@ -23,6 +23,7 @@ export default class ApplicationComponent extends Component {
         name === 'search' ||
         name === 'menu' ||
         name === 'contributions' ||
+        name === 'activity' ||
         name.startsWith('lists'))
     );
   }
@@ -51,6 +52,7 @@ export default class ApplicationComponent extends Component {
       name === 'place' ||
       name === 'menu' ||
       name === 'contributions' ||
+      name === 'activity' ||
       name.startsWith('lists')
     ) {
       this.mapUi.clearSelection();
@@ -58,6 +60,7 @@ export default class ApplicationComponent extends Component {
       if (
         name === 'menu' ||
         name === 'contributions' ||
+        name === 'activity' ||
         name.startsWith('lists')
       ) {
         this.router.transitionTo('index');

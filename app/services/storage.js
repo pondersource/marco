@@ -61,6 +61,7 @@ export default class StorageService extends Service {
     this.rs.on('connected', () => {
       this.connected = true;
       this.userAddress = this.rs.remote.userAddress;
+      this.initialSyncDone = false;
 
       if (this.isNewConnection) {
         this.toast.show('Remote storage connected', 3000);
@@ -71,6 +72,7 @@ export default class StorageService extends Service {
     });
 
     this.rs.on('not-connected', () => {
+      this.initialSyncDone = true;
       this.loadLists();
     });
 

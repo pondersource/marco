@@ -39,6 +39,7 @@ import target from 'feather-icons/dist/icons/target.svg?raw';
 import trash2 from 'feather-icons/dist/icons/trash-2.svg?raw';
 import uploadCloud from 'feather-icons/dist/icons/upload-cloud.svg?raw';
 import user from 'feather-icons/dist/icons/user.svg?raw';
+import userCheck from 'feather-icons/dist/icons/user-check.svg?raw';
 import x from 'feather-icons/dist/icons/x.svg?raw';
 import check from 'feather-icons/dist/icons/check.svg?raw';
 import alertCircle from 'feather-icons/dist/icons/alert-circle.svg?raw';
@@ -281,6 +282,7 @@ const ICONS = {
   'upload-cloud': uploadCloud,
   'tree-and-bench-with-backrest': treeAndBenchWithBackrest,
   user,
+  'user-check': userCheck,
   'village-buildings': villageBuildings,
   'wall-hanging-with-mountains-and-sun': wallHangingWithMountainsAndSun,
   'womens-and-mens-restroom-symbol': womensAndMensRestroomSymbol,

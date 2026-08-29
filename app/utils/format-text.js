@@ -26,9 +26,10 @@ export function formatRelativeDate(timestamp) {
   if (diffMin < 60) return `${diffMin} min ago`;
   if (diffHr < 24) return `${diffHr} hr ago`;
   if (diffDay < 7) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+  const isCurrentYear = date.getFullYear() === now.getFullYear();
   return date.toLocaleDateString(undefined, {
-    year: 'numeric',
     month: 'short',
     day: 'numeric',
+    ...(isCurrentYear ? {} : { year: 'numeric' }),
   });
 }

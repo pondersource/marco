@@ -2660,3 +2660,157 @@ button.create-place {
     color: var(--body-text-color);
   }
 }
+
+/* Activity Timeline — zap activity list rendered in the sidebar */
+.activity-list {
+  list-style: none;
+  padding: 0;
+  margin: -1rem -1rem 0;
+}
+
+.activity-zap-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--divider-color);
+  background: var(--primary-background-color);
+  color: var(--body-text-color);
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &:hover {
+    background: var(--hover-bg);
+  }
+
+  & .zap-sender-avatar {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f0f0f0;
+  }
+
+  & .zap-sender-avatar-placeholder {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+  }
+
+  & .zap-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  & .zap-sender-line {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.95rem;
+
+    & .zap-sender-name {
+      font-weight: bold;
+    }
+
+    & .zap-action {
+      color: #666;
+      font-weight: normal;
+    }
+  }
+
+  & .zap-amount {
+    flex-shrink: 0;
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: var(--body-text-color);
+    white-space: nowrap;
+  }
+
+  & .zap-message {
+    color: var(--body-text-color);
+    font-size: 0.85rem;
+    font-style: italic;
+    position: relative;
+    background: var(--secondary-background-color);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    margin-top: 4px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: 11px;
+      width: 10px;
+      height: 10px;
+      background: var(--secondary-background-color);
+      transform: rotate(45deg);
+    }
+  }
+
+  & .zap-context {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #999;
+    font-size: 0.8rem;
+    margin-top: 8px;
+
+    & .zap-context-images {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    & .zap-context-thumb {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #f0f0f0;
+
+      & img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    }
+
+    & .zap-context-text {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      flex: 1 1 auto;
+      min-width: 0;
+
+      & .zap-place-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      & .zap-date {
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+    }
+  }
+}

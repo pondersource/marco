@@ -28,6 +28,11 @@ export default class AppMenu extends Component {
     this.router.transitionTo('contributions');
   }
 
+  @action
+  goToActivity() {
+    this.router.transitionTo('activity');
+  }
+
   <template>
     <div class="sidebar app-menu-pane">
       {{#if (eq this.currentView "menu")}}
@@ -36,6 +41,7 @@ export default class AppMenu extends Component {
           @onClose={{@onClose}}
           @onSavedPlaces={{this.goToSavedPlaces}}
           @onContributions={{this.goToContributions}}
+          @onActivity={{this.goToActivity}}
         />
 
       {{else if (eq this.currentView "settings")}}
