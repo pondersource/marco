@@ -95,6 +95,7 @@ export default class NostrDataService extends Service {
   _zapReceiptsNetworkSub = null;
   _zapRefreshTimer = null;
   _lastPhotoIds = new Set();
+  _incomingZapsNetworkSub = null;
 
   _requestSub = null;
   _cachePromise = null;
@@ -551,6 +552,54 @@ export default class NostrDataService extends Service {
     );
   }
 
+  /**
+   * Hydrates the store with incoming zap receipts (kind 9735) where the user is
+   * the recipient (`#p` filter). Loads from the IDB cache first (instant), then
+   * fires a network request. Called by the `activity` service.
+   *
+   * @param {string} pubkey The user's Nostr pubkey
+   */
+  async loadIncomingZaps(pubkey) {
+    if (!pubkey) return;
+
+    const filters = [{ kinds: [9735], '#p': [pubkey] }];
+
+    console.debug('[nostr-data] Requesting incoming zap receipts from relays', {
+      filters,
+      relays: this.activeReadRelays,
+    });
+
+    if (this._incomingZapsNetworkSub) {
+      this._incomingZapsNetworkSub.unsubscribe();
+      this._incomingZapsNetworkSub = null;
+    }
+
+    // 1. Populate the store from the local Nostr IDB cache (instant)
+    try {
+      await this._cachePromise;
+
+      const cachedEvents = await this.cache.query(filters);
+
+      if (cachedEvents && cachedEvents.length > 0) {
+        for (const event of cachedEvents) {
+          this.store.add(event);
+        }
+      }
+    } catch (e) {
+      console.warn(
+        '[nostr-data] Failed to read incoming zap receipts from local Nostr IDB cache',
+        e
+      );
+    }
+
+    // 2. Request fresh events from the network in the background
+    this._incomingZapsNetworkSub = this._requestContentWithProvenance(
+      this.activeReadRelays,
+      filters,
+      '[nostr-data] Error fetching incoming zap receipts:'
+    );
+  }
+
   loadProfiles(pubkeys) {
     const newPubkeys = pubkeys.filter(
       (pk) => pk && !this._profileModelSubs.has(pk)
@@ -843,6 +892,10 @@ export default class NostrDataService extends Service {
     }
     this._cleanupZapReceiptSubs();
     this._clearZapRefreshTimer();
+    if (this._incomingZapsNetworkSub) {
+      this._incomingZapsNetworkSub.unsubscribe();
+      this._incomingZapsNetworkSub = null;
+    }
   }
 
   willDestroy() {

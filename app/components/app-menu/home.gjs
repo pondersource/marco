@@ -26,8 +26,14 @@ import iconRounded from '../../icons/icon-rounded.svg?raw';
         </button>
       </li>
       <li>
-        <button type="button" {{on "click" @onContributions}}>
+        <button type="button" {{on "click" @onActivity}}>
           <Icon @name="activity" @size={{20}} />
+          <span>Activity</span>
+        </button>
+      </li>
+      <li>
+        <button type="button" {{on "click" @onContributions}}>
+          <Icon @name="user-check" @size={{20}} />
           <span>My Contributions</span>
         </button>
       </li>

@@ -54,7 +54,7 @@ export class ContributionEntry {
  * @param {object} event A NIP-360 (kind 360) Nostr event
  * @returns {object|null} A photo object, or null if no usable `imeta` was found
  */
-function parsePhotoFromEvent(event) {
+export function parsePhotoFromEvent(event) {
   const tags = event.tags || [];
 
   const eventTags = tags
