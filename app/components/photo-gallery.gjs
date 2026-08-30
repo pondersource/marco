@@ -52,7 +52,7 @@ const GalleryContent = <template>
               <button
                 class="dropdown-item text-danger"
                 type="button"
-                {{on "click" (fn @deletePhotoTask.perform closeMenu)}}
+                {{on "click" (fn @deletePhoto closeMenu)}}
               >Delete Photo</button>
             {{/if}}
           </DropdownMenu>
@@ -259,21 +259,27 @@ export default class PhotoGallery extends Component {
     this.zapModalOpen = false;
   }
 
-  deletePhotoTask = task(async (closeMenu) => {
+  @action
+  deletePhoto(closeMenu, e) {
+    e?.stopPropagation();
+    if (closeMenu) closeMenu();
     if (
       !confirm(
         'Are you sure you want to delete this photo? This cannot be undone.'
       )
     ) {
-      if (closeMenu) closeMenu();
       return;
     }
+    this.deletePhotoTask.perform();
+  }
+
+  deletePhotoTask = task(async () => {
+    const deletedEventId = this.currentPhoto.eventId;
+    const deletedIndex = this.args.photos?.indexOf(this.currentPhoto) ?? -1;
 
     try {
-      const eventId = this.currentPhoto.eventId;
-
       // Publish Nostr kind: 5 deletion event first so we don't end up with dead blossom links on a failure
-      const tags = [['e', eventId]];
+      const tags = [['e', deletedEventId]];
 
       if (this.currentPhoto.placeIdentifier) {
         tags.push(['i', this.currentPhoto.placeIdentifier]);
@@ -316,12 +322,20 @@ export default class PhotoGallery extends Component {
 
       this.toast.show('Photo deleted successfully');
 
-      if (closeMenu) closeMenu();
-      this.handleClose();
+      // Navigate to the next remaining photo, or close the gallery if none left.
+      // this.args.photos may be stale until Glimmer re-renders, so filter locally.
+      const remaining = (this.args.photos || []).filter(
+        (p) => p.eventId !== deletedEventId
+      );
+      if (remaining.length === 0) {
+        this.handleClose();
+      } else {
+        this.currentPhoto =
+          remaining[Math.min(deletedIndex, remaining.length - 1)];
+      }
     } catch (e) {
       console.error('Failed to delete photo:', e);
       this.toast.show('Failed to delete photo: ' + e.message);
-      if (closeMenu) closeMenu();
     }
   });
 
@@ -333,7 +347,7 @@ export default class PhotoGallery extends Component {
         @handleKeydown={{this.handleKeydown}}
         @copyEventId={{this.copyEventId}}
         @canDeletePhoto={{this.canDeletePhoto}}
-        @deletePhotoTask={{this.deletePhotoTask}}
+        @deletePhoto={{this.deletePhoto}}
         @handleClose={{this.handleClose}}
         @photos={{@photos}}
         @currentPhoto={{this.currentPhoto}}
@@ -356,7 +370,7 @@ export default class PhotoGallery extends Component {
           @handleKeydown={{this.handleKeydown}}
           @copyEventId={{this.copyEventId}}
           @canDeletePhoto={{this.canDeletePhoto}}
-          @deletePhotoTask={{this.deletePhotoTask}}
+          @deletePhoto={{this.deletePhoto}}
           @handleClose={{this.handleClose}}
           @photos={{@photos}}
           @currentPhoto={{this.currentPhoto}}

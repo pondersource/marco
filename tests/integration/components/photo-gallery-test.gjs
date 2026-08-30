@@ -133,6 +133,9 @@ module('Integration | Component | photo-gallery', function (hooks) {
 
     assert.ok(confirmStub.calledOnce, 'confirmation dialog was shown');
     assert.ok(blossomSpy.notCalled, 'blossom.delete was NOT called');
+    assert
+      .dom('.dropdown-popover')
+      .doesNotExist('dropdown menu was closed on cancel');
   });
 
   test('it performs full deletion flow when confirmed', async function (assert) {
@@ -226,7 +229,58 @@ module('Integration | Component | photo-gallery', function (hooks) {
       toastSpy.calledWith('Photo deleted successfully'),
       'success toast was shown'
     );
-    assert.ok(closed, 'gallery was closed after deletion');
+    assert
+      .dom('.dropdown-popover')
+      .doesNotExist('dropdown menu was closed after deletion');
+    assert.notOk(closed, 'gallery was kept open after deletion');
+  });
+
+  test('it closes the gallery when deleting the last remaining photo', async function (assert) {
+    this.nostrAuth.pubkey = USER_A;
+    this.settings.update('experimentalEnablePhotoDeletion', true);
+    Object.defineProperty(this.nostrAuth, 'signer', {
+      configurable: true,
+      get: () => ({
+        signEvent: async (e) => ({
+          ...e,
+          id: 'a3b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1',
+          sig: 'b3b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1',
+          pubkey: USER_A,
+        }),
+        getPublicKey: async () => USER_A,
+      }),
+    });
+
+    this.set('photos', [this.photos[0]]);
+    this.selectedPhoto = this.photos[0];
+
+    let closed = false;
+    this.handleClose = () => {
+      closed = true;
+    };
+
+    sinon.stub(window, 'confirm').returns(true);
+    sinon.stub(this.blossom, 'delete').resolves();
+    sinon.stub(this.nostrRelay, 'publish').resolves();
+    sinon.stub(this.nostrData.store, 'add');
+
+    await render(
+      <template>
+        <div id="test-container">
+          <div id="modal-portal"></div>
+          <PhotoGallery
+            @photos={{this.photos}}
+            @selectedPhoto={{this.selectedPhoto}}
+            @onClose={{this.handleClose}}
+          />
+        </div>
+      </template>
+    );
+
+    await click('.dropdown-trigger-btn');
+    await click('.dropdown-item.text-danger');
+
+    assert.ok(closed, 'gallery was closed when last photo was deleted');
   });
 
   test('it copies event id to clipboard', async function (assert) {
