@@ -35,4 +35,11 @@ module('Unit | Utility | poi-category-matcher', function () {
 
     assert.ok(categoryIds.includes('things-to-do'));
   });
+
+  test('leisure=resort matches accommodation category', function (assert) {
+    const tags = { leisure: 'resort' };
+    const categoryIds = getMatchingPoiCategoryIds(tags, POI_CATEGORIES);
+
+    assert.ok(categoryIds.includes('accommodation'));
+  });
 });

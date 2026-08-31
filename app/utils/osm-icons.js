@@ -160,6 +160,7 @@ export const POI_ICON_RULES = [
   { tags: { tourism: 'hostel' }, icon: 'person-sleeping-in-bed' },
   { tags: { tourism: 'motel' }, icon: 'person-sleeping-in-bed' },
   { tags: { tourism: 'guest_house' }, icon: 'person-sleeping-in-bed' },
+  { tags: { leisure: 'resort' }, icon: 'person-sleeping-in-bed' },
 
   // Sports / Motorsports
   { tags: { sport: 'motor' }, icon: 'flag-checkered' },

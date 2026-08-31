@@ -38,6 +38,11 @@ module('Unit | Utility | osm-icons', function () {
     assert.strictEqual(result, null);
   });
 
+  test('it returns person-sleeping-in-bed for leisure=resort', function (assert) {
+    let result = getIconNameForTags({ leisure: 'resort' });
+    assert.strictEqual(result, 'person-sleeping-in-bed');
+  });
+
   test('all icons used in POI_ICON_RULES exist in the icons utility', function (assert) {
     for (let rule of POI_ICON_RULES) {
       let icon = getIcon(rule.icon);
