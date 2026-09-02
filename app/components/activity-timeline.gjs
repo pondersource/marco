@@ -10,71 +10,9 @@ import NostrConnect from './nostr-connect';
 import not from 'ember-truth-helpers/helpers/not';
 import eq from 'ember-truth-helpers/helpers/eq';
 import restoreScroll from '../modifiers/restore-scroll';
-import { ActivityEntry } from '../utils/activity';
 
 export default class ActivityTimelineComponent extends Component {
   @tracked isNostrConnectModalOpen = false;
-
-  get dummyPhotoEntry() {
-    const entry = new ActivityEntry({
-      photoEventId: 'dummy-photo-event-id',
-      photos: [
-        {
-          thumbUrl: 'https://picsum.photos/seed/marco-photo-1/200/200',
-          url: 'https://picsum.photos/seed/marco-photo-1/800/800',
-          placeIdentifier: 'osm:node:123456789',
-        },
-      ],
-      placeIdentifier: 'osm:node:123456789',
-      senderPubkey: 'dummy-sender-pubkey',
-      amountSats: 0,
-      message: null,
-      createdAt: Math.floor(Date.now() / 1000) - 3600,
-    });
-    entry.type = 'photo';
-    entry.senderName = 'Alice Mapper';
-    entry.senderAvatar =
-      'https://api.dicebear.com/7.x/avataaars/svg?seed=alice';
-    entry.placeName = 'Central Park Café';
-    entry.placeNameLoading = false;
-    entry.senderProfileLoading = false;
-    return entry;
-  }
-
-  get dummyMultiPhotoEntry() {
-    const entry = new ActivityEntry({
-      photoEventId: 'dummy-multi-photo-event-id',
-      photos: [
-        {
-          thumbUrl: 'https://picsum.photos/seed/marco-multi-1/200/200',
-          url: 'https://picsum.photos/seed/marco-multi-1/800/800',
-          placeIdentifier: 'osm:node:987654321',
-        },
-        {
-          thumbUrl: 'https://picsum.photos/seed/marco-multi-2/200/200',
-          url: 'https://picsum.photos/seed/marco-multi-2/800/800',
-          placeIdentifier: 'osm:node:987654321',
-        },
-        {
-          thumbUrl: 'https://picsum.photos/seed/marco-multi-3/200/200',
-          url: 'https://picsum.photos/seed/marco-multi-3/800/800',
-          placeIdentifier: 'osm:node:987654321',
-        },
-      ],
-      placeIdentifier: 'osm:node:987654321',
-      senderPubkey: 'dummy-multi-sender-pubkey',
-      amountSats: 0,
-      message: null,
-      createdAt: Math.floor(Date.now() / 1000) - 7200,
-    });
-    entry.type = 'photo';
-    entry.senderName = 'Bob Cartographer';
-    entry.senderAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=bob';
-    entry.placeName = 'Riverside Lookout';
-    entry.placeNameLoading = false;
-    entry.senderProfileLoading = false;
-    return entry;
-  }
 
   @action
   openNostrConnectModal(event) {
@@ -136,14 +74,6 @@ export default class ActivityTimelineComponent extends Component {
                 <ActivityPhotoItem @item={{item}} @onSelect={{@onSelect}} />
               {{/if}}
             {{/each}}
-            <ActivityPhotoItem
-              @item={{this.dummyPhotoEntry}}
-              @onSelect={{@onSelect}}
-            />
-            <ActivityPhotoItem
-              @item={{this.dummyMultiPhotoEntry}}
-              @onSelect={{@onSelect}}
-            />
           </ul>
         {{/if}}
       </div>

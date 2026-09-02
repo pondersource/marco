@@ -97,6 +97,12 @@ export default class NostrDataService extends Service {
   _lastPhotoIds = new Set();
   _incomingZapsNetworkSub = null;
 
+  // Activity photos state: tracks the current time window and source mode
+  // so that the contacts callback can re-trigger when contacts arrive.
+  _activityPhotosSince = null;
+  _activityPhotosMode = 'social';
+  _activityPhotosNetworkSub = null;
+
   _requestSub = null;
   _cachePromise = null;
   _currentPlaceEntityId = null;
@@ -600,6 +606,106 @@ export default class NostrDataService extends Service {
     );
   }
 
+  /**
+   * Loads kind 360 (Place Photo) events for the activity feed, scoped to the
+   * given time window and source mode.
+   *
+   * - `'social'` mode: fetches photos authored by the user's followed contacts
+   *   (kind 3). If contacts haven't loaded yet (`_contactPubkeys` is null or
+   *   empty), this returns early and is re-triggered automatically by the
+   *   `ContactsModel` subscription callback when contacts arrive.
+   *
+   * Future modes (e.g. `'trusted-relays'`) can be added by extending the
+   * switch below.
+   *
+   * @param {number} since Unix timestamp (seconds) for the start of the window
+   * @param {string} [mode='social'] Source mode
+   */
+  async loadActivityPhotos(since, mode = 'social') {
+    this._activityPhotosSince = since;
+    this._activityPhotosMode = mode;
+
+    if (this._activityPhotosNetworkSub) {
+      this._activityPhotosNetworkSub.unsubscribe();
+      this._activityPhotosNetworkSub = null;
+    }
+
+    if (mode === 'social') {
+      this._loadSocialCirclePhotos(since);
+    }
+    // Future modes (e.g. 'trusted-relays') can be added here.
+  }
+
+  /**
+   * Fetches kind 360 photos from the user's followed contacts, batched by
+   * author pubkey (≤100 per filter to stay under relay REQ limits).
+   */
+  _loadSocialCirclePhotos(since) {
+    const pubkeys = this._contactPubkeys
+      ? Array.from(this._contactPubkeys)
+      : [];
+
+    if (pubkeys.length === 0) {
+      console.debug(
+        '[nostr-data] No contacts loaded yet, deferring social photo load'
+      );
+      return;
+    }
+
+    const filters = this._batchAuthorFilters(pubkeys, [360], since);
+
+    console.debug('[nostr-data] Loading social circle photos', {
+      filterCount: filters.length,
+      pubkeyCount: pubkeys.length,
+      since,
+    });
+
+    // 1. Populate the store from the local Nostr IDB cache (instant)
+    this._cachePromise
+      .then(() => this.cache.query(filters))
+      .then((cachedEvents) => {
+        if (cachedEvents && cachedEvents.length > 0) {
+          for (const event of cachedEvents) {
+            this.store.add(event);
+          }
+        }
+      })
+      .catch((e) => {
+        console.warn(
+          '[nostr-data] Failed to read social photos from local Nostr IDB cache',
+          e
+        );
+      });
+
+    // 2. Request fresh events from the network (captures provenance for trust)
+    this._activityPhotosNetworkSub = this._requestContentWithProvenance(
+      this.activeReadRelays,
+      filters,
+      '[nostr-data] Error fetching social circle photos:'
+    );
+  }
+
+  /**
+   * Builds an array of Nostr filters, each with ≤ `BATCH_SIZE` author pubkeys.
+   *
+   * @param {string[]} pubkeys Author pubkeys to batch
+   * @param {number[]} kinds Event kinds to request
+   * @param {number} since Unix timestamp (seconds) for the start of the window
+   * @returns {object[]} Array of filter objects
+   */
+  _batchAuthorFilters(pubkeys, kinds, since) {
+    const BATCH_SIZE = 100;
+    const filters = [];
+    for (let i = 0; i < pubkeys.length; i += BATCH_SIZE) {
+      filters.push({
+        kinds,
+        authors: pubkeys.slice(i, i + BATCH_SIZE),
+        since,
+      });
+    }
+    return filters;
+  }
+
   loadProfiles(pubkeys) {
     const newPubkeys = pubkeys.filter(
       (pk) => pk && !this._profileModelSubs.has(pk)
@@ -659,6 +765,15 @@ export default class NostrDataService extends Service {
         this.contacts = contacts;
         this._contactPubkeys = new Set(contacts.map((c) => c.pubkey));
         this._updatePlacePhotos();
+        // Re-trigger activity photo load now that contacts are available.
+        // If no activity load has been requested yet, _activityPhotosSince
+        // is null and the call is a no-op.
+        if (this._activityPhotosSince !== null) {
+          this.loadActivityPhotos(
+            this._activityPhotosSince,
+            this._activityPhotosMode
+          );
+        }
       });
 
     this._blossomSub = this.store
@@ -895,6 +1010,10 @@ export default class NostrDataService extends Service {
     if (this._incomingZapsNetworkSub) {
       this._incomingZapsNetworkSub.unsubscribe();
       this._incomingZapsNetworkSub = null;
+    }
+    if (this._activityPhotosNetworkSub) {
+      this._activityPhotosNetworkSub.unsubscribe();
+      this._activityPhotosNetworkSub = null;
     }
   }
 

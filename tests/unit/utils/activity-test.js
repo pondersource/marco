@@ -3,6 +3,7 @@ import {
   ActivityEntry,
   parseZapReceipt,
   enrichWithPhoto,
+  groupSocialPhotos,
 } from 'marco/utils/activity';
 import {
   setVerifyWrappedEventMethod,
@@ -207,5 +208,254 @@ module('Unit | Utility | activity', function () {
 
     const result = enrichWithPhoto(entry, mockStore, USER_PUBKEY);
     assert.false(result, 'event not in store');
+  });
+});
+
+const SOCIAL_PK_A = 'a'.repeat(64);
+const SOCIAL_PK_B = 'b'.repeat(64);
+
+function makeSocialPhotoEvent(opts = {}) {
+  return {
+    id: opts.id || `e${(opts.idx ?? 0).toString().padStart(63, '0')}`,
+    pubkey: opts.author || SOCIAL_PK_A,
+    kind: 360,
+    created_at: opts.created_at || 5000,
+    tags: [
+      ['i', opts.placeIdentifier || 'osm:node:123'],
+      ['imeta', `url ${opts.url || 'https://x.com/photo.jpg'}`, 'dim 800x600'],
+    ],
+    content: '',
+    sig: 'sig',
+  };
+}
+
+module('Unit | Utility | activity | groupSocialPhotos', function () {
+  test('returns empty for no events', function (assert) {
+    assert.deepEqual(groupSocialPhotos([]), []);
+    assert.deepEqual(groupSocialPhotos(null), []);
+  });
+
+  test('groups by author + place within time threshold', function (assert) {
+    const events = [
+      makeSocialPhotoEvent({
+        idx: 1,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 1000,
+      }),
+      makeSocialPhotoEvent({
+        idx: 2,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 2000,
+      }),
+      makeSocialPhotoEvent({
+        idx: 3,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 3000,
+      }),
+    ];
+
+    const entries = groupSocialPhotos(events);
+    assert.strictEqual(entries.length, 1, 'one entry for same author + place');
+    assert.strictEqual(entries[0].type, 'photo');
+    assert.strictEqual(entries[0].photos.length, 3);
+    assert.strictEqual(entries[0].senderPubkey, SOCIAL_PK_A);
+    assert.strictEqual(entries[0].createdAt, 3000, 'newest created_at');
+    assert.strictEqual(entries[0].placeIdentifier, 'osm:node:1');
+  });
+
+  test('separates entries by author for the same place', function (assert) {
+    const events = [
+      makeSocialPhotoEvent({
+        idx: 1,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 1000,
+      }),
+      makeSocialPhotoEvent({
+        idx: 2,
+        author: SOCIAL_PK_B,
+        placeIdentifier: 'osm:node:1',
+        created_at: 2000,
+      }),
+    ];
+
+    const entries = groupSocialPhotos(events);
+    assert.strictEqual(entries.length, 2, 'two entries (one per author)');
+    assert.strictEqual(entries[0].senderPubkey, SOCIAL_PK_B, 'newest first');
+    assert.strictEqual(entries[1].senderPubkey, SOCIAL_PK_A);
+  });
+
+  test('separates entries by place for the same author', function (assert) {
+    const events = [
+      makeSocialPhotoEvent({
+        idx: 1,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 1000,
+      }),
+      makeSocialPhotoEvent({
+        idx: 2,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:2',
+        created_at: 2000,
+      }),
+    ];
+
+    const entries = groupSocialPhotos(events);
+    assert.strictEqual(entries.length, 2, 'two entries (one per place)');
+    assert.strictEqual(
+      entries[0].placeIdentifier,
+      'osm:node:2',
+      'newest first'
+    );
+    assert.strictEqual(entries[1].placeIdentifier, 'osm:node:1');
+  });
+
+  test('splits by time proximity within same author + place', function (assert) {
+    const events = [
+      makeSocialPhotoEvent({
+        idx: 1,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 1000,
+      }),
+      makeSocialPhotoEvent({
+        idx: 2,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 2000,
+      }),
+      // 5-hour gap (> 3h threshold)
+      makeSocialPhotoEvent({
+        idx: 3,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 20000,
+      }),
+    ];
+
+    const entries = groupSocialPhotos(events);
+    assert.strictEqual(entries.length, 2, 'split by time gap');
+    assert.strictEqual(entries[0].photos.length, 1, 'newer group has 1 photo');
+    assert.strictEqual(entries[1].photos.length, 2, 'older group has 2 photos');
+  });
+
+  test('sorts entries newest-first', function (assert) {
+    const events = [
+      makeSocialPhotoEvent({
+        idx: 1,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 1000,
+      }),
+      makeSocialPhotoEvent({
+        idx: 2,
+        author: SOCIAL_PK_B,
+        placeIdentifier: 'osm:node:2',
+        created_at: 5000,
+      }),
+      makeSocialPhotoEvent({
+        idx: 3,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:node:1',
+        created_at: 2000,
+      }),
+    ];
+
+    const entries = groupSocialPhotos(events);
+    assert.strictEqual(entries[0].createdAt, 5000, 'newest entry first');
+    assert.strictEqual(entries[1].createdAt, 2000, 'second entry');
+  });
+
+  test('sets osmType and osmId from placeIdentifier', function (assert) {
+    const events = [
+      makeSocialPhotoEvent({
+        idx: 1,
+        author: SOCIAL_PK_A,
+        placeIdentifier: 'osm:way:999',
+        created_at: 1000,
+      }),
+    ];
+
+    const entries = groupSocialPhotos(events);
+    assert.strictEqual(entries[0].osmType, 'way');
+    assert.strictEqual(entries[0].osmId, '999');
+  });
+
+  test('filters out events without an i tag', function (assert) {
+    const event = makeSocialPhotoEvent({ idx: 1, author: SOCIAL_PK_A });
+    event.tags = [['imeta', 'url https://x.com/photo.jpg', 'dim 800x600']];
+
+    const entries = groupSocialPhotos([event]);
+    assert.strictEqual(entries.length, 0, 'no i tag → filtered out');
+  });
+
+  test('applies kind 5 deletions', function (assert) {
+    const photoId = 'e'.padStart(64, '0');
+    const events = [
+      {
+        id: photoId,
+        pubkey: SOCIAL_PK_A,
+        kind: 360,
+        created_at: 1000,
+        tags: [
+          ['i', 'osm:node:1'],
+          ['imeta', 'url https://x.com/photo.jpg', 'dim 800x600'],
+        ],
+        content: '',
+        sig: 'sig',
+      },
+      {
+        id: 'd'.padStart(64, '0'),
+        pubkey: SOCIAL_PK_A,
+        kind: 5,
+        created_at: 5000,
+        tags: [['e', photoId]],
+        content: '',
+        sig: 'sig',
+      },
+    ];
+
+    const entries = groupSocialPhotos(events);
+    assert.strictEqual(entries.length, 0, 'deleted photo is filtered out');
+  });
+
+  test('filters out entries with no usable photos (malformed imeta)', function (assert) {
+    const event = makeSocialPhotoEvent({ idx: 1, author: SOCIAL_PK_A });
+    event.tags = [
+      ['i', 'osm:node:1'],
+      ['imeta', 'dim 800x600'], // no url
+    ];
+
+    const entries = groupSocialPhotos([event]);
+    assert.strictEqual(entries.length, 0, 'malformed imeta → filtered out');
+  });
+
+  test('photo is set to first photo in the group', function (assert) {
+    const events = [
+      makeSocialPhotoEvent({
+        idx: 1,
+        author: SOCIAL_PK_A,
+        url: 'https://x.com/a.jpg',
+        created_at: 1000,
+      }),
+      makeSocialPhotoEvent({
+        idx: 2,
+        author: SOCIAL_PK_A,
+        url: 'https://x.com/b.jpg',
+        created_at: 2000,
+      }),
+    ];
+
+    const entries = groupSocialPhotos(events);
+    assert.ok(entries[0].photo, 'photo is set');
+    assert.strictEqual(
+      entries[0].photo.url,
+      'https://x.com/a.jpg',
+      'first photo (oldest) is the thumbnail'
+    );
   });
 });

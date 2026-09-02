@@ -856,6 +856,114 @@ module('Unit | Service | nostr-data | my contributions', function (hooks) {
   });
 });
 
+module('Unit | Service | nostr-data | activity photos', function (hooks) {
+  setupNostrDataService(hooks);
+
+  test('loadActivityPhotos defers when contacts are not loaded yet', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    // _contactPubkeys is null initially (no loadProfile called)
+    assert.strictEqual(service._contactPubkeys, null);
+
+    await service.loadActivityPhotos(1000, 'social');
+
+    // No network request should have been made
+    const photoFilters = this.requestedFilters.filter(
+      (f) => f.kinds?.includes(360) && f.authors
+    );
+    assert.strictEqual(photoFilters.length, 0, 'no request without contacts');
+  });
+
+  test('loadActivityPhotos batches >100 pubkeys into multiple filters', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    // Create 250 contact pubkeys
+    const contactPubkeys = Array.from({ length: 250 }, (_, i) =>
+      makePubkey(100 + i)
+    );
+
+    // Load contacts so _contactPubkeys is populated
+    service.store.add(makeContactsEvent(userPubkey, contactPubkeys));
+    await service.loadProfile(userPubkey);
+
+    await service.loadActivityPhotos(1000, 'social');
+
+    const photoFilters = this.requestedFilters.filter(
+      (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
+    );
+    assert.strictEqual(
+      photoFilters.length,
+      3,
+      '250 pubkeys → 3 filters (100+100+50)'
+    );
+    assert.strictEqual(photoFilters[0].authors.length, 100);
+    assert.strictEqual(photoFilters[1].authors.length, 100);
+    assert.strictEqual(photoFilters[2].authors.length, 50);
+  });
+
+  test('loadActivityPhotos includes since in filter', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const contactPubkey = makePubkey(2);
+
+    service.store.add(makeContactsEvent(userPubkey, [contactPubkey]));
+    await service.loadProfile(userPubkey);
+
+    const since = 12345;
+    await service.loadActivityPhotos(since, 'social');
+
+    const photoFilter = this.requestedFilters.find(
+      (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
+    );
+    assert.ok(photoFilter, 'photo filter with since found');
+    assert.strictEqual(photoFilter.since, since, 'since value matches');
+    assert.deepEqual(photoFilter.kinds, [360], 'requests kind 360');
+  });
+
+  test('loadActivityPhotos re-triggers when contacts arrive', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const contactPubkey = makePubkey(2);
+
+    // Call loadActivityPhotos before contacts are loaded
+    await service.loadActivityPhotos(1000, 'social');
+
+    const beforeCount = this.requestedFilters.filter(
+      (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
+    ).length;
+    assert.strictEqual(beforeCount, 0, 'no request before contacts');
+
+    // Now load contacts — the ContactsModel callback should re-trigger
+    service.store.add(makeContactsEvent(userPubkey, [contactPubkey]));
+    await service.loadProfile(userPubkey);
+
+    // Give the callback a tick to propagate
+    await new Promise((r) => setTimeout(r, 50));
+
+    const afterCount = this.requestedFilters.filter(
+      (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
+    ).length;
+    assert.ok(afterCount > 0, 'request made after contacts arrived');
+  });
+
+  test('_batchAuthorFilters produces correct batches', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const pubkeys = Array.from({ length: 250 }, (_, i) => makePubkey(i));
+    const filters = service._batchAuthorFilters(pubkeys, [360], 1000);
+
+    assert.strictEqual(filters.length, 3, '250 → 3 filters');
+    assert.strictEqual(filters[0].authors.length, 100);
+    assert.strictEqual(filters[1].authors.length, 100);
+    assert.strictEqual(filters[2].authors.length, 50);
+    assert.deepEqual(filters[0].kinds, [360]);
+    assert.strictEqual(filters[0].since, 1000);
+  });
+});
+
 module('Unit | Service | nostr-data | zap receipts', function (hooks) {
   setupNostrDataService(hooks);
 

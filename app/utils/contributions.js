@@ -120,7 +120,7 @@ export function parsePhotoFromEvent(event) {
  * @param {Array} events Mixed kind 360 and kind 5 events
  * @returns {Array} Surviving kind 360 events
  */
-function applyDeletions(events) {
+export function applyDeletions(events) {
   const deletedIds = new Set();
   for (const event of events) {
     if (event.kind === 5) {

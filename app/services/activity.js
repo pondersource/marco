@@ -2,7 +2,13 @@ import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { ProfileModel } from 'applesauce-core/models/profile';
 import { getProfileContent } from 'applesauce-core/helpers/profile';
-import { parseZapReceipt, enrichWithPhoto } from '../utils/activity';
+import {
+  parseZapReceipt,
+  enrichWithPhoto,
+  groupSocialPhotos,
+} from '../utils/activity';
+
+const SINCE_WINDOW = 30 * 24 * 60 * 60; // 30 days in seconds
 
 /**
  * Orchestrates loading the user's incoming social activity (zaps received on
@@ -27,11 +33,18 @@ export default class ActivityService extends Service {
   @tracked items = [];
 
   _sub = null;
+  _socialSub = null;
   _profileSubs = new Map();
   _userPubkey = null;
+  _zapItems = [];
+  _socialItems = [];
+  _lastSocialEvents = [];
+  _since = null;
+  _sourceMode = 'social';
 
   /**
-   * Loads the user's incoming zap receipts and subscribes to live updates.
+   * Loads the user's incoming zap receipts and social photo activity, then
+   * subscribes to live updates.
    *
    * @param {string} pubkey The user's Nostr pubkey
    */
@@ -42,20 +55,33 @@ export default class ActivityService extends Service {
     }
 
     this._userPubkey = pubkey;
+    this._since = Math.floor(Date.now() / 1000) - SINCE_WINDOW;
 
-    const filters = [{ kinds: [9735], '#p': [pubkey] }];
+    const zapFilters = [{ kinds: [9735], '#p': [pubkey] }];
 
     console.debug('[activity] Subscribing to zap receipts', {
-      filters,
+      filters: zapFilters,
       pubkey,
       activeReadRelays: this.nostrData.activeReadRelays,
     });
 
-    // Subscribe to the store timeline so we get live updates as receipts
-    // arrive and are added to the store.
-    this._sub = this.nostrData.store.timeline(filters).subscribe((events) => {
-      this._updateItems(events, pubkey);
-    });
+    // Subscribe to zap receipts (kind 9735 where #p = user)
+    this._sub = this.nostrData.store
+      .timeline(zapFilters)
+      .subscribe((events) => {
+        this._updateZapItems(events, pubkey);
+      });
+
+    // Subscribe to all kind 360 photos in the time window. The callback
+    // filters by source mode (e.g. followed contacts only) so we only
+    // show photos from the relevant source.
+    const photoFilters = [{ kinds: [360], since: this._since }];
+    this._socialSub = this.nostrData.store
+      .timeline(photoFilters)
+      .subscribe((events) => {
+        this._lastSocialEvents = events;
+        this._updateSocialItems(events);
+      });
 
     // Ensure the user's kind 360 photo events are in the store first so
     // enrichWithPhoto can look them up when zap receipts arrive.
@@ -64,6 +90,33 @@ export default class ActivityService extends Service {
     // Then load zap receipts — adding them to the store triggers the
     // timeline subscription, and by now the photo events are available.
     await this.nostrData.loadIncomingZaps(pubkey);
+
+    // Load social photos (contacts dependency handled internally — if
+    // contacts haven't loaded yet, loadActivityPhotos returns early and
+    // the ContactsModel callback re-triggers it when they arrive).
+    await this.nostrData.loadActivityPhotos(this._since, this._sourceMode);
+  }
+
+  /**
+   * Switches the activity source mode (e.g. 'social' for followed contacts,
+   * 'trusted-relays' for content from trusted relays). Re-filters existing
+   * events and re-fetches with the new mode.
+   *
+   * @param {string} mode The new source mode
+   */
+  setSourceMode(mode) {
+    if (mode === this._sourceMode) return;
+    this._sourceMode = mode;
+
+    // Re-filter existing events with the new mode
+    if (this._lastSocialEvents.length > 0) {
+      this._updateSocialItems(this._lastSocialEvents);
+    }
+
+    // Re-fetch with the new mode
+    if (this._userPubkey && this._since !== null) {
+      this.nostrData.loadActivityPhotos(this._since, mode);
+    }
   }
 
   /**
@@ -75,9 +128,17 @@ export default class ActivityService extends Service {
       this._sub.unsubscribe();
       this._sub = null;
     }
+    if (this._socialSub) {
+      this._socialSub.unsubscribe();
+      this._socialSub = null;
+    }
     this._cleanupProfileSubs();
+    this._zapItems = [];
+    this._socialItems = [];
+    this._lastSocialEvents = [];
     this.items = [];
     this._userPubkey = null;
+    this._since = null;
     this.placeNameResolver.reset();
   }
 
@@ -86,7 +147,7 @@ export default class ActivityService extends Service {
     super.willDestroy(...arguments);
   }
 
-  _updateItems(receipts, pubkey) {
+  _updateZapItems(receipts, pubkey) {
     const entries = [];
 
     for (const receipt of receipts) {
@@ -113,8 +174,8 @@ export default class ActivityService extends Service {
       pubkey,
     });
 
-    // 2. Bookmark lookup is synchronous — resolve those immediately so the
-    //    first render shows bookmarked place names without a "Loading…" flicker.
+    // Synchronous bookmark lookup — resolve those immediately so the
+    // first render shows bookmarked place names without a "Loading…" flicker.
     for (const entry of entries) {
       if (entry.osmId) {
         const bookmarkName = this.placeNameResolver.resolveBookmark(
@@ -127,13 +188,73 @@ export default class ActivityService extends Service {
       }
     }
 
-    this.items = entries;
+    this._zapItems = entries;
+    this._mergeItems();
 
-    // 3. Async-resolve remaining entries from the IndexedDB name cache and OSM
-    //    cache, then fall through to the network batch for the rest.
+    // Async-resolve remaining entries from the IndexedDB name cache and OSM
+    // cache, then fall through to the network batch for the rest.
     void this.placeNameResolver.resolveInBackground(entries).then(() => {
-      this.items = [...this.items];
+      this._mergeItems();
     });
+  }
+
+  _updateSocialItems(events) {
+    // Filter by source mode (e.g. only followed contacts, excluding own photos)
+    const filtered = events.filter((e) => this._matchesSourceMode(e));
+    const entries = groupSocialPhotos(filtered);
+
+    // Resolve sender profiles (async, fire-and-forget per sender)
+    for (const entry of entries) {
+      this._resolveSender(entry);
+    }
+
+    // Synchronous bookmark lookup for instant first render
+    for (const entry of entries) {
+      if (entry.osmId) {
+        const bookmarkName = this.placeNameResolver.resolveBookmark(
+          entry.osmId
+        );
+        if (bookmarkName) {
+          entry.placeName = bookmarkName;
+          entry.placeNameLoading = false;
+        }
+      }
+    }
+
+    this._socialItems = entries;
+    this._mergeItems();
+
+    // Async-resolve remaining place names from caches → network batch
+    void this.placeNameResolver.resolveInBackground(entries).then(() => {
+      this._mergeItems();
+    });
+  }
+
+  /**
+   * Merges `_zapItems` and `_socialItems` into `items`, sorted newest-first.
+   */
+  _mergeItems() {
+    const all = [...this._zapItems, ...this._socialItems];
+    all.sort((a, b) => b.createdAt - a.createdAt);
+    this.items = all;
+  }
+
+  /**
+   * Returns true if an event should be included in the activity feed given
+   * the current source mode.
+   *
+   * - `'social'`: only events from followed contacts (excluding own photos)
+   * - Future modes (e.g. `'trusted-relays'`) can be added here
+   */
+  _matchesSourceMode(event) {
+    if (this._sourceMode === 'social') {
+      return (
+        this._userPubkey &&
+        event.pubkey !== this._userPubkey &&
+        this.nostrData._contactPubkeys?.has(event.pubkey)
+      );
+    }
+    return false;
   }
 
   _resolveSender(entry) {

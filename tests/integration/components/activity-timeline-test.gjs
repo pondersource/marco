@@ -143,7 +143,7 @@ module('Integration | Component | activity-timeline', function (hooks) {
       </template>
     );
 
-    assert.dom('.activity-item').exists({ count: 4 });
+    assert.dom('.activity-item').exists({ count: 2 });
     assert.dom(this.element).includesText('Alice');
     assert.dom(this.element).includesText('21 ⚡');
     assert.dom(this.element).includesText('Bob');

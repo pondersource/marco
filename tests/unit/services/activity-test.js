@@ -10,6 +10,16 @@ import {
 
 setVerifyWrappedEventMethod(fakeVerifyEvent);
 
+class MockPlaceNameResolver extends Service {
+  resolveBookmark() {
+    return null;
+  }
+  resolveInBackground() {
+    return new Promise(() => {});
+  }
+  reset() {}
+}
+
 const USER_PUBKEY = 'a'.repeat(64);
 const SENDER_PUBKEY = 'b'.repeat(64);
 
@@ -64,7 +74,7 @@ function makePhotoEvent(opts = {}) {
     id: opts.id || PHOTO_EVENT_ID_1,
     pubkey: opts.author || USER_PUBKEY,
     kind: 360,
-    created_at: 5000,
+    created_at: opts.created_at || 5000,
     tags: [
       ['i', opts.placeIdentifier || 'osm:node:123'],
       ['imeta', `url ${opts.url || 'https://x.com/photo.jpg'}`, 'dim 800x600'],
@@ -76,6 +86,7 @@ function makePhotoEvent(opts = {}) {
 
 class MockNostrDataService extends Service {
   @tracked profiles = {};
+  _contactPubkeys = new Set();
 
   store = {
     events: new Map(),
@@ -112,6 +123,7 @@ class MockNostrDataService extends Service {
   };
 
   loadProfiles() {}
+  loadActivityPhotos() {}
 
   getProfile(pubkey) {
     return this.profiles[pubkey];
@@ -125,9 +137,10 @@ module('Unit | Service | activity', function (hooks) {
 
   hooks.beforeEach(function () {
     this.owner.register('service:nostrData', MockNostrDataService);
+    this.owner.register('service:placeNameResolver', MockPlaceNameResolver);
   });
 
-  test('_updateItems parses receipts and enriches with photos from the store', function (assert) {
+  test('_updateZapItems parses receipts and enriches with photos from the store', function (assert) {
     const service = this.owner.lookup('service:activity');
     const photoEvent = makePhotoEvent({
       id: PHOTO_EVENT_ID_1,
@@ -140,7 +153,7 @@ module('Unit | Service | activity', function (hooks) {
       message: 'Love it!',
     });
 
-    service._updateItems([receipt], USER_PUBKEY);
+    service._updateZapItems([receipt], USER_PUBKEY);
 
     assert.strictEqual(service.items.length, 1);
     assert.strictEqual(service.items[0].type, 'zap');
@@ -151,7 +164,7 @@ module('Unit | Service | activity', function (hooks) {
     assert.ok(service.items[0].photo, 'photo is populated');
   });
 
-  test('_updateItems filters out zaps for non-photo events', function (assert) {
+  test('_updateZapItems filters out zaps for non-photo events', function (assert) {
     const service = this.owner.lookup('service:activity');
     service.nostrData.store.add({
       id: TEXT_EVENT_ID,
@@ -163,12 +176,12 @@ module('Unit | Service | activity', function (hooks) {
 
     const receipt = makeZapReceiptEvent({ zappedEventId: TEXT_EVENT_ID });
 
-    service._updateItems([receipt], USER_PUBKEY);
+    service._updateZapItems([receipt], USER_PUBKEY);
 
     assert.strictEqual(service.items.length, 0, 'non-photo zap filtered out');
   });
 
-  test('_updateItems filters out zaps for photos not authored by the user', function (assert) {
+  test('_updateZapItems filters out zaps for photos not authored by the user', function (assert) {
     const service = this.owner.lookup('service:activity');
     const otherUserPhoto = makePhotoEvent({
       id: PHOTO_EVENT_ID_OTHER,
@@ -180,7 +193,7 @@ module('Unit | Service | activity', function (hooks) {
       zappedEventId: PHOTO_EVENT_ID_OTHER,
     });
 
-    service._updateItems([receipt], USER_PUBKEY);
+    service._updateZapItems([receipt], USER_PUBKEY);
 
     assert.strictEqual(
       service.items.length,
@@ -189,7 +202,7 @@ module('Unit | Service | activity', function (hooks) {
     );
   });
 
-  test('_updateItems filters out zaps not directed at the user', function (assert) {
+  test('_updateZapItems filters out zaps not directed at the user', function (assert) {
     const service = this.owner.lookup('service:activity');
     const photoEvent = makePhotoEvent({ id: PHOTO_EVENT_ID_1 });
     service.nostrData.store.add(photoEvent);
@@ -199,7 +212,7 @@ module('Unit | Service | activity', function (hooks) {
       zappedEventId: PHOTO_EVENT_ID_1,
     });
 
-    service._updateItems([receipt], USER_PUBKEY);
+    service._updateZapItems([receipt], USER_PUBKEY);
 
     assert.strictEqual(
       service.items.length,
@@ -208,7 +221,7 @@ module('Unit | Service | activity', function (hooks) {
     );
   });
 
-  test('_updateItems sorts entries newest-first', function (assert) {
+  test('_updateZapItems sorts entries newest-first', function (assert) {
     const service = this.owner.lookup('service:activity');
     service.nostrData.store.add(makePhotoEvent({ id: PHOTO_EVENT_ID_1 }));
     service.nostrData.store.add(makePhotoEvent({ id: PHOTO_EVENT_ID_2 }));
@@ -224,7 +237,7 @@ module('Unit | Service | activity', function (hooks) {
       created_at: 9000,
     });
 
-    service._updateItems([oldReceipt, newReceipt], USER_PUBKEY);
+    service._updateZapItems([oldReceipt, newReceipt], USER_PUBKEY);
 
     assert.strictEqual(service.items.length, 2);
     assert.strictEqual(service.items[0].createdAt, 9000, 'newest first');
@@ -234,7 +247,7 @@ module('Unit | Service | activity', function (hooks) {
   test('stop clears items and resets state', function (assert) {
     const service = this.owner.lookup('service:activity');
     service.nostrData.store.add(makePhotoEvent({ id: PHOTO_EVENT_ID_1 }));
-    service._updateItems(
+    service._updateZapItems(
       [makeZapReceiptEvent({ zappedEventId: PHOTO_EVENT_ID_1 })],
       USER_PUBKEY
     );
@@ -269,5 +282,145 @@ module('Unit | Service | activity', function (hooks) {
     assert.strictEqual(entry.senderName, 'Alice');
     assert.strictEqual(entry.senderAvatar, 'https://x.com/avatar.jpg');
     assert.false(entry.senderProfileLoading);
+  });
+
+  test('_updateSocialItems groups photos by author + place', function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const photo1 = makePhotoEvent({
+      id: 'p1'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: 1000,
+    });
+    const photo2 = makePhotoEvent({
+      id: 'p2'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: 2000,
+    });
+
+    service._updateSocialItems([photo1, photo2]);
+
+    assert.strictEqual(
+      service.items.length,
+      1,
+      'one entry for same author + place'
+    );
+    assert.strictEqual(service.items[0].type, 'photo');
+    assert.strictEqual(service.items[0].photos.length, 2);
+    assert.strictEqual(service.items[0].senderPubkey, SENDER_PUBKEY);
+  });
+
+  test('_matchesSourceMode filters by contact pubkeys in social mode', function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service._sourceMode = 'social';
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const followedPhoto = makePhotoEvent({ author: SENDER_PUBKEY });
+    const unfollowedPhoto = makePhotoEvent({ author: 'z'.repeat(64) });
+    const ownPhoto = makePhotoEvent({ author: USER_PUBKEY });
+
+    assert.true(
+      service._matchesSourceMode(followedPhoto),
+      'followed contact passes'
+    );
+    assert.false(
+      service._matchesSourceMode(unfollowedPhoto),
+      'unfollowed pubkey rejected'
+    );
+    assert.false(service._matchesSourceMode(ownPhoto), 'own photo excluded');
+  });
+
+  test('_updateSocialItems merges with zap items sorted by createdAt', function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    // Seed a zap item
+    service.nostrData.store.add(
+      makePhotoEvent({ id: PHOTO_EVENT_ID_1, placeIdentifier: 'osm:node:50' })
+    );
+    service._updateZapItems(
+      [
+        makeZapReceiptEvent({
+          zappedEventId: PHOTO_EVENT_ID_1,
+          created_at: 5000,
+        }),
+      ],
+      USER_PUBKEY
+    );
+
+    // Add a social photo that is newer
+    const socialPhoto = makePhotoEvent({
+      id: 'sp1'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: 9000,
+    });
+    service._updateSocialItems([socialPhoto]);
+
+    assert.strictEqual(service.items.length, 2);
+    assert.strictEqual(
+      service.items[0].createdAt,
+      9000,
+      'newer social photo first'
+    );
+    assert.strictEqual(service.items[1].createdAt, 5000, 'older zap second');
+  });
+
+  test('setSourceMode re-filters existing events', function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service._sourceMode = 'trusted-relays';
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const followedPhoto = makePhotoEvent({
+      id: 'fp1'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: 1000,
+    });
+    service._lastSocialEvents = [followedPhoto];
+
+    // In 'trusted-relays' mode, _matchesSourceMode returns false for all events
+    service._updateSocialItems([followedPhoto]);
+    assert.strictEqual(
+      service.items.length,
+      0,
+      'no social items in trusted-relays mode'
+    );
+
+    // Switch to 'social' mode — now the followed photo should appear
+    service.setSourceMode('social');
+    assert.strictEqual(
+      service.items.length,
+      1,
+      're-filtered shows followed contact in social mode'
+    );
+  });
+
+  test('stop clears social items and resets state', function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const photo = makePhotoEvent({
+      id: 'sp2'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+    });
+    service._updateSocialItems([photo]);
+
+    assert.strictEqual(service.items.length, 1);
+
+    service.stop();
+
+    assert.strictEqual(service.items.length, 0, 'items cleared');
+    assert.strictEqual(service._socialItems.length, 0, 'social items cleared');
+    assert.strictEqual(service._zapItems.length, 0, 'zap items cleared');
   });
 });

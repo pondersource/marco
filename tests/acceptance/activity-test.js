@@ -98,7 +98,7 @@ module('Acceptance | activity', function (hooks) {
     await visit('/activity');
 
     await waitFor('.activity-item');
-    assert.dom('.activity-item').exists({ count: 3 });
+    assert.dom('.activity-item').exists({ count: 1 });
     assert.dom('.sender-name').hasText('Alice');
     assert.dom('.action').includesText('zapped your photo');
     assert.dom('.amount').includesText('21 ⚡');
