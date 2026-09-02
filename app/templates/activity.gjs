@@ -6,6 +6,8 @@ import ActivityTimeline from '#components/activity-timeline';
       @items={{@controller.items}}
       @isLoading={{@controller.loadTask.isRunning}}
       @isConnected={{@controller.isConnected}}
+      @sourceMode={{@controller.sourceMode}}
+      @onSetSourceMode={{@controller.setSourceMode}}
       @scrollTop={{@controller.scrollTop}}
       @onSelect={{@controller.selectItem}}
       @onBack={{@controller.backToMenu}}

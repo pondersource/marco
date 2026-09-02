@@ -10,7 +10,6 @@ export default class ActivityController extends Controller {
   @service activity;
 
   loadTask = task({ restartable: true }, async (pubkey) => {
-    if (!pubkey) return;
     await this.activity.load(pubkey);
   });
 
@@ -24,6 +23,15 @@ export default class ActivityController extends Controller {
 
   get isConnected() {
     return this.nostrAuth.isConnected;
+  }
+
+  get sourceMode() {
+    return this.activity.sourceMode;
+  }
+
+  @action
+  setSourceMode(mode) {
+    this.activity.setSourceMode(mode);
   }
 
   @action

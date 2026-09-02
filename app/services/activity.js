@@ -31,6 +31,7 @@ export default class ActivityService extends Service {
   @service placeNameResolver;
 
   @tracked items = [];
+  @tracked sourceMode = 'home';
 
   _sub = null;
   _socialSub = null;
@@ -40,37 +41,39 @@ export default class ActivityService extends Service {
   _socialItems = [];
   _lastSocialEvents = [];
   _since = null;
-  _sourceMode = 'social';
+  _sourceMode = 'home';
 
   /**
    * Loads the user's incoming zap receipts and social photo activity, then
    * subscribes to live updates.
    *
-   * @param {string} pubkey The user's Nostr pubkey
+   * When a Nostr account is connected, zaps received on the user's photos are
+   * loaded and the 'home' mode shows photos from followed contacts. When no
+   * account is connected, zaps and 'home' mode are skipped, but 'explore'
+   * mode still loads photos from trusted relays.
+   *
+   * @param {string|null} pubkey The user's Nostr pubkey, or null
    */
   async load(pubkey) {
-    if (!pubkey) {
-      this.items = [];
-      return;
-    }
-
-    this._userPubkey = pubkey;
+    this._userPubkey = pubkey || null;
     this._since = Math.floor(Date.now() / 1000) - SINCE_WINDOW;
 
-    const zapFilters = [{ kinds: [9735], '#p': [pubkey] }];
+    if (pubkey) {
+      const zapFilters = [{ kinds: [9735], '#p': [pubkey] }];
 
-    console.debug('[activity] Subscribing to zap receipts', {
-      filters: zapFilters,
-      pubkey,
-      activeReadRelays: this.nostrData.activeReadRelays,
-    });
-
-    // Subscribe to zap receipts (kind 9735 where #p = user)
-    this._sub = this.nostrData.store
-      .timeline(zapFilters)
-      .subscribe((events) => {
-        this._updateZapItems(events, pubkey);
+      console.debug('[activity] Subscribing to zap receipts', {
+        filters: zapFilters,
+        pubkey,
+        activeReadRelays: this.nostrData.activeReadRelays,
       });
+
+      // Subscribe to zap receipts (kind 9735 where #p = user)
+      this._sub = this.nostrData.store
+        .timeline(zapFilters)
+        .subscribe((events) => {
+          this._updateZapItems(events, pubkey);
+        });
+    }
 
     // Subscribe to all kind 360 photos in the time window. The callback
     // filters by source mode (e.g. followed contacts only) so we only
@@ -83,13 +86,15 @@ export default class ActivityService extends Service {
         this._updateSocialItems(events);
       });
 
-    // Ensure the user's kind 360 photo events are in the store first so
-    // enrichWithPhoto can look them up when zap receipts arrive.
-    await this.nostrData.loadMyContributions(pubkey);
+    if (pubkey) {
+      // Ensure the user's kind 360 photo events are in the store first so
+      // enrichWithPhoto can look them up when zap receipts arrive.
+      await this.nostrData.loadMyContributions(pubkey);
 
-    // Then load zap receipts — adding them to the store triggers the
-    // timeline subscription, and by now the photo events are available.
-    await this.nostrData.loadIncomingZaps(pubkey);
+      // Then load zap receipts — adding them to the store triggers the
+      // timeline subscription, and by now the photo events are available.
+      await this.nostrData.loadIncomingZaps(pubkey);
+    }
 
     // Load social photos (contacts dependency handled internally — if
     // contacts haven't loaded yet, loadActivityPhotos returns early and
@@ -98,8 +103,8 @@ export default class ActivityService extends Service {
   }
 
   /**
-   * Switches the activity source mode (e.g. 'social' for followed contacts,
-   * 'trusted-relays' for content from trusted relays). Re-filters existing
+   * Switches the activity source mode (e.g. 'home' for followee photos,
+   * 'explore' for all photos from trusted relays). Re-filters existing
    * events and re-fetches with the new mode.
    *
    * @param {string} mode The new source mode
@@ -107,6 +112,7 @@ export default class ActivityService extends Service {
   setSourceMode(mode) {
     if (mode === this._sourceMode) return;
     this._sourceMode = mode;
+    this.sourceMode = mode;
 
     // Re-filter existing events with the new mode
     if (this._lastSocialEvents.length > 0) {
@@ -114,7 +120,7 @@ export default class ActivityService extends Service {
     }
 
     // Re-fetch with the new mode
-    if (this._userPubkey && this._since !== null) {
+    if (this._since !== null) {
       this.nostrData.loadActivityPhotos(this._since, mode);
     }
   }
@@ -234,7 +240,10 @@ export default class ActivityService extends Service {
    * Merges `_zapItems` and `_socialItems` into `items`, sorted newest-first.
    */
   _mergeItems() {
-    const all = [...this._zapItems, ...this._socialItems];
+    const all =
+      this._sourceMode === 'explore'
+        ? [...this._socialItems]
+        : [...this._zapItems, ...this._socialItems];
     all.sort((a, b) => b.createdAt - a.createdAt);
     this.items = all;
   }
@@ -243,15 +252,27 @@ export default class ActivityService extends Service {
    * Returns true if an event should be included in the activity feed given
    * the current source mode.
    *
-   * - `'social'`: only events from followed contacts (excluding own photos)
-   * - Future modes (e.g. `'trusted-relays'`) can be added here
+   * - `'home'`: only events from followees (excluding own photos)
+   * - `'explore'`: events from non-followed authors trusted by relay provenance
+   *   (excluding own photos). When no pubkey is connected, all trusted events
+   *   pass (no own-photo or followee exclusion).
    */
   _matchesSourceMode(event) {
-    if (this._sourceMode === 'social') {
+    if (this._sourceMode === 'home') {
       return (
         this._userPubkey &&
         event.pubkey !== this._userPubkey &&
         this.nostrData._contactPubkeys?.has(event.pubkey)
+      );
+    }
+    if (this._sourceMode === 'explore') {
+      if (!this._userPubkey) {
+        return this.nostrData.isTrustedEvent(event);
+      }
+      return (
+        event.pubkey !== this._userPubkey &&
+        !this.nostrData._contactPubkeys?.has(event.pubkey) &&
+        this.nostrData.isTrustedEvent(event)
       );
     }
     return false;

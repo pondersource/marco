@@ -2417,6 +2417,38 @@ button.create-place {
   padding: 4rem 1rem;
 }
 
+/* Tab Navigation */
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid var(--divider-color);
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.tab-nav-button {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--secondary-text-color);
+  font-family: inherit;
+  border-bottom: 2px solid transparent;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.tab-nav-button:hover {
+  color: var(--body-text-color);
+}
+
+.tab-nav-button.is-active {
+  border-bottom-color: var(--link-color);
+  font-weight: 600;
+  color: var(--body-text-color);
+}
+
 /* Contributions Timeline */
 .contributions-list {
   list-style: none;

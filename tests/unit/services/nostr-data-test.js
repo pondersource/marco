@@ -865,7 +865,7 @@ module('Unit | Service | nostr-data | activity photos', function (hooks) {
     // _contactPubkeys is null initially (no loadProfile called)
     assert.strictEqual(service._contactPubkeys, null);
 
-    await service.loadActivityPhotos(1000, 'social');
+    await service.loadActivityPhotos(1000, 'home');
 
     // No network request should have been made
     const photoFilters = this.requestedFilters.filter(
@@ -887,7 +887,7 @@ module('Unit | Service | nostr-data | activity photos', function (hooks) {
     service.store.add(makeContactsEvent(userPubkey, contactPubkeys));
     await service.loadProfile(userPubkey);
 
-    await service.loadActivityPhotos(1000, 'social');
+    await service.loadActivityPhotos(1000, 'home');
 
     const photoFilters = this.requestedFilters.filter(
       (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
@@ -912,7 +912,7 @@ module('Unit | Service | nostr-data | activity photos', function (hooks) {
     await service.loadProfile(userPubkey);
 
     const since = 12345;
-    await service.loadActivityPhotos(since, 'social');
+    await service.loadActivityPhotos(since, 'home');
 
     const photoFilter = this.requestedFilters.find(
       (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
@@ -929,7 +929,7 @@ module('Unit | Service | nostr-data | activity photos', function (hooks) {
     const contactPubkey = makePubkey(2);
 
     // Call loadActivityPhotos before contacts are loaded
-    await service.loadActivityPhotos(1000, 'social');
+    await service.loadActivityPhotos(1000, 'home');
 
     const beforeCount = this.requestedFilters.filter(
       (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
@@ -947,6 +947,22 @@ module('Unit | Service | nostr-data | activity photos', function (hooks) {
       (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
     ).length;
     assert.ok(afterCount > 0, 'request made after contacts arrived');
+  });
+
+  test("loadActivityPhotos in 'explore' mode fetches all photos without authors filter", async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const since = 9999;
+    await service.loadActivityPhotos(since, 'explore');
+
+    // Should make a request immediately (no contacts dependency)
+    const photoFilter = this.requestedFilters.find(
+      (f) => f.kinds?.includes(360) && f.since !== undefined && !f.authors
+    );
+    assert.ok(photoFilter, 'photo filter without authors found');
+    assert.strictEqual(photoFilter.since, since, 'since value matches');
+    assert.deepEqual(photoFilter.kinds, [360], 'requests kind 360');
+    assert.notOk(photoFilter.authors, 'no authors filter in explore mode');
   });
 
   test('_batchAuthorFilters produces correct batches', function (assert) {

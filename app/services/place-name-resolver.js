@@ -56,11 +56,9 @@ export default class PlaceNameResolverService extends Service {
    */
   async resolveInBackground(entries) {
     const pending = entries.filter((e) => e.placeNameLoading);
-    if (pending.length === 0) {
-      this._maybeBatchFetchNames(entries);
-      return;
-    }
+    if (pending.length === 0) return;
 
+    // Phase 1: Cache lookup (localForage → OSM IDB cache)
     await Promise.all(
       pending.map(async (entry) => {
         const name = await this._resolveCachedName(entry);
@@ -71,20 +69,6 @@ export default class PlaceNameResolverService extends Service {
       })
     );
 
-    // Trigger re-render via caller, then kick off the network batch for
-    // entries that are still loading.
-    this._maybeBatchFetchNames(entries);
-  }
-
-  _isUnresolvable(entry) {
-    return this._unresolvable.has(entry.placeIdentifier);
-  }
-
-  _maybeBatchFetchNames(entries) {
-    const unresolved = entries.filter(
-      (e) => e.placeNameLoading && !this._isUnresolvable(e)
-    );
-
     // Apply fallbacks for items already marked unresolvable in this session
     for (const entry of entries) {
       if (entry.placeNameLoading && this._isUnresolvable(entry)) {
@@ -93,52 +77,67 @@ export default class PlaceNameResolverService extends Service {
       }
     }
 
-    if (unresolved.length === 0) {
-      return;
-    }
+    const unresolved = entries.filter(
+      (e) => e.placeNameLoading && !this._isUnresolvable(e)
+    );
+    if (unresolved.length === 0) return;
 
-    // Build a stable signature so we only fire one batch request per unique set
+    // Phase 2: Batch OSM fetch (awaited, deduplicated by signature)
+    try {
+      const nameMap = await this._getOrCreateBatch(unresolved);
+      for (const entry of entries) {
+        if (!entry.placeNameLoading) continue;
+        if (nameMap.has(entry.placeIdentifier)) {
+          entry.placeName = nameMap.get(entry.placeIdentifier);
+          entry.placeNameLoading = false;
+        } else {
+          this._unresolvable.add(entry.placeIdentifier);
+          entry.placeName = this._fallbackName(entry);
+          entry.placeNameLoading = false;
+        }
+      }
+    } catch (e) {
+      console.error('[place-name-resolver] Batch resolution failed', e);
+      for (const entry of entries) {
+        if (entry.placeNameLoading) {
+          this._unresolvable.add(entry.placeIdentifier);
+          entry.placeName = this._fallbackName(entry);
+          entry.placeNameLoading = false;
+        }
+      }
+    }
+  }
+
+  _isUnresolvable(entry) {
+    return this._unresolvable.has(entry.placeIdentifier);
+  }
+
+  /**
+   * Returns a promise for the batch OSM fetch, deduplicating calls that have
+   * the same set of place identifiers. If a batch with the same signature is
+   * already in flight, returns that promise instead of firing a new one.
+   *
+   * @param {Array} unresolved Entries that still need a network fetch
+   * @returns {Promise<Map<string, string>>} Map of placeIdentifier → name
+   */
+  _getOrCreateBatch(unresolved) {
     const signature = unresolved
       .map((e) => e.placeIdentifier)
       .sort()
       .join('|');
-    if (signature === this._lastBatchSignature && this._pendingBatchPromise) {
-      return;
-    }
-    this._lastBatchSignature = signature;
 
-    this._pendingBatchPromise = this._batchResolveNames(unresolved)
-      .then((nameMap) => {
-        // Merge resolved names back into the entries
-        for (const entry of entries) {
-          if (!entry.placeNameLoading) continue;
-          if (nameMap.has(entry.placeIdentifier)) {
-            const name = nameMap.get(entry.placeIdentifier);
-            entry.placeName = name;
-            entry.placeNameLoading = false;
-          } else {
-            // Could not be resolved (deleted object, network error for this item).
-            // Mark as unresolvable for this session and use a fallback.
-            this._unresolvable.add(entry.placeIdentifier);
-            entry.placeName = this._fallbackName(entry);
-            entry.placeNameLoading = false;
-          }
-        }
-      })
-      .catch((e) => {
-        console.error('[place-name-resolver] Batch name resolution failed', e);
-        // On a total failure, mark all as unresolvable and apply fallbacks
-        for (const entry of entries) {
-          if (entry.placeNameLoading) {
-            this._unresolvable.add(entry.placeIdentifier);
-            entry.placeName = this._fallbackName(entry);
-            entry.placeNameLoading = false;
-          }
-        }
-      })
-      .finally(() => {
+    if (signature === this._lastBatchSignature && this._pendingBatchPromise) {
+      return this._pendingBatchPromise;
+    }
+
+    this._lastBatchSignature = signature;
+    this._pendingBatchPromise = this._batchResolveNames(unresolved).finally(
+      () => {
         this._pendingBatchPromise = null;
-      });
+      }
+    );
+
+    return this._pendingBatchPromise;
   }
 
   _fallbackName(entry) {

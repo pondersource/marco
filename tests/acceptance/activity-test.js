@@ -23,8 +23,11 @@ class MockActivityService extends Service {
       senderProfileLoading: false,
     },
   ];
+  @tracked sourceMode = 'home';
 
   async load() {}
+
+  setSourceMode() {}
 
   stop() {
     this.items = [];

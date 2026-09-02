@@ -13,6 +13,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
   hooks.beforeEach(function () {
     this.noop = noop;
     this.emptyItems = [];
+    this.sourceMode = 'home';
+    this.onSetSourceMode = () => {};
   });
 
   test('it renders a loading state', async function (assert) {
@@ -22,6 +24,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @items={{this.emptyItems}}
           @isLoading={{true}}
           @isConnected={{true}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
           @onSelect={{this.noop}}
           @onBack={{this.noop}}
           @onClose={{this.noop}}
@@ -41,6 +45,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @items={{this.emptyItems}}
           @isLoading={{false}}
           @isConnected={{false}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
           @onSelect={{this.noop}}
           @onBack={{this.noop}}
           @onClose={{this.noop}}
@@ -60,6 +66,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @items={{this.emptyItems}}
           @isLoading={{false}}
           @isConnected={{false}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
           @onSelect={{this.noop}}
           @onBack={{this.noop}}
           @onClose={{this.noop}}
@@ -82,6 +90,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @items={{this.emptyItems}}
           @isLoading={{false}}
           @isConnected={{true}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
           @onSelect={{this.noop}}
           @onBack={{this.noop}}
           @onClose={{this.noop}}
@@ -135,6 +145,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @items={{this.items}}
           @isLoading={{false}}
           @isConnected={{true}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
           @onSelect={{this.noop}}
           @onBack={{this.noop}}
           @onClose={{this.noop}}
@@ -162,6 +174,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @items={{this.emptyItems}}
           @isLoading={{false}}
           @isConnected={{true}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
           @onSelect={{this.noop}}
           @onBack={{this.handleBack}}
           @onClose={{this.noop}}
@@ -172,5 +186,124 @@ module('Integration | Component | activity-timeline', function (hooks) {
 
     await click('.sidebar-header .back-btn');
     assert.true(backClicked);
+  });
+
+  test('it renders tab nav with Home and Explore tabs', async function (assert) {
+    await render(
+      <template>
+        <ActivityTimeline
+          @items={{this.emptyItems}}
+          @isLoading={{false}}
+          @isConnected={{true}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
+          @onSelect={{this.noop}}
+          @onBack={{this.noop}}
+          @onClose={{this.noop}}
+          @onNostrConnected={{this.noop}}
+        />
+      </template>
+    );
+
+    assert.dom('.tab-nav').exists();
+    assert.dom('.tab-nav-button').exists({ count: 2 });
+    const buttons = this.element.querySelectorAll('.tab-nav-button');
+    assert.strictEqual(buttons[0].textContent.trim(), 'Home');
+    assert.strictEqual(buttons[1].textContent.trim(), 'Explore');
+  });
+
+  test('clicking a tab fires @onSetSourceMode with the tab value', async function (assert) {
+    let selectedMode = null;
+    this.handleSetSourceMode = (mode) => {
+      selectedMode = mode;
+    };
+
+    await render(
+      <template>
+        <ActivityTimeline
+          @items={{this.emptyItems}}
+          @isLoading={{false}}
+          @isConnected={{true}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.handleSetSourceMode}}
+          @onSelect={{this.noop}}
+          @onBack={{this.noop}}
+          @onClose={{this.noop}}
+          @onNostrConnected={{this.noop}}
+        />
+      </template>
+    );
+
+    const buttons = this.element.querySelectorAll('.tab-nav-button');
+    await click(buttons[1]);
+
+    assert.strictEqual(
+      selectedMode,
+      'explore',
+      'onSetSourceMode called with explore'
+    );
+  });
+
+  test('explore mode shows items when not connected', async function (assert) {
+    this.items = [
+      {
+        type: 'photo',
+        photoEventId: 'photo-1',
+        photo: {
+          url: 'https://x.com/photo.jpg',
+          thumbUrl: 'https://x.com/thumb.jpg',
+        },
+        placeIdentifier: 'osm:node:111',
+        authorPubkey: 'b'.repeat(64),
+        createdAt: 2000,
+        authorName: 'Alice',
+        authorAvatar: 'https://x.com/avatar.jpg',
+        authorProfileLoading: false,
+      },
+    ];
+    this.sourceMode = 'explore';
+
+    await render(
+      <template>
+        <ActivityTimeline
+          @items={{this.items}}
+          @isLoading={{false}}
+          @isConnected={{false}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
+          @onSelect={{this.noop}}
+          @onBack={{this.noop}}
+          @onClose={{this.noop}}
+          @onNostrConnected={{this.noop}}
+        />
+      </template>
+    );
+
+    assert.dom('.activity-list').exists('items render in explore mode');
+    assert.dom('.activity-list li').exists({ count: 1 });
+    assert.dom('.empty-state').doesNotExist('no connect prompt in explore');
+  });
+
+  test('explore mode shows empty state when not connected and no items', async function (assert) {
+    this.sourceMode = 'explore';
+
+    await render(
+      <template>
+        <ActivityTimeline
+          @items={{this.emptyItems}}
+          @isLoading={{false}}
+          @isConnected={{false}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
+          @onSelect={{this.noop}}
+          @onBack={{this.noop}}
+          @onClose={{this.noop}}
+          @onNostrConnected={{this.noop}}
+        />
+      </template>
+    );
+
+    assert.dom('.empty-state').includesText('No activity yet.');
+    assert.dom('.empty-state').doesNotIncludeText('Connect');
   });
 });

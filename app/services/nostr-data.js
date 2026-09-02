@@ -100,7 +100,7 @@ export default class NostrDataService extends Service {
   // Activity photos state: tracks the current time window and source mode
   // so that the contacts callback can re-trigger when contacts arrive.
   _activityPhotosSince = null;
-  _activityPhotosMode = 'social';
+  _activityPhotosMode = 'home';
   _activityPhotosNetworkSub = null;
 
   _requestSub = null;
@@ -610,18 +610,18 @@ export default class NostrDataService extends Service {
    * Loads kind 360 (Place Photo) events for the activity feed, scoped to the
    * given time window and source mode.
    *
-   * - `'social'` mode: fetches photos authored by the user's followed contacts
-   *   (kind 3). If contacts haven't loaded yet (`_contactPubkeys` is null or
+   * - `'home'` mode: fetches photos authored by the user's followed contacts
+   *   (followees). If contacts haven't loaded yet (`_contactPubkeys` is null or
    *   empty), this returns early and is re-triggered automatically by the
    *   `ContactsModel` subscription callback when contacts arrive.
-   *
-   * Future modes (e.g. `'trusted-relays'`) can be added by extending the
-   * switch below.
+   * - `'explore'` mode: fetches all kind 360 photos in the time window from
+   *   trusted relays (no authors filter). Provenance is captured so
+   *   `isTrustedEvent` can filter at presentation time.
    *
    * @param {number} since Unix timestamp (seconds) for the start of the window
-   * @param {string} [mode='social'] Source mode
+   * @param {string} [mode='home'] Source mode
    */
-  async loadActivityPhotos(since, mode = 'social') {
+  async loadActivityPhotos(since, mode = 'home') {
     this._activityPhotosSince = since;
     this._activityPhotosMode = mode;
 
@@ -630,31 +630,33 @@ export default class NostrDataService extends Service {
       this._activityPhotosNetworkSub = null;
     }
 
-    if (mode === 'social') {
-      this._loadSocialCirclePhotos(since);
+    if (mode === 'home') {
+      this._loadFolloweePhotos(since);
+    } else if (mode === 'explore') {
+      this._loadTrustedRelaysPhotos(since);
     }
-    // Future modes (e.g. 'trusted-relays') can be added here.
   }
 
   /**
-   * Fetches kind 360 photos from the user's followed contacts, batched by
-   * author pubkey (≤100 per filter to stay under relay REQ limits).
+   * Fetches kind 360 photos from the user's followees (followed contacts),
+   * batched by author pubkey (≤100 per filter to stay under relay REQ limits).
+   * Defers if contacts haven't loaded yet.
    */
-  _loadSocialCirclePhotos(since) {
+  _loadFolloweePhotos(since) {
     const pubkeys = this._contactPubkeys
       ? Array.from(this._contactPubkeys)
       : [];
 
     if (pubkeys.length === 0) {
       console.debug(
-        '[nostr-data] No contacts loaded yet, deferring social photo load'
+        '[nostr-data] No contacts loaded yet, deferring followee photo load'
       );
       return;
     }
 
     const filters = this._batchAuthorFilters(pubkeys, [360], since);
 
-    console.debug('[nostr-data] Loading social circle photos', {
+    console.debug('[nostr-data] Loading followee photos', {
       filterCount: filters.length,
       pubkeyCount: pubkeys.length,
       since,
@@ -672,7 +674,7 @@ export default class NostrDataService extends Service {
       })
       .catch((e) => {
         console.warn(
-          '[nostr-data] Failed to read social photos from local Nostr IDB cache',
+          '[nostr-data] Failed to read followee photos from local Nostr IDB cache',
           e
         );
       });
@@ -681,7 +683,42 @@ export default class NostrDataService extends Service {
     this._activityPhotosNetworkSub = this._requestContentWithProvenance(
       this.activeReadRelays,
       filters,
-      '[nostr-data] Error fetching social circle photos:'
+      '[nostr-data] Error fetching followee photos:'
+    );
+  }
+
+  /**
+   * Fetches all kind 360 photos in the time window from trusted relays (no
+   * authors filter). Provenance is captured so `isTrustedEvent` can filter
+   * at presentation time. Fires immediately — no contacts dependency.
+   */
+  _loadTrustedRelaysPhotos(since) {
+    const filters = [{ kinds: [360], since }];
+
+    console.debug('[nostr-data] Loading trusted relay photos', { since });
+
+    // 1. Populate the store from the local Nostr IDB cache (instant)
+    this._cachePromise
+      .then(() => this.cache.query(filters))
+      .then((cachedEvents) => {
+        if (cachedEvents && cachedEvents.length > 0) {
+          for (const event of cachedEvents) {
+            this.store.add(event);
+          }
+        }
+      })
+      .catch((e) => {
+        console.warn(
+          '[nostr-data] Failed to read trusted relay photos from local Nostr IDB cache',
+          e
+        );
+      });
+
+    // 2. Request fresh events from the network (captures provenance for trust)
+    this._activityPhotosNetworkSub = this._requestContentWithProvenance(
+      this.activeReadRelays,
+      filters,
+      '[nostr-data] Error fetching trusted relay photos:'
     );
   }
 

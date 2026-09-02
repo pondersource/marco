@@ -207,4 +207,70 @@ module('Unit | Service | place-name-resolver', function (hooks) {
     assert.strictEqual(resolver._lastBatchSignature, '');
     assert.strictEqual(resolver._pendingBatchPromise, null);
   });
+
+  test('deduplicated batch resolves entries from a second call with same place identifiers', async function (assert) {
+    const resolver = this.owner.lookup('service:place-name-resolver');
+    const localForage = this.owner.lookup('service:localForage');
+
+    let fetchCount = 0;
+    resolver.osm.fetchOsmObjectsBatch = async () => {
+      fetchCount++;
+      const map = new Map();
+      map.set('node:222', { title: 'Shared Place' });
+      return map;
+    };
+
+    // First call with entry1 — triggers a batch fetch
+    const entry1 = makeEntry({ placeIdentifier: 'osm:node:222' });
+    const promise1 = resolver.resolveInBackground([entry1]);
+    await flushPromises();
+    await promise1;
+
+    // Verify the name persisted so the second call's cache check finds it
+    assert.strictEqual(entry1.placeName, 'Shared Place');
+    assert.strictEqual(fetchCount, 1, 'only one batch fetch fired');
+
+    // Simulate the real-world race: a second set of entries for the same
+    // place arrives before the cache is consulted. Clear the persistent cache
+    // to simulate the incognito scenario where the batch hasn't persisted yet.
+    await localForage.clear('place-name-cache');
+
+    // Second call with a fresh entry2 — should resolve from the batch result
+    // that was already persisted (or re-use the pending batch if still in flight)
+    const entry2 = makeEntry({ placeIdentifier: 'osm:node:222' });
+    await resolver.resolveInBackground([entry2]);
+
+    assert.strictEqual(
+      entry2.placeName,
+      'Shared Place',
+      'second entry resolves even when batch was from a prior call'
+    );
+  });
+
+  test('pending batch is shared when second call fires before first completes', async function (assert) {
+    const resolver = this.owner.lookup('service:place-name-resolver');
+
+    let fetchCount = 0;
+    resolver.osm.fetchOsmObjectsBatch = async () => {
+      fetchCount++;
+      const map = new Map();
+      map.set('node:333', { title: 'Concurrent Place' });
+      return map;
+    };
+
+    // First call — don't await yet (simulates subscription firing)
+    const entry1 = makeEntry({ placeIdentifier: 'osm:node:333' });
+    const promise1 = resolver.resolveInBackground([entry1]);
+
+    // Second call with a different entry for the same place — should piggyback
+    const entry2 = makeEntry({ placeIdentifier: 'osm:node:333' });
+    const promise2 = resolver.resolveInBackground([entry2]);
+
+    await Promise.all([promise1, promise2]);
+    await flushPromises();
+
+    assert.strictEqual(fetchCount, 1, 'only one batch fetch fired');
+    assert.strictEqual(entry1.placeName, 'Concurrent Place');
+    assert.strictEqual(entry2.placeName, 'Concurrent Place');
+  });
 });

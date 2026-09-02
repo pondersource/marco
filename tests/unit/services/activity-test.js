@@ -314,10 +314,10 @@ module('Unit | Service | activity', function (hooks) {
     assert.strictEqual(service.items[0].senderPubkey, SENDER_PUBKEY);
   });
 
-  test('_matchesSourceMode filters by contact pubkeys in social mode', function (assert) {
+  test('_matchesSourceMode filters by contact pubkeys in home mode', function (assert) {
     const service = this.owner.lookup('service:activity');
     service._userPubkey = USER_PUBKEY;
-    service._sourceMode = 'social';
+    service._sourceMode = 'home';
     service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
 
     const followedPhoto = makePhotoEvent({ author: SENDER_PUBKEY });
@@ -333,6 +333,70 @@ module('Unit | Service | activity', function (hooks) {
       'unfollowed pubkey rejected'
     );
     assert.false(service._matchesSourceMode(ownPhoto), 'own photo excluded');
+  });
+
+  test('_matchesSourceMode in explore mode includes trusted strangers, excludes own photos and followees', function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service._sourceMode = 'explore';
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const STRANGER_PUBKEY = 'c'.repeat(64);
+
+    // Mock isTrustedEvent to return true for SENDER_PUBKEY and STRANGER_PUBKEY
+    service.nostrData.isTrustedEvent = (event) =>
+      event.pubkey === SENDER_PUBKEY || event.pubkey === STRANGER_PUBKEY;
+
+    const trustedStrangerPhoto = makePhotoEvent({ author: STRANGER_PUBKEY });
+    const trustedFolloweePhoto = makePhotoEvent({ author: SENDER_PUBKEY });
+    const untrustedPhoto = makePhotoEvent({ author: 'z'.repeat(64) });
+    const ownPhoto = makePhotoEvent({ author: USER_PUBKEY });
+
+    assert.true(
+      service._matchesSourceMode(trustedStrangerPhoto),
+      'trusted stranger passes in explore mode'
+    );
+    assert.false(
+      service._matchesSourceMode(trustedFolloweePhoto),
+      'trusted followee excluded in explore mode'
+    );
+    assert.false(
+      service._matchesSourceMode(untrustedPhoto),
+      'untrusted event rejected in explore mode'
+    );
+    assert.false(
+      service._matchesSourceMode(ownPhoto),
+      'own photo excluded in explore mode'
+    );
+  });
+
+  test('_matchesSourceMode in explore mode with no pubkey includes all trusted events', function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = null;
+    service._sourceMode = 'explore';
+    service.nostrData._contactPubkeys = null;
+
+    const STRANGER_PUBKEY = 'c'.repeat(64);
+
+    service.nostrData.isTrustedEvent = (event) =>
+      event.pubkey === SENDER_PUBKEY || event.pubkey === STRANGER_PUBKEY;
+
+    const trustedPhoto = makePhotoEvent({ author: SENDER_PUBKEY });
+    const trustedStrangerPhoto = makePhotoEvent({ author: STRANGER_PUBKEY });
+    const untrustedPhoto = makePhotoEvent({ author: 'z'.repeat(64) });
+
+    assert.true(
+      service._matchesSourceMode(trustedPhoto),
+      'trusted event passes with no pubkey'
+    );
+    assert.true(
+      service._matchesSourceMode(trustedStrangerPhoto),
+      'trusted stranger passes with no pubkey'
+    );
+    assert.false(
+      service._matchesSourceMode(untrustedPhoto),
+      'untrusted event rejected with no pubkey'
+    );
   });
 
   test('_updateSocialItems merges with zap items sorted by createdAt', function (assert) {
@@ -372,11 +436,58 @@ module('Unit | Service | activity', function (hooks) {
     assert.strictEqual(service.items[1].createdAt, 5000, 'older zap second');
   });
 
+  test('explore mode excludes zap items from merged results', function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service._sourceMode = 'explore';
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    // Seed a zap item
+    service.nostrData.store.add(
+      makePhotoEvent({ id: PHOTO_EVENT_ID_1, placeIdentifier: 'osm:node:50' })
+    );
+    service._updateZapItems(
+      [
+        makeZapReceiptEvent({
+          zappedEventId: PHOTO_EVENT_ID_1,
+          created_at: 5000,
+        }),
+      ],
+      USER_PUBKEY
+    );
+
+    // Add a trusted stranger social photo
+    const STRANGER_PUBKEY = 'c'.repeat(64);
+    service.nostrData.isTrustedEvent = (event) =>
+      event.pubkey === STRANGER_PUBKEY;
+
+    const socialPhoto = makePhotoEvent({
+      id: 'sp1'.padEnd(64, '0'),
+      author: STRANGER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: 9000,
+    });
+    service._updateSocialItems([socialPhoto]);
+
+    assert.strictEqual(
+      service.items.length,
+      1,
+      'zap excluded in explore mode, only social photo shown'
+    );
+    assert.strictEqual(
+      service.items[0].createdAt,
+      9000,
+      'only the social photo is present'
+    );
+  });
+
   test('setSourceMode re-filters existing events', function (assert) {
     const service = this.owner.lookup('service:activity');
     service._userPubkey = USER_PUBKEY;
-    service._sourceMode = 'trusted-relays';
+    service._sourceMode = 'explore';
     service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+    // In explore mode, isTrustedEvent returns false (no provenance in mock)
+    service.nostrData.isTrustedEvent = () => false;
 
     const followedPhoto = makePhotoEvent({
       id: 'fp1'.padEnd(64, '0'),
@@ -386,20 +497,20 @@ module('Unit | Service | activity', function (hooks) {
     });
     service._lastSocialEvents = [followedPhoto];
 
-    // In 'trusted-relays' mode, _matchesSourceMode returns false for all events
+    // In 'explore' mode, _matchesSourceMode returns false (isTrustedEvent is false)
     service._updateSocialItems([followedPhoto]);
     assert.strictEqual(
       service.items.length,
       0,
-      'no social items in trusted-relays mode'
+      'no social items in explore mode with untrusted events'
     );
 
-    // Switch to 'social' mode — now the followed photo should appear
-    service.setSourceMode('social');
+    // Switch to 'home' mode — now the followed photo should appear
+    service.setSourceMode('home');
     assert.strictEqual(
       service.items.length,
       1,
-      're-filtered shows followed contact in social mode'
+      're-filtered shows followed contact in home mode'
     );
   });
 
