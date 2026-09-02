@@ -27,6 +27,7 @@ export class ActivityEntry {
   type = 'zap';
   photoEventId;
   photo;
+  photos = [];
   placeIdentifier;
   osmType;
   osmId;
@@ -43,6 +44,7 @@ export class ActivityEntry {
   constructor({
     photoEventId,
     photo,
+    photos,
     placeIdentifier,
     senderPubkey,
     amountSats,
@@ -51,6 +53,7 @@ export class ActivityEntry {
   }) {
     this.photoEventId = photoEventId;
     this.photo = photo;
+    this.photos = photos ?? [];
     this.placeIdentifier = placeIdentifier;
     this.senderPubkey = senderPubkey;
     this.amountSats = amountSats;

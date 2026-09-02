@@ -36,15 +36,15 @@ module('Integration | Component | activity-zap-item', function (hooks) {
       </template>
     );
 
-    assert.dom('.zap-sender-name').hasText('Alice');
-    assert.dom('.zap-action').includesText('zapped your photo');
-    assert.dom('.zap-amount').hasText('21 ⚡');
-    assert.dom('.zap-message').includesText('Great shot!');
+    assert.dom('.sender-name').hasText('Alice');
+    assert.dom('.action').includesText('zapped your photo');
+    assert.dom('.amount').hasText('21 ⚡');
+    assert.dom('.message').includesText('Great shot!');
     assert
-      .dom('.zap-sender-avatar')
+      .dom('.sender-avatar')
       .hasAttribute('src', 'https://x.com/avatar.jpg');
     assert
-      .dom('.zap-context-thumb img')
+      .dom('.context-thumb img')
       .hasAttribute('src', 'https://x.com/thumb.jpg');
   });
 
@@ -68,8 +68,8 @@ module('Integration | Component | activity-zap-item', function (hooks) {
       </template>
     );
 
-    assert.dom('.zap-sender-avatar-placeholder').exists();
-    assert.dom('.zap-sender-avatar').doesNotExist();
+    assert.dom('.sender-avatar-placeholder').exists();
+    assert.dom('.sender-avatar').doesNotExist();
   });
 
   test('it omits the message line when there is no message', async function (assert) {
@@ -91,7 +91,7 @@ module('Integration | Component | activity-zap-item', function (hooks) {
       </template>
     );
 
-    assert.dom('.zap-message').doesNotExist();
+    assert.dom('.message').doesNotExist();
   });
 
   test('it omits the context thumbnail when there is no photo', async function (assert) {
@@ -113,8 +113,8 @@ module('Integration | Component | activity-zap-item', function (hooks) {
       </template>
     );
 
-    assert.dom('.zap-context-thumb').doesNotExist();
-    assert.dom('.zap-context-text').exists();
+    assert.dom('.context-thumb').doesNotExist();
+    assert.dom('.context-text').exists();
   });
 
   test('clicking the item fires @onSelect with the item', async function (assert) {
@@ -141,7 +141,7 @@ module('Integration | Component | activity-zap-item', function (hooks) {
       </template>
     );
 
-    await click('.activity-zap-item');
+    await click('.activity-item');
 
     assert.strictEqual(selected, this.item);
   });
@@ -168,7 +168,7 @@ module('Integration | Component | activity-zap-item', function (hooks) {
     );
 
     assert
-      .dom('.zap-context-text')
+      .dom('.context-text')
       .includesText('Café Central', 'Resolved place name is displayed');
     assert
       .dom('.contribution-name-loading')
@@ -197,7 +197,7 @@ module('Integration | Component | activity-zap-item', function (hooks) {
     );
 
     assert
-      .dom('.zap-context-text .contribution-name-loading')
+      .dom('.context-text .contribution-name-loading')
       .hasText('Loading…', 'Loading state is displayed');
   });
 
@@ -223,11 +223,11 @@ module('Integration | Component | activity-zap-item', function (hooks) {
     );
 
     assert
-      .dom('.zap-context-text .contribution-name-loading')
+      .dom('.context-text .contribution-name-loading')
       .hasText('Unnamed place', 'Fallback name is displayed');
   });
 
-  test('it displays place name in zap-place-name and date in zap-date', async function (assert) {
+  test('it displays place name in activity-place-name and date in activity-date', async function (assert) {
     this.item = new ActivityEntry({
       photoEventId: 'photo-1',
       photo: null,
@@ -248,14 +248,14 @@ module('Integration | Component | activity-zap-item', function (hooks) {
       </template>
     );
 
-    const placeNameEl = this.element.querySelector('.zap-place-name');
-    const dateEl = this.element.querySelector('.zap-date');
+    const placeNameEl = this.element.querySelector('.activity-place-name');
+    const dateEl = this.element.querySelector('.activity-date');
 
-    assert.ok(placeNameEl, 'zap-place-name element exists');
-    assert.ok(dateEl, 'zap-date element exists');
+    assert.ok(placeNameEl, 'activity-place-name element exists');
+    assert.ok(dateEl, 'activity-date element exists');
     assert.ok(
       placeNameEl.textContent.includes('Café Central'),
-      'Place name is in zap-place-name'
+      'Place name is in activity-place-name'
     );
     assert.ok(dateEl.textContent.includes('hr ago'), 'Date contains hr ago');
     assert.notOk(
@@ -290,7 +290,9 @@ module('Integration | Component | activity-zap-item', function (hooks) {
       </template>
     );
 
-    assert.dom('.zap-place-name').exists('zap-place-name element exists');
-    assert.dom('.zap-date').hasText('1 hr ago', 'Date is still visible');
+    assert
+      .dom('.activity-place-name')
+      .exists('activity-place-name element exists');
+    assert.dom('.activity-date').hasText('1 hr ago', 'Date is still visible');
   });
 });

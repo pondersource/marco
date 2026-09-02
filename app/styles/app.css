@@ -2661,14 +2661,14 @@ button.create-place {
   }
 }
 
-/* Activity Timeline — zap activity list rendered in the sidebar */
+/* Activity Timeline — activity list rendered in the sidebar */
 .activity-list {
   list-style: none;
   padding: 0;
   margin: -1rem -1rem 0;
 }
 
-.activity-zap-item {
+.activity-item {
   width: 100%;
   text-align: left;
   border: none;
@@ -2687,7 +2687,7 @@ button.create-place {
     background: var(--hover-bg);
   }
 
-  & .zap-sender-avatar {
+  & .sender-avatar {
     flex-shrink: 0;
     width: 32px;
     height: 32px;
@@ -2696,7 +2696,7 @@ button.create-place {
     background: #f0f0f0;
   }
 
-  & .zap-sender-avatar-placeholder {
+  & .sender-avatar-placeholder {
     flex-shrink: 0;
     width: 32px;
     height: 32px;
@@ -2708,39 +2708,42 @@ button.create-place {
     color: #999;
   }
 
-  & .zap-header {
+  & .header {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 8px;
   }
 
-  & .zap-sender-line {
+  & .sender-line {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.95rem;
 
-    & .zap-sender-name {
+    & .sender-name {
       font-weight: bold;
     }
 
-    & .zap-action {
+    & .action {
       color: #666;
       font-weight: normal;
     }
   }
 
-  & .zap-amount {
+  & .amount {
     flex-shrink: 0;
     font-weight: bold;
     font-size: 0.95rem;
     color: var(--body-text-color);
     white-space: nowrap;
+    align-self: center;
+    display: flex;
+    align-items: center;
   }
 
-  & .zap-message {
+  & .message {
     color: var(--body-text-color);
     font-size: 0.85rem;
     font-style: italic;
@@ -2762,7 +2765,7 @@ button.create-place {
     }
   }
 
-  & .zap-context {
+  & .context {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -2770,19 +2773,20 @@ button.create-place {
     font-size: 0.8rem;
     margin-top: 8px;
 
-    & .zap-context-images {
+    & .context-images {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    & .zap-context-thumb {
+    & .context-thumb {
       flex-shrink: 0;
       width: 32px;
       height: 32px;
       border-radius: 4px;
       overflow: hidden;
       background: #f0f0f0;
+      position: relative;
 
       & img {
         width: 100%;
@@ -2790,16 +2794,28 @@ button.create-place {
         object-fit: cover;
         display: block;
       }
+
+      & .context-thumb-badge {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        background: rgb(0 0 0 / 65%);
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: bold;
+        padding: 1px 4px;
+        border-radius: 4px;
+      }
     }
 
-    & .zap-context-text {
+    & .context-text {
       display: flex;
       align-items: baseline;
       gap: 6px;
       flex: 1 1 auto;
       min-width: 0;
 
-      & .zap-place-name {
+      & .activity-place-name {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -2807,7 +2823,7 @@ button.create-place {
         min-width: 0;
       }
 
-      & .zap-date {
+      & .activity-date {
         flex-shrink: 0;
         white-space: nowrap;
       }
