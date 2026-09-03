@@ -74,14 +74,17 @@ module('Acceptance | collections navigation', function (hooks) {
     assert.dom('.sidebar.app-menu-pane').exists('App menu sidebar is open');
     assert
       .dom('.app-menu')
-      .includesText('Collections', 'Menu contains Collections link');
+      .includesText('Saved Places', 'Menu contains Saved Places link');
 
-    // 3. Transition to Collections Index (List of lists)
-    await click(document.querySelectorAll('.app-menu button')[0]); // Click "Collections"
+    // 3. Transition to Saved Places index (list of lists)
+    await click(document.querySelectorAll('.app-menu button')[0]); // Click "Saved Places"
     assert.strictEqual(currentURL(), '/lists', 'Transitions to /lists index');
     assert
       .dom('.sidebar-header-text-centered')
-      .includesText('Collections', 'Header is centered and titled Collections');
+      .includesText(
+        'Saved Places',
+        'Header is centered and titled Saved Places'
+      );
     assert
       .dom('.lists-index-item')
       .exists({ count: 2 }, 'Renders our 2 mocked list items');

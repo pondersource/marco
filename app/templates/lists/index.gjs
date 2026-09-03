@@ -46,7 +46,7 @@ export default class ListsIndexTemplate extends Component {
             <span class="sidebar-header-icon-wrapper">
               <Icon @name="bookmark" @size={{20}} @color="#898989" />
             </span>
-            Collections
+            Saved Places
           </h2>
           <button type="button" class="close-btn" {{on "click" this.close}}>
             <Icon @name="x" @size={{20}} @color="#333" />
