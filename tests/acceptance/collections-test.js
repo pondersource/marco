@@ -16,7 +16,15 @@ class MockStorageService extends Service {
       id: 'place-123',
       title: 'Mountain Trail',
       geohash: 'u33dc0',
+      createdAt: '2023-01-02T12:00:00.000Z',
       osmTags: { name: 'Mountain Trail' },
+    },
+    {
+      id: 'place-456',
+      title: 'Beach View',
+      geohash: 'u33dc1',
+      createdAt: '2023-01-03T12:00:00.000Z',
+      osmTags: { name: 'Beach View' },
     },
   ];
   lists = [
@@ -87,17 +95,39 @@ module('Acceptance | collections navigation', function (hooks) {
       );
     assert
       .dom('.lists-index-item')
-      .exists({ count: 2 }, 'Renders our 2 mocked list items');
+      .exists({ count: 3 }, 'Renders Saved plus our 2 mocked list items');
+    assert
+      .dom(document.querySelectorAll('.lists-index-item')[0])
+      .includesText('Saved', 'Saved appears as the first list item');
+    assert
+      .dom(document.querySelectorAll('.lists-index-item')[0])
+      .includesText('2 places', 'Saved shows the total saved places count');
 
-    // 4. Transition to a specific list (Want to go)
-    await click(document.querySelectorAll('.lists-index-item')[0]); // Click "Want to go"
+    // 4. Transition to the synthetic Saved list
+    await click(document.querySelectorAll('.lists-index-item')[0]);
+    assert.strictEqual(currentURL(), '/lists/saved', 'Transitions to /lists/saved');
+
+    await waitFor('.places-list');
+    assert
+      .dom(document.querySelectorAll('.places-list .place-name')[0])
+      .hasText('Beach View', 'Saved Places shows newest saved place first');
+    assert
+      .dom(document.querySelectorAll('.places-list .place-name')[1])
+      .hasText('Mountain Trail', 'Saved Places includes all saved places');
+
+    // 5. Go back to the Saved Places index
+    await click('.sidebar-header .back-btn');
+    assert.strictEqual(currentURL(), '/lists', 'Goes back to /lists index');
+
+    // 6. Transition to a specific real list (Want to go)
+    await click(document.querySelectorAll('.lists-index-item')[1]); // Click "Want to go"
     assert.strictEqual(
       currentURL(),
       '/lists/to-go',
       'Transitions instantly to /lists/to-go'
     );
 
-    // 5. Verify background loading spinner shows up, then results populate
+    // 7. Verify background loading spinner shows up, then results populate
     await waitFor('.places-list');
     assert
       .dom('.places-list .place-name')
@@ -106,17 +136,35 @@ module('Acceptance | collections navigation', function (hooks) {
       .dom('.places-list .place-type')
       .hasText('Saved place', 'Place type displays Saved place correctly');
 
-    // 6. Click back button in collection list header
+    // 8. Click back button in collection list header
     await click('.sidebar-header .back-btn');
     assert.strictEqual(currentURL(), '/lists', 'Goes back to /lists index');
 
-    // 7. Click back button in collections index header
+    // 9. Click back button in collections index header
     await click('.sidebar-header .back-btn');
     assert.strictEqual(currentURL(), '/menu', 'Goes back to main menu route');
 
-    // 8. Close sidebar
+    // 10. Close sidebar
     await click('.sidebar-header .close-btn');
     assert.strictEqual(currentURL(), '/', 'Sidebar closed and returned home');
+  });
+
+  test('clicking a place inside Saved Places sets returnToRoute and returns gracefully on back click', async function (assert) {
+    await visit('/lists/saved');
+    await waitFor('.places-list');
+
+    await click('.place-item');
+    assert.ok(
+      currentURL().includes('/place/place-456'),
+      'Transitions to the newest saved place details route'
+    );
+
+    await click('.back-btn');
+    assert.strictEqual(
+      currentURL(),
+      '/lists/saved',
+      'Returns gracefully back to the Saved Places view'
+    );
   });
 
   test('clicking a place inside a collection sets returnToRoute and returns gracefully on back click', async function (assert) {
@@ -139,7 +187,7 @@ module('Acceptance | collections navigation', function (hooks) {
     );
   });
 
-  test('places inside a collection are sorted by createdAt descending', async function (assert) {
+  test('places inside Saved Places are sorted by createdAt descending', async function (assert) {
     class SortedMockStorageService extends Service {
       initialSyncDone = true;
       savedPlaces = [
@@ -206,7 +254,7 @@ module('Acceptance | collections navigation', function (hooks) {
     this.owner.unregister('service:storage');
     this.owner.register('service:storage', SortedMockStorageService);
 
-    await visit('/lists/to-go');
+    await visit('/lists/saved');
     await waitFor('.places-list');
 
     const placeNames = Array.from(
@@ -216,7 +264,7 @@ module('Acceptance | collections navigation', function (hooks) {
     assert.deepEqual(
       placeNames,
       ['Newest Place', 'Middle Place', 'Oldest Place'],
-      'Places are ordered by createdAt in descending order'
+      'Saved Places are ordered by createdAt in descending order'
     );
   });
 });

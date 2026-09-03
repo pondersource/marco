@@ -14,6 +14,8 @@ function getPlaceTime(place) {
   return isNaN(parsed) ? 0 : parsed;
 }
 
+const SAVED_LIST_ID = 'saved';
+
 export default class ListsListController extends Controller {
   @service router;
   @service mapUi;
@@ -41,6 +43,12 @@ export default class ListsListController extends Controller {
   }
 
   get listColor() {
+    if (this.listId === SAVED_LIST_ID) {
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue('--default-list-color')
+        .trim();
+    }
+
     const list = this.storage.lists.find((l) => l.id === this.listId);
     if (list && list.color) {
       return list.color;
@@ -51,11 +59,21 @@ export default class ListsListController extends Controller {
   }
 
   get listTitle() {
+    if (this.listId === SAVED_LIST_ID) {
+      return 'Saved Places';
+    }
+
     const list = this.storage.lists.find((l) => l.id === this.listId);
     return list ? list.title : 'Collections';
   }
 
   get places() {
+    if (this.listId === SAVED_LIST_ID) {
+      return [...this.storage.savedPlaces].sort(
+        (a, b) => getPlaceTime(b) - getPlaceTime(a)
+      );
+    }
+
     const currentList = this.storage.lists.find((l) => l.id === this.listId);
     const placeRefsIds = new Set(
       currentList?.placeRefs?.map((ref) => ref.id) || []
