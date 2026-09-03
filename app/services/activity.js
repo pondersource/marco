@@ -61,7 +61,7 @@ export default class ActivityService extends Service {
    * @param {string|null} pubkey The user's Nostr pubkey, or null
    */
   async load(pubkey) {
-    if (this.items.length > 0 && pubkey) return;
+    if (this.items.length > 0) return;
     this._userPubkey = pubkey || null;
     this._since = Math.floor(Date.now() / 1000) - SINCE_WINDOW;
     this.isLoading = true;

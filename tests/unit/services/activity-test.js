@@ -273,13 +273,17 @@ module('Unit | Service | activity', function (hooks) {
     assert.strictEqual(service._userPubkey, null);
   });
 
-  test('load with no pubkey clears items', async function (assert) {
+  test('load with no pubkey preserves existing items', async function (assert) {
     const service = this.owner.lookup('service:activity');
     service.items = [{ fake: true }];
 
     await service.load(null);
 
-    assert.strictEqual(service.items.length, 0);
+    assert.strictEqual(
+      service.items.length,
+      1,
+      'items preserved when already loaded'
+    );
   });
 
   test('_resolveSender applies profile when available', function (assert) {
