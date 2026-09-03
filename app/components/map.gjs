@@ -1214,18 +1214,22 @@ export default class MapComponent extends Component {
         clickedSearchResult = searchResultFeature.get('originalPlace');
       } else {
         for (const feature of features) {
-          const sourceLayer = feature.get?.('mvt:layer') || feature.get?.('layer');
+          const sourceLayer =
+            feature.get?.('mvt:layer') || feature.get?.('layer');
           const featureName = feature.get?.('name');
           const featureId = feature.getId?.();
           const { decoded, reason } = this.decodeVectorTileOsmFeature(feature);
 
           if (decoded) {
-            console.debug('Decoded vector tile feature to explicit OSM place:', {
-              sourceLayer,
-              featureName,
-              featureId,
-              decoded,
-            });
+            console.debug(
+              'Decoded vector tile feature to explicit OSM place:',
+              {
+                sourceLayer,
+                featureName,
+                featureId,
+                decoded,
+              }
+            );
             clickedTileOsmFeature = decoded;
             break;
           }

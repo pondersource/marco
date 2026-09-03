@@ -35,10 +35,13 @@ module('Unit | Component | map', function () {
       },
     };
 
-    assert.deepEqual(MapComponent.prototype.decodeVectorTileOsmFeature(feature), {
-      decoded: null,
-      reason: 'unsupported source layer: transportation',
-    });
+    assert.deepEqual(
+      MapComponent.prototype.decodeVectorTileOsmFeature(feature),
+      {
+        decoded: null,
+        reason: 'unsupported source layer: transportation',
+      }
+    );
   });
 
   test('it ignores unsupported or invalid vector tile ids', function (assert) {
@@ -52,9 +55,12 @@ module('Unit | Component | map', function () {
       },
     };
 
-    assert.deepEqual(MapComponent.prototype.decodeVectorTileOsmFeature(feature), {
-      decoded: null,
-      reason: 'feature id suffix 0 is not an OSM type',
-    });
+    assert.deepEqual(
+      MapComponent.prototype.decodeVectorTileOsmFeature(feature),
+      {
+        decoded: null,
+        reason: 'feature id suffix 0 is not an OSM type',
+      }
+    );
   });
 });
