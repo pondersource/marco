@@ -105,7 +105,11 @@ module('Acceptance | collections navigation', function (hooks) {
 
     // 4. Transition to the synthetic Saved list
     await click(document.querySelectorAll('.lists-index-item')[0]);
-    assert.strictEqual(currentURL(), '/lists/saved', 'Transitions to /lists/saved');
+    assert.strictEqual(
+      currentURL(),
+      '/lists/saved',
+      'Transitions to /lists/saved'
+    );
 
     await waitFor('.places-list');
     assert
