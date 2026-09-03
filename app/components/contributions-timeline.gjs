@@ -38,7 +38,7 @@ export default class ContributionsTimelineComponent extends Component {
         </button>
         <h2 class="sidebar-header-text-centered">
           <span class="sidebar-header-icon-wrapper">
-            <Icon @name="activity" @size={{20}} @color="#898989" />
+            <Icon @name="user-check" @size={{20}} @color="#898989" />
           </span>
           My Contributions
         </h2>
