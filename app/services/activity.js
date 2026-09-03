@@ -184,11 +184,24 @@ export default class ActivityService extends Service {
 
     const newEntries = groupSocialPhotos(filtered);
 
-    for (const entry of newEntries) {
+    const seenPhotoIds = new Set();
+    for (const entry of this._socialItems) {
+      for (const photo of entry.photos) {
+        seenPhotoIds.add(photo.eventId);
+      }
+    }
+
+    const dedupedEntries = newEntries.filter(
+      (entry) => !entry.photos.every((photo) => seenPhotoIds.has(photo.eventId))
+    );
+
+    if (dedupedEntries.length === 0) return false;
+
+    for (const entry of dedupedEntries) {
       this._resolveSender(entry);
     }
 
-    for (const entry of newEntries) {
+    for (const entry of dedupedEntries) {
       if (entry.osmId) {
         const bookmarkName = this.placeNameResolver.resolveBookmark(
           entry.osmId
@@ -200,11 +213,11 @@ export default class ActivityService extends Service {
       }
     }
 
-    this._socialItems = [...this._socialItems, ...newEntries];
+    this._socialItems = [...this._socialItems, ...dedupedEntries];
     this._mergeItems();
 
     void this.placeNameResolver
-      .resolveInBackground(newEntries)
+      .resolveInBackground(dedupedEntries)
       .then(() => this._mergeItems());
 
     return true;
