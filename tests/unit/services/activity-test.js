@@ -787,6 +787,65 @@ module('Unit | Service | activity', function (hooks) {
     assert.false(called, 'no fetch when items is empty');
   });
 
+  test('loadMore does not append duplicate photo group', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service._sourceMode = 'explore';
+    service.sourceMode = 'explore';
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const STRANGER_PUBKEY = 'c'.repeat(64);
+    service.nostrData.isTrustedEvent = (event) =>
+      event.pubkey === STRANGER_PUBKEY;
+
+    const NOW = Math.floor(Date.now() / 1000);
+    service._since = NOW;
+
+    const photo1 = makePhotoEvent({
+      id: 'd1'.padEnd(64, '0'),
+      author: STRANGER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: NOW - 100,
+      url: 'https://x.com/p1.jpg',
+    });
+    const photo2 = makePhotoEvent({
+      id: 'd2'.padEnd(64, '0'),
+      author: STRANGER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: NOW - 200,
+      url: 'https://x.com/p2.jpg',
+    });
+    const photo3 = makePhotoEvent({
+      id: 'd3'.padEnd(64, '0'),
+      author: STRANGER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: NOW - 300,
+      url: 'https://x.com/p3.jpg',
+    });
+
+    service._updateSocialItems([photo1, photo2, photo3]);
+    assert.strictEqual(
+      service.items.length,
+      1,
+      'one grouped entry with 3 photos'
+    );
+    assert.strictEqual(service.items[0].photos.length, 3);
+
+    service.nostrData.fetchActivityPhotos = async () => ({
+      cacheEvents: [photo1, photo2, photo3],
+      networkEvents: Promise.resolve([]),
+    });
+
+    await service.loadMore();
+
+    assert.strictEqual(service.items.length, 1, 'duplicate group not appended');
+    assert.strictEqual(
+      service.items[0].photos.length,
+      3,
+      'photo count unchanged'
+    );
+  });
+
   test('stop resets isLoadingMore and isLoading', function (assert) {
     const service = this.owner.lookup('service:activity');
     service._isLoadingMore = true;
