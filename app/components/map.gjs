@@ -1005,6 +1005,62 @@ export default class MapComponent extends Component {
     }
   });
 
+  decodeVectorTileOsmFeature(feature) {
+    if (!feature?.getId || !feature?.get) {
+      return { decoded: null, reason: 'feature does not expose get()/getId()' };
+    }
+
+    // ol-mapbox-style stores the source-layer name on `mvt:layer`.
+    const sourceLayer = feature.get('mvt:layer') || feature.get('layer');
+
+    // OpenFreeMap uses Planetiler/OpenMapTiles tiles, which encode OSM-backed
+    // feature ids as (osmId * 10) + sourceType.
+    if (sourceLayer !== 'poi') {
+      return {
+        decoded: null,
+        reason: `unsupported source layer: ${sourceLayer || 'unknown'}`,
+      };
+    }
+
+    const rawId = feature.getId();
+    const encodedId = Number(rawId);
+    if (!Number.isSafeInteger(encodedId) || encodedId <= 0) {
+      return {
+        decoded: null,
+        reason: `feature id is not a positive safe integer: ${rawId}`,
+      };
+    }
+
+    const osmType = {
+      1: 'node',
+      2: 'way',
+      3: 'relation',
+    }[encodedId % 10];
+
+    if (!osmType) {
+      return {
+        decoded: null,
+        reason: `feature id suffix ${encodedId % 10} is not an OSM type`,
+      };
+    }
+
+    const osmId = Math.floor(encodedId / 10);
+    if (osmId <= 0) {
+      return {
+        decoded: null,
+        reason: `decoded OSM id is invalid: ${osmId}`,
+      };
+    }
+
+    return {
+      decoded: {
+        osmId: String(osmId),
+        osmType,
+      },
+      reason: null,
+    };
+  }
+
   animateToCrosshair(targetCoords) {
     if (!this.mapInstance || !this.crosshairElement) return;
 
@@ -1141,6 +1197,7 @@ export default class MapComponent extends Component {
     });
     let clickedBookmark = null;
     let clickedSearchResult = null;
+    let clickedTileOsmFeature = null;
     let selectedFeatureName = null;
 
     if (features && features.length > 0) {
@@ -1155,6 +1212,35 @@ export default class MapComponent extends Component {
         clickedBookmark = bookmarkFeature.get('originalPlace');
       } else if (searchResultFeature) {
         clickedSearchResult = searchResultFeature.get('originalPlace');
+      } else {
+        for (const feature of features) {
+          const sourceLayer =
+            feature.get?.('mvt:layer') || feature.get?.('layer');
+          const featureName = feature.get?.('name');
+          const featureId = feature.getId?.();
+          const { decoded, reason } = this.decodeVectorTileOsmFeature(feature);
+
+          if (decoded) {
+            console.debug(
+              'Decoded vector tile feature to explicit OSM place:',
+              {
+                sourceLayer,
+                featureName,
+                featureId,
+                decoded,
+              }
+            );
+            clickedTileOsmFeature = decoded;
+            break;
+          }
+
+          console.debug('Vector tile feature could not be decoded directly:', {
+            sourceLayer,
+            featureName,
+            featureId,
+            reason,
+          });
+        }
       }
       // Also get visual props for standard map click logic later
       const props = features[0].getProperties();
@@ -1179,6 +1265,19 @@ export default class MapComponent extends Component {
       this.router.transitionTo('place', place);
     };
 
+    const transitionToExplicitOsmPlace = ({ osmId, osmType }) => {
+      if (
+        this.router.currentRouteName === 'search' ||
+        (this.mapUi.currentSearch && this.mapUi.searchResults.length > 0)
+      ) {
+        this.mapUi.returnToSearch = true;
+      }
+
+      this.mapUi.preventNextZoom = true;
+      this.mapUi.showSidebar();
+      this.router.transitionTo('place', `osm:${osmType}:${osmId}`);
+    };
+
     // Special handling when sidebar is OPEN
     if (this.args.isSidebarOpen) {
       // If it's a bookmark or search result, we allow "switching" to it even if sidebar is open
@@ -1189,6 +1288,15 @@ export default class MapComponent extends Component {
           targetPlace
         );
         transitionToPlace(targetPlace);
+        return;
+      }
+
+      if (clickedTileOsmFeature) {
+        console.debug(
+          'Clicked vector tile POI while sidebar open (switching):',
+          clickedTileOsmFeature
+        );
+        transitionToExplicitOsmPlace(clickedTileOsmFeature);
         return;
       }
 
@@ -1209,6 +1317,12 @@ export default class MapComponent extends Component {
     if (clickedSearchResult) {
       console.debug('Clicked search result:', clickedSearchResult);
       transitionToPlace(clickedSearchResult);
+      return;
+    }
+
+    if (clickedTileOsmFeature) {
+      console.debug('Clicked vector tile POI:', clickedTileOsmFeature);
+      transitionToExplicitOsmPlace(clickedTileOsmFeature);
       return;
     }
 
