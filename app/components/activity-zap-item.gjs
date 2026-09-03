@@ -50,54 +50,54 @@ export default class ActivityZapItem extends Component {
     <li>
       <button
         type="button"
-        class="activity-zap-item"
+        class="activity-item"
         {{on "click" (fn @onSelect @item)}}
       >
-        <div class="zap-header">
-          <span class="zap-sender-line">
-            <span class="zap-sender-name">{{this.senderDisplayName}}</span>
+        <div class="header">
+          <span class="sender-line">
+            <span class="sender-name">{{this.senderDisplayName}}</span>
             {{! template-lint-disable no-whitespace-for-layout }}
-            <span class="zap-action"> zapped your photo</span>
+            <span class="action"> zapped your photo</span>
           </span>
-          <span class="zap-amount">{{this.item.amountSats}} ⚡</span>
+          <span class="amount">{{this.item.amountSats}} ⚡</span>
         </div>
 
-        <div class="zap-context">
-          <div class="zap-context-images">
+        <div class="context">
+          <div class="context-images">
             {{#if this.senderAvatar}}
               <img
-                class="zap-sender-avatar"
+                class="sender-avatar"
                 src={{this.senderAvatar}}
                 alt=""
                 loading="lazy"
               />
             {{else}}
-              <div class="zap-sender-avatar-placeholder">
+              <div class="sender-avatar-placeholder">
                 <Icon @name="user" @size={{16}} @color="#999" />
               </div>
             {{/if}}
             {{#if this.hasPhoto}}
-              <div class="zap-context-thumb">
+              <div class="context-thumb">
                 <img src={{this.photoThumbUrl}} alt="" loading="lazy" />
               </div>
             {{/if}}
           </div>
-          <div class="zap-context-text">
-            <span class="zap-place-name">
+          <div class="context-text">
+            <span class="activity-place-name">
               {{#if this.placeName}}
-                {{this.placeName}}
-              {{else if this.placeNameLoading}}
-                <span class="contribution-name-loading">Loading…</span>
-              {{else}}
-                <span class="contribution-name-loading">Unnamed place</span>
+                <span class="place-name-text">{{this.placeName}}</span>
+              {{else if this.placeNameLoading}}{{else}}
+                <span class="place-name-text">Unnamed place</span>
               {{/if}}
             </span>
-            <span class="zap-date">{{formatRelativeDate @item.createdAt}}</span>
+            <span class="activity-date">{{formatRelativeDate
+                @item.createdAt
+              }}</span>
           </div>
         </div>
 
         {{#if this.item.message}}
-          <div class="zap-message">{{this.item.message}}</div>
+          <div class="message">{{this.item.message}}</div>
         {{/if}}
       </button>
     </li>

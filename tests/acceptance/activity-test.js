@@ -23,8 +23,15 @@ class MockActivityService extends Service {
       senderProfileLoading: false,
     },
   ];
+  @tracked sourceMode = 'home';
+  @tracked isLoadingMore = false;
+  @tracked isLoading = false;
 
   async load() {}
+
+  async setSourceMode() {}
+
+  loadMore() {}
 
   stop() {
     this.items = [];
@@ -97,12 +104,12 @@ module('Acceptance | activity', function (hooks) {
   test('activity items are rendered as zap rows', async function (assert) {
     await visit('/activity');
 
-    await waitFor('.activity-zap-item');
-    assert.dom('.activity-zap-item').exists({ count: 1 });
-    assert.dom('.zap-sender-name').hasText('Alice');
-    assert.dom('.zap-action').includesText('zapped your photo');
-    assert.dom('.zap-amount').includesText('21 ⚡');
-    assert.dom('.zap-message').includesText('Great photo!');
+    await waitFor('.activity-item');
+    assert.dom('.activity-item').exists({ count: 1 });
+    assert.dom('.sender-name').hasText('Alice');
+    assert.dom('.action').includesText('zapped your photo');
+    assert.dom('.amount').includesText('21 ⚡');
+    assert.dom('.message').includesText('Great photo!');
   });
 
   test('closing the sidebar returns to index', async function (assert) {
@@ -124,9 +131,9 @@ module('Acceptance | activity', function (hooks) {
     const mapUi = this.owner.lookup('service:map-ui');
 
     await visit('/activity');
-    await waitFor('.activity-zap-item');
+    await waitFor('.activity-item');
 
-    await click('.activity-zap-item');
+    await click('.activity-item');
 
     assert.ok(
       currentURL().includes('/place/osm:node:123'),

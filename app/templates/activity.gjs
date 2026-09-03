@@ -4,8 +4,12 @@ import ActivityTimeline from '#components/activity-timeline';
   {{#if @controller.mapUi.isSidebarVisible}}
     <ActivityTimeline
       @items={{@controller.items}}
-      @isLoading={{@controller.loadTask.isRunning}}
+      @isLoading={{@controller.isLoading}}
       @isConnected={{@controller.isConnected}}
+      @sourceMode={{@controller.sourceMode}}
+      @onSetSourceMode={{@controller.setSourceMode}}
+      @isLoadingMore={{@controller.isLoadingMore}}
+      @onLoadMore={{@controller.loadMore}}
       @scrollTop={{@controller.scrollTop}}
       @onSelect={{@controller.selectItem}}
       @onBack={{@controller.backToMenu}}

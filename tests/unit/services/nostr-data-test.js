@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupTest } from 'marco/tests/helpers';
-import { Subject, EMPTY } from 'rxjs';
+import { Subject, EMPTY, of } from 'rxjs';
 import Service from '@ember/service';
 import NostrDataService from 'marco/services/nostr-data';
 import { getGeohashPrefixesInBbox } from 'marco/utils/geohash-coverage';
@@ -203,6 +203,58 @@ module('Unit | Service | nostr-data | contacts', function (hooks) {
       [0, 3, 10002, 10063].sort(),
       'kinds match expected set'
     );
+  });
+
+  test('whenContactsLoaded resolves after contacts are loaded', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const pubkey = makePubkey(1);
+    const contactA = makePubkey(2);
+
+    // Start loadProfile (sets up the deferred + subscriptions)
+    await service.loadProfile(pubkey);
+
+    // Contacts not loaded yet — whenContactsLoaded should not resolve yet
+    // (it will resolve after timeout, but we'll add the event first)
+
+    // Add a contacts event to the store — the ContactsModel subscription fires
+    service.store.add(makeContactsEvent(pubkey, [contactA]));
+
+    // Give the model a tick to process
+    await new Promise((r) => setTimeout(r, 50));
+
+    await service.whenContactsLoaded();
+
+    assert.ok(service._contactPubkeys, 'contacts loaded');
+    assert.true(
+      service._contactPubkeys.has(contactA),
+      'contact pubkey present'
+    );
+  });
+
+  test('whenContactsLoaded resolves immediately when contacts already loaded', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const pubkey = makePubkey(1);
+    const contactA = makePubkey(2);
+
+    service.store.add(makeContactsEvent(pubkey, [contactA]));
+    await service.loadProfile(pubkey);
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Contacts are already loaded — whenContactsLoaded should resolve immediately
+    await service.whenContactsLoaded();
+
+    assert.true(service._contactPubkeys.has(contactA), 'contacts available');
+  });
+
+  test('whenContactsLoaded resolves immediately when no profile loaded', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    // No loadProfile called — should resolve immediately
+    await service.whenContactsLoaded();
+
+    assert.true(true, 'resolved without hanging');
   });
 
   test('kind 3 events are persisted to IDB cache', async function (assert) {
@@ -853,6 +905,331 @@ module('Unit | Service | nostr-data | my contributions', function (hooks) {
     const filter = this.requestedFilters.find((f) => f.authors?.includes(myPk));
     assert.ok(filter, 'filter for own pubkey requested');
     assert.deepEqual(filter.kinds.sort(), [360, 5].sort(), 'kinds 360 and 5');
+  });
+});
+
+module('Unit | Service | nostr-data | activity photos', function (hooks) {
+  setupNostrDataService(hooks);
+
+  test('loadActivityPhotos defers when contacts are not loaded yet', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    // _contactPubkeys is null initially (no loadProfile called)
+    assert.strictEqual(service._contactPubkeys, null);
+
+    await service.loadActivityPhotos(1000, 'home');
+
+    // No network request should have been made
+    const photoFilters = this.requestedFilters.filter(
+      (f) => f.kinds?.includes(360) && f.authors
+    );
+    assert.strictEqual(photoFilters.length, 0, 'no request without contacts');
+  });
+
+  test('loadActivityPhotos batches >100 pubkeys into multiple filters', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    // Create 250 contact pubkeys
+    const contactPubkeys = Array.from({ length: 250 }, (_, i) =>
+      makePubkey(100 + i)
+    );
+
+    // Load contacts so _contactPubkeys is populated
+    service.store.add(makeContactsEvent(userPubkey, contactPubkeys));
+    await service.loadProfile(userPubkey);
+
+    await service.loadActivityPhotos(1000, 'home');
+
+    const photoFilters = this.requestedFilters.filter(
+      (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
+    );
+    assert.strictEqual(
+      photoFilters.length,
+      3,
+      '250 pubkeys → 3 filters (100+100+50)'
+    );
+    assert.strictEqual(photoFilters[0].authors.length, 100);
+    assert.strictEqual(photoFilters[1].authors.length, 100);
+    assert.strictEqual(photoFilters[2].authors.length, 50);
+  });
+
+  test('loadActivityPhotos includes since in filter', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const contactPubkey = makePubkey(2);
+
+    service.store.add(makeContactsEvent(userPubkey, [contactPubkey]));
+    await service.loadProfile(userPubkey);
+
+    const since = 12345;
+    await service.loadActivityPhotos(since, 'home');
+
+    const photoFilter = this.requestedFilters.find(
+      (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
+    );
+    assert.ok(photoFilter, 'photo filter with since found');
+    assert.strictEqual(photoFilter.since, since, 'since value matches');
+    assert.deepEqual(photoFilter.kinds, [360], 'requests kind 360');
+  });
+
+  test('loadActivityPhotos re-triggers when contacts arrive', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const contactPubkey = makePubkey(2);
+
+    // Call loadActivityPhotos before contacts are loaded
+    await service.loadActivityPhotos(1000, 'home');
+
+    const beforeCount = this.requestedFilters.filter(
+      (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
+    ).length;
+    assert.strictEqual(beforeCount, 0, 'no request before contacts');
+
+    // Now load contacts — the ContactsModel callback should re-trigger
+    service.store.add(makeContactsEvent(userPubkey, [contactPubkey]));
+    await service.loadProfile(userPubkey);
+
+    // Give the callback a tick to propagate
+    await new Promise((r) => setTimeout(r, 50));
+
+    const afterCount = this.requestedFilters.filter(
+      (f) => f.kinds?.includes(360) && f.authors && f.since !== undefined
+    ).length;
+    assert.ok(afterCount > 0, 'request made after contacts arrived');
+  });
+
+  test("loadActivityPhotos in 'explore' mode fetches all photos without authors filter", async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const since = 9999;
+    await service.loadActivityPhotos(since, 'explore');
+
+    // Should make a request immediately (no contacts dependency)
+    const photoFilter = this.requestedFilters.find(
+      (f) => f.kinds?.includes(360) && f.since !== undefined && !f.authors
+    );
+    assert.ok(photoFilter, 'photo filter without authors found');
+    assert.strictEqual(photoFilter.since, since, 'since value matches');
+    assert.deepEqual(photoFilter.kinds, [360], 'requests kind 360');
+    assert.notOk(photoFilter.authors, 'no authors filter in explore mode');
+  });
+
+  test('_batchAuthorFilters produces correct batches', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const pubkeys = Array.from({ length: 250 }, (_, i) => makePubkey(i));
+    const filters = service._batchAuthorFilters(pubkeys, [360], 1000);
+
+    assert.strictEqual(filters.length, 3, '250 → 3 filters');
+    assert.strictEqual(filters[0].authors.length, 100);
+    assert.strictEqual(filters[1].authors.length, 100);
+    assert.strictEqual(filters[2].authors.length, 50);
+    assert.deepEqual(filters[0].kinds, [360]);
+    assert.strictEqual(filters[0].since, 1000);
+    assert.notOk(filters[0].until, 'no until when not provided');
+  });
+
+  test('_batchAuthorFilters includes until when provided', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const pubkeys = Array.from({ length: 5 }, (_, i) => makePubkey(i));
+    const filters = service._batchAuthorFilters(pubkeys, [360], 1000, 2000);
+
+    assert.strictEqual(filters.length, 1);
+    assert.strictEqual(filters[0].since, 1000);
+    assert.strictEqual(filters[0].until, 2000);
+  });
+});
+
+module('Unit | Service | nostr-data | fetchActivityPhotos', function (hooks) {
+  setupNostrDataService(hooks);
+
+  test('fetchActivityPhotos in home mode returns events from network', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const contactPubkey = makePubkey(2);
+    const photo = makePhotoEvent(contactPubkey, 'osm:node:100', {
+      id: makeEventId(100),
+    });
+
+    service.store.add(makeContactsEvent(userPubkey, [contactPubkey]));
+    await service.loadProfile(userPubkey);
+
+    service.nostrRelay.pool.req = (_relays, filters) => {
+      this.requestedFilters.push(...filters);
+      return of({
+        type: 'EVENT',
+        event: photo,
+        from: 'wss://relay.example',
+      });
+    };
+
+    const result = await service.fetchActivityPhotos(1000, undefined, 'home');
+    const networkEvents = await result.networkEvents;
+
+    assert.ok(
+      networkEvents.some((e) => e.id === photo.id),
+      'photo event from network returned'
+    );
+  });
+
+  test('fetchActivityPhotos includes until in filters', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const contactPubkey = makePubkey(2);
+
+    service.store.add(makeContactsEvent(userPubkey, [contactPubkey]));
+    await service.loadProfile(userPubkey);
+
+    service.nostrRelay.pool.req = (_relays, filters) => {
+      this.requestedFilters.push(...filters);
+      return EMPTY;
+    };
+
+    await service.fetchActivityPhotos(1000, 2000, 'home');
+
+    const photoFilter = this.requestedFilters.find(
+      (f) => f.kinds?.includes(360) && f.authors
+    );
+    assert.ok(photoFilter, 'photo filter found');
+    assert.strictEqual(photoFilter.since, 1000, 'since value matches');
+    assert.strictEqual(photoFilter.until, 2000, 'until value matches');
+  });
+
+  test('fetchActivityPhotos in explore mode does not include authors filter', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    service.nostrRelay.pool.req = (_relays, filters) => {
+      this.requestedFilters.push(...filters);
+      return EMPTY;
+    };
+
+    await service.fetchActivityPhotos(9999, undefined, 'explore');
+
+    const photoFilter = this.requestedFilters.find(
+      (f) => f.kinds?.includes(360) && !f.authors
+    );
+    assert.ok(photoFilter, 'photo filter without authors found');
+    assert.strictEqual(photoFilter.since, 9999);
+    assert.notOk(photoFilter.until, 'no until when not provided');
+  });
+
+  test('fetchActivityPhotos in explore mode includes until', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    service.nostrRelay.pool.req = (_relays, filters) => {
+      this.requestedFilters.push(...filters);
+      return EMPTY;
+    };
+
+    await service.fetchActivityPhotos(1000, 2000, 'explore');
+
+    const photoFilter = this.requestedFilters.find(
+      (f) => f.kinds?.includes(360) && !f.authors
+    );
+    assert.ok(photoFilter, 'photo filter found');
+    assert.strictEqual(photoFilter.since, 1000);
+    assert.strictEqual(photoFilter.until, 2000);
+  });
+
+  test('fetchActivityPhotos returns empty array when no contacts in home mode', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    service.nostrRelay.pool.req = () => EMPTY;
+
+    const result = await service.fetchActivityPhotos(1000, undefined, 'home');
+
+    assert.strictEqual(
+      result.cacheEvents.length,
+      0,
+      'empty cache events when no contacts'
+    );
+    const networkEvents = await result.networkEvents;
+    assert.strictEqual(
+      networkEvents.length,
+      0,
+      'empty network events when no contacts'
+    );
+  });
+
+  test('fetchActivityPhotos deduplicates cache and network events', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    const userPubkey = makePubkey(1);
+    const contactPubkey = makePubkey(2);
+    const photo = makePhotoEvent(contactPubkey, 'osm:node:100', {
+      id: makeEventId(100),
+    });
+
+    service.store.add(makeContactsEvent(userPubkey, [contactPubkey]));
+    await service.loadProfile(userPubkey);
+
+    // Add to IDB cache
+    await service.cache.add(photo);
+
+    service.nostrRelay.pool.req = (_relays, filters) => {
+      this.requestedFilters.push(...filters);
+      return of({
+        type: 'EVENT',
+        event: photo,
+        from: 'wss://relay.example',
+      });
+    };
+
+    const result = await service.fetchActivityPhotos(1000, undefined, 'home');
+    const networkEvents = await result.networkEvents;
+
+    assert.strictEqual(
+      result.cacheEvents.filter((e) => e.id === photo.id).length,
+      1,
+      'photo appears once in cache events'
+    );
+    assert.strictEqual(
+      networkEvents.filter((e) => e.id === photo.id).length,
+      0,
+      'photo not in network events (deduplicated against cache)'
+    );
+  });
+
+  test('fetchIncomingZaps includes since and until in filter', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    service.nostrRelay.pool.req = (_relays, filters) => {
+      this.requestedFilters.push(...filters);
+      return EMPTY;
+    };
+
+    await service.fetchIncomingZaps(makePubkey(1), 1000, 2000);
+
+    const zapFilter = this.requestedFilters.find((f) =>
+      f.kinds?.includes(9735)
+    );
+    assert.ok(zapFilter, 'zap filter found');
+    assert.strictEqual(zapFilter.since, 1000, 'since value matches');
+    assert.strictEqual(zapFilter.until, 2000, 'until value matches');
+  });
+
+  test('fetchIncomingZaps without since/until does not include them', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+
+    service.nostrRelay.pool.req = (_relays, filters) => {
+      this.requestedFilters.push(...filters);
+      return EMPTY;
+    };
+
+    await service.fetchIncomingZaps(makePubkey(1));
+
+    const zapFilter = this.requestedFilters.find((f) =>
+      f.kinds?.includes(9735)
+    );
+    assert.ok(zapFilter, 'zap filter found');
+    assert.notOk('since' in zapFilter, 'no since when not provided');
+    assert.notOk('until' in zapFilter, 'no until when not provided');
   });
 });
 

@@ -3,15 +3,24 @@ import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import Icon from './icon';
+import TabNav from './tab-nav';
 import ActivityZapItem from './activity-zap-item';
+import ActivityPhotoItem from './activity-photo-item';
 import Modal from './modal';
 import NostrConnect from './nostr-connect';
 import not from 'ember-truth-helpers/helpers/not';
 import eq from 'ember-truth-helpers/helpers/eq';
+import and from 'ember-truth-helpers/helpers/and';
 import restoreScroll from '../modifiers/restore-scroll';
+import observeIntersection from '../modifiers/observe-intersection';
 
 export default class ActivityTimelineComponent extends Component {
   @tracked isNostrConnectModalOpen = false;
+
+  tabs = [
+    { label: 'Home', value: 'home' },
+    { label: 'Explore', value: 'explore' },
+  ];
 
   @action
   openNostrConnectModal(event) {
@@ -47,12 +56,18 @@ export default class ActivityTimelineComponent extends Component {
         </button>
       </div>
 
+      <TabNav
+        @tabs={{this.tabs}}
+        @active={{@sourceMode}}
+        @onChange={{@onSetSourceMode}}
+      />
+
       <div class="sidebar-content" {{restoreScroll @scrollTop}}>
         {{#if @isLoading}}
           <div class="sidebar-loading">
             <Icon @name="loading-ring" @size={{24}} @color="#898989" />
           </div>
-        {{else if (not @isConnected)}}
+        {{else if (and (not @isConnected) (eq @sourceMode "home"))}}
           <p class="empty-state">
             <a
               href="#"
@@ -69,8 +84,17 @@ export default class ActivityTimelineComponent extends Component {
             {{#each @items as |item|}}
               {{#if (eq item.type "zap")}}
                 <ActivityZapItem @item={{item}} @onSelect={{@onSelect}} />
+              {{else if (eq item.type "photo")}}
+                <ActivityPhotoItem @item={{item}} @onSelect={{@onSelect}} />
               {{/if}}
             {{/each}}
+            <li class="activity-load-more" {{observeIntersection @onLoadMore}}>
+              {{#if @isLoadingMore}}
+                <div class="activity-load-more-spinner">
+                  <Icon @name="loading-ring" @size={{24}} @color="#898989" />
+                </div>
+              {{/if}}
+            </li>
           </ul>
         {{/if}}
       </div>

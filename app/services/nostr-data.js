@@ -76,6 +76,11 @@ export default class NostrDataService extends Service {
   // trust lookups. Rebuilt whenever contacts change.
   _contactPubkeys = null;
 
+  // Deferred that resolves when contacts are first loaded. Created in
+  // loadProfile, resolved in the ContactsModel callback.
+  _contactsResolver = null;
+  _contactsPromise = null;
+
   // Session-only reveal toggle for untrusted content. Not persisted.
   @tracked showUntrustedContent = false;
   // Count of currently-hidden (untrusted) place photos for the selected place.
@@ -96,6 +101,12 @@ export default class NostrDataService extends Service {
   _zapRefreshTimer = null;
   _lastPhotoIds = new Set();
   _incomingZapsNetworkSub = null;
+
+  // Activity photos state: tracks the current time window and source mode
+  // so that the contacts callback can re-trigger when contacts arrive.
+  _activityPhotosSince = null;
+  _activityPhotosMode = 'home';
+  _activityPhotosNetworkSub = null;
 
   _requestSub = null;
   _cachePromise = null;
@@ -600,6 +611,312 @@ export default class NostrDataService extends Service {
     );
   }
 
+  /**
+   * Loads kind 360 (Place Photo) events for the activity feed, scoped to the
+   * given time window and source mode.
+   *
+   * - `'home'` mode: fetches photos authored by the user's followed contacts
+   *   (followees). If contacts haven't loaded yet (`_contactPubkeys` is null or
+   *   empty), this returns early and is re-triggered automatically by the
+   *   `ContactsModel` subscription callback when contacts arrive.
+   * - `'explore'` mode: fetches all kind 360 photos in the time window from
+   *   trusted relays (no authors filter). Provenance is captured so
+   *   `isTrustedEvent` can filter at presentation time.
+   *
+   * @param {number} since Unix timestamp (seconds) for the start of the window
+   * @param {string} [mode='home'] Source mode
+   */
+  async loadActivityPhotos(since, mode = 'home') {
+    this._activityPhotosSince = since;
+    this._activityPhotosMode = mode;
+
+    if (this._activityPhotosNetworkSub) {
+      this._activityPhotosNetworkSub.unsubscribe();
+      this._activityPhotosNetworkSub = null;
+    }
+
+    if (mode === 'home') {
+      this._loadFolloweePhotos(since);
+    } else if (mode === 'explore') {
+      this._loadTrustedRelaysPhotos(since);
+    }
+  }
+
+  /**
+   * Fetches kind 360 photos from the user's followees (followed contacts),
+   * batched by author pubkey (≤100 per filter to stay under relay REQ limits).
+   * Defers if contacts haven't loaded yet.
+   */
+  _loadFolloweePhotos(since) {
+    const pubkeys = this._contactPubkeys
+      ? Array.from(this._contactPubkeys)
+      : [];
+
+    if (pubkeys.length === 0) {
+      console.debug(
+        '[nostr-data] No contacts loaded yet, deferring followee photo load'
+      );
+      return;
+    }
+
+    const filters = this._batchAuthorFilters(pubkeys, [360], since);
+
+    console.debug('[nostr-data] Loading followee photos', {
+      filterCount: filters.length,
+      pubkeyCount: pubkeys.length,
+      since,
+    });
+
+    // 1. Populate the store from the local Nostr IDB cache (instant)
+    this._cachePromise
+      .then(() => this.cache.query(filters))
+      .then((cachedEvents) => {
+        if (cachedEvents && cachedEvents.length > 0) {
+          for (const event of cachedEvents) {
+            this.store.add(event);
+          }
+        }
+      })
+      .catch((e) => {
+        console.warn(
+          '[nostr-data] Failed to read followee photos from local Nostr IDB cache',
+          e
+        );
+      });
+
+    // 2. Request fresh events from the network (captures provenance for trust)
+    this._activityPhotosNetworkSub = this._requestContentWithProvenance(
+      this.activeReadRelays,
+      filters,
+      '[nostr-data] Error fetching followee photos:'
+    );
+  }
+
+  /**
+   * Fetches all kind 360 photos in the time window from trusted relays (no
+   * authors filter). Provenance is captured so `isTrustedEvent` can filter
+   * at presentation time. Fires immediately — no contacts dependency.
+   */
+  _loadTrustedRelaysPhotos(since) {
+    const filters = [{ kinds: [360], since }];
+
+    console.debug('[nostr-data] Loading trusted relay photos', { since });
+
+    // 1. Populate the store from the local Nostr IDB cache (instant)
+    this._cachePromise
+      .then(() => this.cache.query(filters))
+      .then((cachedEvents) => {
+        if (cachedEvents && cachedEvents.length > 0) {
+          for (const event of cachedEvents) {
+            this.store.add(event);
+          }
+        }
+      })
+      .catch((e) => {
+        console.warn(
+          '[nostr-data] Failed to read trusted relay photos from local Nostr IDB cache',
+          e
+        );
+      });
+
+    // 2. Request fresh events from the network (captures provenance for trust)
+    this._activityPhotosNetworkSub = this._requestContentWithProvenance(
+      this.activeReadRelays,
+      filters,
+      '[nostr-data] Error fetching trusted relay photos:'
+    );
+  }
+
+  /**
+   * Fetches events from the network as a Promise that resolves on EOSE.
+   * Records provenance for each event and adds them to the store.
+   *
+   * @param {object[]} filters Nostr filters
+   * @param {string} errorLabel Log label for errors
+   * @returns {Promise<object[]>} Deduplicated events received from relays
+   */
+  async _fetchEventsWithProvenance(filters, errorLabel) {
+    const complete = RelayGroup.completeOnAny(
+      RelayGroup.completeAfterFirstRelay(5_000),
+      RelayGroup.completeOnAllEose()
+    );
+
+    const seen = new Set();
+    const events = [];
+
+    return new Promise((resolve) => {
+      this.nostrRelay.pool
+        .req(this.activeReadRelays, filters)
+        .pipe(
+          completeWhen(complete),
+          timeout({ first: 30_000 }),
+          filter((message) => message.type === 'EVENT')
+        )
+        .subscribe({
+          next: (message) => {
+            this._recordProvenance(message.event.id, message.from);
+            this.store.add(message.event);
+            if (!seen.has(message.event.id)) {
+              seen.add(message.event.id);
+              events.push(message.event);
+            }
+          },
+          error: (err) => {
+            console.error(errorLabel, err);
+            resolve(events);
+          },
+          complete: () => resolve(events),
+        });
+    });
+  }
+
+  /**
+   * Fetches kind 360 (Place Photo) events for the activity feed.
+   *
+   * Returns `{ cacheEvents, networkEvents }` so the caller can show cached
+   * items instantly while the network request resolves on EOSE.
+   *
+   * - `'home'` mode: fetches photos authored by the user's followed contacts
+   *   (followees), batched by author pubkey.
+   * - `'explore'` mode: fetches all kind 360 photos in the time window from
+   *   trusted relays (no authors filter).
+   *
+   * @param {number} since Unix timestamp (seconds) for the start of the window
+   * @param {number} [until] Unix timestamp (seconds) for the end of the window
+   * @param {string} [mode='home'] Source mode
+   * @returns {Promise<{cacheEvents: object[], networkEvents: Promise<object[]>}>}
+   */
+  async fetchActivityPhotos(since, until, mode = 'home') {
+    let filters;
+    if (mode === 'home') {
+      const pubkeys = this._contactPubkeys
+        ? Array.from(this._contactPubkeys)
+        : [];
+      if (pubkeys.length === 0)
+        return { cacheEvents: [], networkEvents: Promise.resolve([]) };
+      filters = this._batchAuthorFilters(pubkeys, [360], since, until);
+    } else if (mode === 'explore') {
+      const filter = { kinds: [360], since };
+      if (until !== undefined) filter.until = until;
+      filters = [filter];
+    } else {
+      return { cacheEvents: [], networkEvents: Promise.resolve([]) };
+    }
+
+    // 1. Populate the store from the local Nostr IDB cache (instant)
+    const seen = new Set();
+    const cacheResult = [];
+
+    const cacheEvents = await this._cachePromise
+      .then(() => this.cache.query(filters))
+      .catch(() => []);
+
+    if (cacheEvents) {
+      for (const event of cacheEvents) {
+        if (!seen.has(event.id)) {
+          seen.add(event.id);
+          cacheResult.push(event);
+          this.store.add(event);
+        }
+      }
+    }
+
+    // 2. Request fresh events from the network (resolves on EOSE)
+    const networkEvents = this._fetchEventsWithProvenance(
+      filters,
+      '[nostr-data] Error fetching activity photos:'
+    ).then((events) => {
+      const result = [];
+      for (const event of events) {
+        if (!seen.has(event.id)) {
+          seen.add(event.id);
+          result.push(event);
+        }
+      }
+      return result;
+    });
+
+    return { cacheEvents: cacheResult, networkEvents };
+  }
+
+  /**
+   * Fetches incoming zap receipts (kind 9735) where the user is the recipient.
+   *
+   * Returns `{ cacheEvents, networkEvents }` so the caller can show cached
+   * items instantly while the network request resolves on EOSE.
+   *
+   * @param {string} pubkey The user's Nostr pubkey
+   * @param {number} [since] Unix timestamp (seconds) for the start of the window
+   * @param {number} [until] Unix timestamp (seconds) for the end of the window
+   * @returns {Promise<{cacheEvents: object[], networkEvents: Promise<object[]>}>}
+   */
+  async fetchIncomingZaps(pubkey, since, until) {
+    if (!pubkey) return { cacheEvents: [], networkEvents: Promise.resolve([]) };
+
+    const filter = { kinds: [9735], '#p': [pubkey] };
+    if (since !== undefined) filter.since = since;
+    if (until !== undefined) filter.until = until;
+    const filters = [filter];
+
+    const seen = new Set();
+    const cacheResult = [];
+
+    // 1. IDB cache
+    const cacheEvents = await this._cachePromise
+      .then(() => this.cache.query(filters))
+      .catch(() => []);
+
+    if (cacheEvents) {
+      for (const event of cacheEvents) {
+        if (!seen.has(event.id)) {
+          seen.add(event.id);
+          cacheResult.push(event);
+          this.store.add(event);
+        }
+      }
+    }
+
+    // 2. Network (resolves on EOSE)
+    const networkEvents = this._fetchEventsWithProvenance(
+      filters,
+      '[nostr-data] Error fetching incoming zap receipts:'
+    ).then((events) => {
+      const result = [];
+      for (const event of events) {
+        if (!seen.has(event.id)) {
+          seen.add(event.id);
+          result.push(event);
+        }
+      }
+      return result;
+    });
+
+    return { cacheEvents: cacheResult, networkEvents };
+  }
+
+  /**
+   * Builds an array of Nostr filters, each with ≤ `BATCH_SIZE` author pubkeys.
+   *
+   * @param {string[]} pubkeys Author pubkeys to batch
+   * @param {number[]} kinds Event kinds to request
+   * @param {number} since Unix timestamp (seconds) for the start of the window
+   * @returns {object[]} Array of filter objects
+   */
+  _batchAuthorFilters(pubkeys, kinds, since, until) {
+    const BATCH_SIZE = 100;
+    const filters = [];
+    for (let i = 0; i < pubkeys.length; i += BATCH_SIZE) {
+      const filter = {
+        kinds,
+        authors: pubkeys.slice(i, i + BATCH_SIZE),
+        since,
+      };
+      if (until !== undefined) filter.until = until;
+      filters.push(filter);
+    }
+    return filters;
+  }
+
   loadProfiles(pubkeys) {
     const newPubkeys = pubkeys.filter(
       (pk) => pk && !this._profileModelSubs.has(pk)
@@ -637,6 +954,11 @@ export default class NostrDataService extends Service {
     this._contactPubkeys = null;
     this.blossomServers = [];
 
+    // Create a deferred that resolves when contacts are first loaded
+    this._contactsPromise = new Promise((resolve) => {
+      this._contactsResolver = resolve;
+    });
+
     this._cleanupSubscriptions();
 
     // Setup models to track state reactively FIRST
@@ -658,7 +980,19 @@ export default class NostrDataService extends Service {
       .subscribe((contacts) => {
         this.contacts = contacts;
         this._contactPubkeys = new Set(contacts.map((c) => c.pubkey));
+        // Resolve the deferred so callers awaiting whenContactsLoaded proceed.
+        this._contactsResolver?.();
+        this._contactsResolver = null;
         this._updatePlacePhotos();
+        // Re-trigger activity photo load now that contacts are available.
+        // If no activity load has been requested yet, _activityPhotosSince
+        // is null and the call is a no-op.
+        if (this._activityPhotosSince !== null) {
+          this.loadActivityPhotos(
+            this._activityPhotosSince,
+            this._activityPhotosMode
+          );
+        }
       });
 
     this._blossomSub = this.store
@@ -722,6 +1056,23 @@ export default class NostrDataService extends Service {
           console.error('Error fetching profile events:', err);
         },
       });
+  }
+
+  /**
+   * Returns a promise that resolves when contacts are first loaded, or
+   * immediately if already loaded. Times out after 5s so callers don't hang
+   * forever if contacts never arrive.
+   *
+   * @param {number} [timeout=5000] Timeout in milliseconds
+   * @returns {Promise<void>}
+   */
+  whenContactsLoaded(timeout = 5000) {
+    if (this._contactPubkeys) return Promise.resolve();
+    if (!this._contactsPromise) return Promise.resolve();
+    return Promise.race([
+      this._contactsPromise,
+      new Promise((resolve) => setTimeout(resolve, timeout)),
+    ]);
   }
 
   get userDisplayName() {
@@ -895,6 +1246,10 @@ export default class NostrDataService extends Service {
     if (this._incomingZapsNetworkSub) {
       this._incomingZapsNetworkSub.unsubscribe();
       this._incomingZapsNetworkSub = null;
+    }
+    if (this._activityPhotosNetworkSub) {
+      this._activityPhotosNetworkSub.unsubscribe();
+      this._activityPhotosNetworkSub = null;
     }
   }
 
