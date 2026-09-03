@@ -1068,10 +1068,11 @@ module('Unit | Service | nostr-data | fetchActivityPhotos', function (hooks) {
       });
     };
 
-    const events = await service.fetchActivityPhotos(1000, undefined, 'home');
+    const result = await service.fetchActivityPhotos(1000, undefined, 'home');
+    const networkEvents = await result.networkEvents;
 
     assert.ok(
-      events.some((e) => e.id === photo.id),
+      networkEvents.some((e) => e.id === photo.id),
       'photo event from network returned'
     );
   });
@@ -1141,9 +1142,19 @@ module('Unit | Service | nostr-data | fetchActivityPhotos', function (hooks) {
 
     service.nostrRelay.pool.req = () => EMPTY;
 
-    const events = await service.fetchActivityPhotos(1000, undefined, 'home');
+    const result = await service.fetchActivityPhotos(1000, undefined, 'home');
 
-    assert.strictEqual(events.length, 0, 'empty array when no contacts');
+    assert.strictEqual(
+      result.cacheEvents.length,
+      0,
+      'empty cache events when no contacts'
+    );
+    const networkEvents = await result.networkEvents;
+    assert.strictEqual(
+      networkEvents.length,
+      0,
+      'empty network events when no contacts'
+    );
   });
 
   test('fetchActivityPhotos deduplicates cache and network events', async function (assert) {
@@ -1170,12 +1181,18 @@ module('Unit | Service | nostr-data | fetchActivityPhotos', function (hooks) {
       });
     };
 
-    const events = await service.fetchActivityPhotos(1000, undefined, 'home');
+    const result = await service.fetchActivityPhotos(1000, undefined, 'home');
+    const networkEvents = await result.networkEvents;
 
     assert.strictEqual(
-      events.filter((e) => e.id === photo.id).length,
+      result.cacheEvents.filter((e) => e.id === photo.id).length,
       1,
-      'photo appears only once despite being in both cache and network'
+      'photo appears once in cache events'
+    );
+    assert.strictEqual(
+      networkEvents.filter((e) => e.id === photo.id).length,
+      0,
+      'photo not in network events (deduplicated against cache)'
     );
   });
 

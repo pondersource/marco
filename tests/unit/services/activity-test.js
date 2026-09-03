@@ -131,11 +131,11 @@ class MockNostrDataService extends Service {
   }
 
   async fetchActivityPhotos() {
-    return [];
+    return { cacheEvents: [], networkEvents: Promise.resolve([]) };
   }
 
   async fetchIncomingZaps() {
-    return [];
+    return { cacheEvents: [], networkEvents: Promise.resolve([]) };
   }
 
   getProfile(pubkey) {
@@ -509,8 +509,12 @@ module('Unit | Service | activity', function (hooks) {
     });
 
     service.nostrData.fetchActivityPhotos = async (_since, _until, mode) => {
-      if (mode === 'home') return [followedPhoto];
-      return [];
+      if (mode === 'home')
+        return {
+          cacheEvents: [followedPhoto],
+          networkEvents: Promise.resolve([]),
+        };
+      return { cacheEvents: [], networkEvents: Promise.resolve([]) };
     };
 
     service._updateSocialItems([followedPhoto]);
@@ -572,7 +576,10 @@ module('Unit | Service | activity', function (hooks) {
     service.nostrData.fetchActivityPhotos = async (since, until) => {
       assert.strictEqual(since, NOW - 30 * 24 * 60 * 60, 'since extended');
       assert.strictEqual(until, NOW, 'until set to old since');
-      return [oldPhoto];
+      return {
+        cacheEvents: [oldPhoto],
+        networkEvents: Promise.resolve([]),
+      };
     };
 
     await service.loadMore();
@@ -623,12 +630,18 @@ module('Unit | Service | activity', function (hooks) {
     });
 
     let zapCallCount = 0;
-    service.nostrData.fetchActivityPhotos = async () => [];
+    service.nostrData.fetchActivityPhotos = async () => ({
+      cacheEvents: [],
+      networkEvents: Promise.resolve([]),
+    });
     service.nostrData.fetchIncomingZaps = async (_pubkey, since, until) => {
       zapCallCount++;
       assert.strictEqual(since, NOW - 30 * 24 * 60 * 60, 'zap since matches');
       assert.strictEqual(until, NOW, 'zap until matches');
-      return [oldZapReceipt];
+      return {
+        cacheEvents: [oldZapReceipt],
+        networkEvents: Promise.resolve([]),
+      };
     };
 
     await service.loadMore();
@@ -658,15 +671,19 @@ module('Unit | Service | activity', function (hooks) {
     service.nostrData.fetchActivityPhotos = async (since, until) => {
       callArgs.push({ since, until });
       callCount++;
-      if (callCount < 2) return [];
-      return [
-        makePhotoEvent({
-          id: 'old2'.padEnd(64, '0'),
-          author: SENDER_PUBKEY,
-          placeIdentifier: 'osm:node:300',
-          created_at: NOW - 100000,
-        }),
-      ];
+      if (callCount < 2)
+        return { cacheEvents: [], networkEvents: Promise.resolve([]) };
+      return {
+        cacheEvents: [
+          makePhotoEvent({
+            id: 'old2'.padEnd(64, '0'),
+            author: SENDER_PUBKEY,
+            placeIdentifier: 'osm:node:300',
+            created_at: NOW - 100000,
+          }),
+        ],
+        networkEvents: Promise.resolve([]),
+      };
     };
 
     await service.loadMore();
@@ -699,7 +716,7 @@ module('Unit | Service | activity', function (hooks) {
     let callCount = 0;
     service.nostrData.fetchActivityPhotos = async () => {
       callCount++;
-      return [];
+      return { cacheEvents: [], networkEvents: Promise.resolve([]) };
     };
 
     await service.loadMore();
@@ -729,14 +746,17 @@ module('Unit | Service | activity', function (hooks) {
     let callCount = 0;
     service.nostrData.fetchActivityPhotos = async () => {
       callCount++;
-      return [
-        makePhotoEvent({
-          id: 'old3'.padEnd(64, '0'),
-          author: SENDER_PUBKEY,
-          placeIdentifier: 'osm:node:200',
-          created_at: NOW - 5000,
-        }),
-      ];
+      return {
+        cacheEvents: [
+          makePhotoEvent({
+            id: 'old3'.padEnd(64, '0'),
+            author: SENDER_PUBKEY,
+            placeIdentifier: 'osm:node:200',
+            created_at: NOW - 5000,
+          }),
+        ],
+        networkEvents: Promise.resolve([]),
+      };
     };
 
     const promise1 = service.loadMore();
@@ -755,7 +775,7 @@ module('Unit | Service | activity', function (hooks) {
     let called = false;
     service.nostrData.fetchActivityPhotos = async () => {
       called = true;
-      return [];
+      return { cacheEvents: [], networkEvents: Promise.resolve([]) };
     };
 
     await service.loadMore();

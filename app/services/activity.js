@@ -44,6 +44,7 @@ export default class ActivityService extends Service {
   _since = null;
   _sourceMode = 'home';
   _isLoadingMore = false;
+  _cacheReadyCallback = null;
 
   /**
    * Loads the user's incoming zap receipts and social photo activity.
@@ -64,6 +65,9 @@ export default class ActivityService extends Service {
     this._userPubkey = pubkey || null;
     this._since = Math.floor(Date.now() / 1000) - SINCE_WINDOW;
     this.isLoading = true;
+    this._cacheReadyCallback = () => {
+      this.isLoading = false;
+    };
 
     try {
       if (pubkey) {
@@ -81,6 +85,7 @@ export default class ActivityService extends Service {
       await this._fetchWithBackoff(this._since, now);
     } finally {
       this.isLoading = false;
+      this._cacheReadyCallback = null;
     }
   }
 
@@ -103,12 +108,16 @@ export default class ActivityService extends Service {
     this._mergeItems();
 
     this.isLoading = true;
+    this._cacheReadyCallback = () => {
+      this.isLoading = false;
+    };
 
     try {
       const now = Math.floor(Date.now() / 1000);
       await this._fetchWithBackoff(this._since, now);
     } finally {
       this.isLoading = false;
+      this._cacheReadyCallback = null;
     }
   }
 
@@ -160,84 +169,125 @@ export default class ActivityService extends Service {
   }
 
   /**
+   * Processes photo events into social items and appends them to the timeline.
+   *
+   * @param {object[]} events Photo events to process
+   * @returns {boolean} True if any items were added
+   */
+  _processPhotoEvents(events) {
+    if (events.length === 0) return false;
+
+    this._lastSocialEvents = [...this._lastSocialEvents, ...events];
+
+    const filtered = events.filter((e) => this._matchesSourceMode(e));
+    if (filtered.length === 0) return false;
+
+    const newEntries = groupSocialPhotos(filtered);
+
+    for (const entry of newEntries) {
+      this._resolveSender(entry);
+    }
+
+    for (const entry of newEntries) {
+      if (entry.osmId) {
+        const bookmarkName = this.placeNameResolver.resolveBookmark(
+          entry.osmId
+        );
+        if (bookmarkName) {
+          entry.placeName = bookmarkName;
+          entry.placeNameLoading = false;
+        }
+      }
+    }
+
+    this._socialItems = [...this._socialItems, ...newEntries];
+    this._mergeItems();
+
+    void this.placeNameResolver
+      .resolveInBackground(newEntries)
+      .then(() => this._mergeItems());
+
+    return true;
+  }
+
+  /**
+   * Processes zap receipt events and appends them to the timeline.
+   *
+   * @param {object[]} events Zap receipt events to process
+   * @returns {boolean} True if any items were added
+   */
+  _processZapEventsIntoTimeline(events) {
+    if (events.length === 0) return false;
+
+    const newZapEntries = this._processZapEvents(events, this._userPubkey);
+    if (newZapEntries.length === 0) return false;
+
+    this._zapItems = [...this._zapItems, ...newZapEntries];
+    this._mergeItems();
+
+    void this.placeNameResolver
+      .resolveInBackground(newZapEntries)
+      .then(() => this._mergeItems());
+
+    return true;
+  }
+
+  /**
    * Fetches photos and zaps for a single time window, processes them, and
-   * appends to the respective item arrays.
+   * appends to the respective item arrays. Cache events are processed first
+   * (firing `_cacheReadyCallback` to dismiss the loading spinner), then
+   * network events are awaited and processed.
    *
    * @param {number} batchSince Start of the window (seconds)
    * @param {number} batchUntil End of the window (seconds)
    * @returns {Promise<boolean>} True if any events were found
    */
   async _fetchAndProcessWindow(batchSince, batchUntil) {
-    const newEvents = await this.nostrData.fetchActivityPhotos(
+    const photoResult = await this.nostrData.fetchActivityPhotos(
       batchSince,
       batchUntil,
       this._sourceMode
     );
 
-    let newZapEvents = [];
+    let zapResult = {
+      cacheEvents: [],
+      networkEvents: Promise.resolve([]),
+    };
     if (this._sourceMode === 'home' && this._userPubkey) {
-      newZapEvents = await this.nostrData.fetchIncomingZaps(
+      zapResult = await this.nostrData.fetchIncomingZaps(
         this._userPubkey,
         batchSince,
         batchUntil
       );
     }
 
-    if (newEvents.length === 0 && newZapEvents.length === 0) {
-      return false;
-    }
-
+    // Phase 1: Process cache events immediately
     let added = false;
 
-    if (newEvents.length > 0) {
-      this._lastSocialEvents = [...this._lastSocialEvents, ...newEvents];
-
-      const filtered = newEvents.filter((e) => this._matchesSourceMode(e));
-      if (filtered.length > 0) {
-        const newEntries = groupSocialPhotos(filtered);
-
-        for (const entry of newEntries) {
-          this._resolveSender(entry);
-        }
-
-        for (const entry of newEntries) {
-          if (entry.osmId) {
-            const bookmarkName = this.placeNameResolver.resolveBookmark(
-              entry.osmId
-            );
-            if (bookmarkName) {
-              entry.placeName = bookmarkName;
-              entry.placeNameLoading = false;
-            }
-          }
-        }
-
-        this._socialItems = [...this._socialItems, ...newEntries];
-        this._mergeItems();
-
-        void this.placeNameResolver
-          .resolveInBackground(newEntries)
-          .then(() => this._mergeItems());
-
-        added = true;
-      }
+    if (photoResult.cacheEvents.length > 0) {
+      added = this._processPhotoEvents(photoResult.cacheEvents) || added;
+    }
+    if (zapResult.cacheEvents.length > 0) {
+      added =
+        this._processZapEventsIntoTimeline(zapResult.cacheEvents) || added;
     }
 
-    if (newZapEvents.length > 0) {
-      const newZapEntries = this._processZapEvents(
-        newZapEvents,
-        this._userPubkey
-      );
-      if (newZapEntries.length > 0) {
-        this._zapItems = [...this._zapItems, ...newZapEntries];
-        this._mergeItems();
+    // Signal that cached items are ready for display
+    if (added) {
+      this._cacheReadyCallback?.();
+    }
 
-        void this.placeNameResolver
-          .resolveInBackground(newZapEntries)
-          .then(() => this._mergeItems());
+    // Phase 2: Await network events and process them
+    const [networkPhotos, networkZaps] = await Promise.all([
+      photoResult.networkEvents,
+      zapResult.networkEvents,
+    ]);
 
-        added = true;
-      }
+    if (networkPhotos.length > 0) {
+      added = this._processPhotoEvents(networkPhotos) || added;
+    }
+    if (networkZaps.length > 0) {
+      added = this._processZapEventsIntoTimeline(networkZaps) || added;
     }
 
     return added;

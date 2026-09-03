@@ -771,9 +771,10 @@ export default class NostrDataService extends Service {
   }
 
   /**
-   * Fetches kind 360 (Place Photo) events for the activity feed as a Promise
-   * that resolves on EOSE. Loads from the IDB cache first (instant), then from
-   * the network with provenance tracking for trust filtering.
+   * Fetches kind 360 (Place Photo) events for the activity feed.
+   *
+   * Returns `{ cacheEvents, networkEvents }` so the caller can show cached
+   * items instantly while the network request resolves on EOSE.
    *
    * - `'home'` mode: fetches photos authored by the user's followed contacts
    *   (followees), batched by author pubkey.
@@ -783,7 +784,7 @@ export default class NostrDataService extends Service {
    * @param {number} since Unix timestamp (seconds) for the start of the window
    * @param {number} [until] Unix timestamp (seconds) for the end of the window
    * @param {string} [mode='home'] Source mode
-   * @returns {Promise<object[]>} Deduplicated events
+   * @returns {Promise<{cacheEvents: object[], networkEvents: Promise<object[]>}>}
    */
   async fetchActivityPhotos(since, until, mode = 'home') {
     let filters;
@@ -791,62 +792,66 @@ export default class NostrDataService extends Service {
       const pubkeys = this._contactPubkeys
         ? Array.from(this._contactPubkeys)
         : [];
-      if (pubkeys.length === 0) return [];
+      if (pubkeys.length === 0)
+        return { cacheEvents: [], networkEvents: Promise.resolve([]) };
       filters = this._batchAuthorFilters(pubkeys, [360], since, until);
     } else if (mode === 'explore') {
       const filter = { kinds: [360], since };
       if (until !== undefined) filter.until = until;
       filters = [filter];
     } else {
-      return [];
+      return { cacheEvents: [], networkEvents: Promise.resolve([]) };
     }
 
     // 1. Populate the store from the local Nostr IDB cache (instant)
+    const seen = new Set();
+    const cacheResult = [];
+
     const cacheEvents = await this._cachePromise
       .then(() => this.cache.query(filters))
       .catch(() => []);
-
-    const seen = new Set();
-    const all = [];
 
     if (cacheEvents) {
       for (const event of cacheEvents) {
         if (!seen.has(event.id)) {
           seen.add(event.id);
-          all.push(event);
+          cacheResult.push(event);
           this.store.add(event);
         }
       }
     }
 
     // 2. Request fresh events from the network (resolves on EOSE)
-    const networkEvents = await this._fetchEventsWithProvenance(
+    const networkEvents = this._fetchEventsWithProvenance(
       filters,
       '[nostr-data] Error fetching activity photos:'
-    );
-
-    for (const event of networkEvents) {
-      if (!seen.has(event.id)) {
-        seen.add(event.id);
-        all.push(event);
+    ).then((events) => {
+      const result = [];
+      for (const event of events) {
+        if (!seen.has(event.id)) {
+          seen.add(event.id);
+          result.push(event);
+        }
       }
-    }
+      return result;
+    });
 
-    return all;
+    return { cacheEvents: cacheResult, networkEvents };
   }
 
   /**
-   * Fetches incoming zap receipts (kind 9735) where the user is the recipient,
-   * as a Promise that resolves on EOSE. Loads from the IDB cache first, then
-   * from the network.
+   * Fetches incoming zap receipts (kind 9735) where the user is the recipient.
+   *
+   * Returns `{ cacheEvents, networkEvents }` so the caller can show cached
+   * items instantly while the network request resolves on EOSE.
    *
    * @param {string} pubkey The user's Nostr pubkey
    * @param {number} [since] Unix timestamp (seconds) for the start of the window
    * @param {number} [until] Unix timestamp (seconds) for the end of the window
-   * @returns {Promise<object[]>} Deduplicated zap receipt events
+   * @returns {Promise<{cacheEvents: object[], networkEvents: Promise<object[]>}>}
    */
   async fetchIncomingZaps(pubkey, since, until) {
-    if (!pubkey) return [];
+    if (!pubkey) return { cacheEvents: [], networkEvents: Promise.resolve([]) };
 
     const filter = { kinds: [9735], '#p': [pubkey] };
     if (since !== undefined) filter.since = since;
@@ -854,7 +859,7 @@ export default class NostrDataService extends Service {
     const filters = [filter];
 
     const seen = new Set();
-    const all = [];
+    const cacheResult = [];
 
     // 1. IDB cache
     const cacheEvents = await this._cachePromise
@@ -865,26 +870,28 @@ export default class NostrDataService extends Service {
       for (const event of cacheEvents) {
         if (!seen.has(event.id)) {
           seen.add(event.id);
-          all.push(event);
+          cacheResult.push(event);
           this.store.add(event);
         }
       }
     }
 
     // 2. Network (resolves on EOSE)
-    const networkEvents = await this._fetchEventsWithProvenance(
+    const networkEvents = this._fetchEventsWithProvenance(
       filters,
       '[nostr-data] Error fetching incoming zap receipts:'
-    );
-
-    for (const event of networkEvents) {
-      if (!seen.has(event.id)) {
-        seen.add(event.id);
-        all.push(event);
+    ).then((events) => {
+      const result = [];
+      for (const event of events) {
+        if (!seen.has(event.id)) {
+          seen.add(event.id);
+          result.push(event);
+        }
       }
-    }
+      return result;
+    });
 
-    return all;
+    return { cacheEvents: cacheResult, networkEvents };
   }
 
   /**
