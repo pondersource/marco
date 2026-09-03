@@ -21,6 +21,10 @@ export default class ActivityController extends Controller {
     return this.activity.items;
   }
 
+  get isLoading() {
+    return this.activity.isLoading;
+  }
+
   get isConnected() {
     return this.nostrAuth.isConnected;
   }
@@ -29,9 +33,18 @@ export default class ActivityController extends Controller {
     return this.activity.sourceMode;
   }
 
+  get isLoadingMore() {
+    return this.activity.isLoadingMore;
+  }
+
   @action
   setSourceMode(mode) {
     this.activity.setSourceMode(mode);
+  }
+
+  @action
+  loadMore() {
+    this.activity.loadMore();
   }
 
   @action

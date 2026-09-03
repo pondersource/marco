@@ -77,7 +77,7 @@ export default class ActivityPhotoItem extends Component {
           <span class="sender-line">
             <span class="sender-name">{{this.senderDisplayName}}</span>
             {{! template-lint-disable no-whitespace-for-layout }}
-            <span class="action"> added {{this.photoCountText}}</span>
+            <span class="action"> shared {{this.photoCountText}}</span>
           </span>
           <span class="amount">
             <Icon
@@ -116,11 +116,9 @@ export default class ActivityPhotoItem extends Component {
           <div class="context-text">
             <span class="activity-place-name">
               {{#if this.placeName}}
-                {{this.placeName}}
-              {{else if this.placeNameLoading}}
-                <span class="contribution-name-loading">Loading…</span>
-              {{else}}
-                <span class="contribution-name-loading">Unnamed place</span>
+                <span class="place-name-text">{{this.placeName}}</span>
+              {{else if this.placeNameLoading}}{{else}}
+                <span class="place-name-text">Unnamed place</span>
               {{/if}}
             </span>
             <span class="activity-date">{{formatRelativeDate

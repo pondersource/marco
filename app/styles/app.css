@@ -2700,6 +2700,19 @@ button.create-place {
   margin: -1rem -1rem 0;
 }
 
+.activity-load-more {
+  list-style: none;
+  text-align: center;
+  padding: 2rem 1rem 1rem;
+  min-height: 48px;
+}
+
+.activity-load-more-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .activity-item {
   width: 100%;
   text-align: left;
@@ -2853,6 +2866,10 @@ button.create-place {
         white-space: nowrap;
         flex: 1 1 auto;
         min-width: 0;
+
+        & .place-name-text {
+          animation: place-name-fade-in 0.15s ease-out;
+        }
       }
 
       & .activity-date {
@@ -2860,5 +2877,15 @@ button.create-place {
         white-space: nowrap;
       }
     }
+  }
+}
+
+@keyframes place-name-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }

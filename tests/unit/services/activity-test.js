@@ -124,6 +124,19 @@ class MockNostrDataService extends Service {
 
   loadProfiles() {}
   loadActivityPhotos() {}
+  loadMyContributions() {}
+  loadProfile() {}
+  whenContactsLoaded() {
+    return Promise.resolve();
+  }
+
+  async fetchActivityPhotos() {
+    return [];
+  }
+
+  async fetchIncomingZaps() {
+    return [];
+  }
 
   getProfile(pubkey) {
     return this.profiles[pubkey];
@@ -481,12 +494,11 @@ module('Unit | Service | activity', function (hooks) {
     );
   });
 
-  test('setSourceMode re-filters existing events', function (assert) {
+  test('setSourceMode resets and re-filters with fresh 30-day window', async function (assert) {
     const service = this.owner.lookup('service:activity');
     service._userPubkey = USER_PUBKEY;
     service._sourceMode = 'explore';
     service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
-    // In explore mode, isTrustedEvent returns false (no provenance in mock)
     service.nostrData.isTrustedEvent = () => false;
 
     const followedPhoto = makePhotoEvent({
@@ -495,22 +507,21 @@ module('Unit | Service | activity', function (hooks) {
       placeIdentifier: 'osm:node:100',
       created_at: 1000,
     });
-    service._lastSocialEvents = [followedPhoto];
 
-    // In 'explore' mode, _matchesSourceMode returns false (isTrustedEvent is false)
+    service.nostrData.fetchActivityPhotos = async (_since, _until, mode) => {
+      if (mode === 'home') return [followedPhoto];
+      return [];
+    };
+
     service._updateSocialItems([followedPhoto]);
-    assert.strictEqual(
-      service.items.length,
-      0,
-      'no social items in explore mode with untrusted events'
-    );
+    assert.strictEqual(service.items.length, 0, 'no items in explore mode');
 
-    // Switch to 'home' mode — now the followed photo should appear
-    service.setSourceMode('home');
-    assert.strictEqual(
-      service.items.length,
-      1,
-      're-filtered shows followed contact in home mode'
+    await service.setSourceMode('home');
+
+    assert.strictEqual(service._sourceMode, 'home', 'mode switched');
+    assert.ok(
+      service.items.length > 0,
+      'items loaded after switching to home mode'
     );
   });
 
@@ -533,5 +544,235 @@ module('Unit | Service | activity', function (hooks) {
     assert.strictEqual(service.items.length, 0, 'items cleared');
     assert.strictEqual(service._socialItems.length, 0, 'social items cleared');
     assert.strictEqual(service._zapItems.length, 0, 'zap items cleared');
+  });
+
+  test('loadMore fetches older events with until set to old since', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const NOW = Math.floor(Date.now() / 1000);
+    service._since = NOW;
+
+    const recentPhoto = makePhotoEvent({
+      id: 'r1'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: NOW - 100,
+    });
+    service._updateSocialItems([recentPhoto]);
+    assert.ok(service.items.length > 0, 'has initial items');
+
+    const oldPhoto = makePhotoEvent({
+      id: 'old1'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:200',
+      created_at: NOW - 5000,
+    });
+    service.nostrData.fetchActivityPhotos = async (since, until) => {
+      assert.strictEqual(since, NOW - 30 * 24 * 60 * 60, 'since extended');
+      assert.strictEqual(until, NOW, 'until set to old since');
+      return [oldPhoto];
+    };
+
+    await service.loadMore();
+
+    assert.strictEqual(
+      service._since,
+      NOW - 30 * 24 * 60 * 60,
+      '_since extended'
+    );
+    assert.false(service.isLoadingMore, 'isLoadingMore reset');
+    assert.false(service._isLoadingMore, '_isLoadingMore reset');
+    assert.ok(
+      service.items.length >= 2,
+      'new items appended without re-processing'
+    );
+  });
+
+  test('loadMore fetches zaps alongside photos in home mode', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service._sourceMode = 'home';
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const NOW = Math.floor(Date.now() / 1000);
+    service._since = NOW;
+
+    // Seed initial photo so loadMore doesn't bail
+    const recentPhoto = makePhotoEvent({
+      id: 'r5'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: NOW - 100,
+    });
+    service._updateSocialItems([recentPhoto]);
+
+    // Also seed a photo for the zap to reference
+    const zapPhoto = makePhotoEvent({
+      id: PHOTO_EVENT_ID_1,
+      author: USER_PUBKEY,
+      placeIdentifier: 'osm:node:50',
+      created_at: NOW - 200,
+    });
+    service.nostrData.store.add(zapPhoto);
+
+    const oldZapReceipt = makeZapReceiptEvent({
+      zappedEventId: PHOTO_EVENT_ID_1,
+      created_at: NOW - 5000,
+    });
+
+    let zapCallCount = 0;
+    service.nostrData.fetchActivityPhotos = async () => [];
+    service.nostrData.fetchIncomingZaps = async (_pubkey, since, until) => {
+      zapCallCount++;
+      assert.strictEqual(since, NOW - 30 * 24 * 60 * 60, 'zap since matches');
+      assert.strictEqual(until, NOW, 'zap until matches');
+      return [oldZapReceipt];
+    };
+
+    await service.loadMore();
+
+    assert.strictEqual(zapCallCount, 1, 'fetchIncomingZaps called once');
+    assert.ok(service.items.length >= 2, 'zap and photo items both present');
+  });
+
+  test('loadMore exponentially expands window on empty results', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const NOW = Math.floor(Date.now() / 1000);
+    service._since = NOW;
+
+    const recentPhoto = makePhotoEvent({
+      id: 'r2'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: NOW - 100,
+    });
+    service._updateSocialItems([recentPhoto]);
+
+    const callArgs = [];
+    let callCount = 0;
+    service.nostrData.fetchActivityPhotos = async (since, until) => {
+      callArgs.push({ since, until });
+      callCount++;
+      if (callCount < 2) return [];
+      return [
+        makePhotoEvent({
+          id: 'old2'.padEnd(64, '0'),
+          author: SENDER_PUBKEY,
+          placeIdentifier: 'osm:node:300',
+          created_at: NOW - 100000,
+        }),
+      ];
+    };
+
+    await service.loadMore();
+
+    assert.strictEqual(callCount, 2, 'retried with expanding window');
+    assert.strictEqual(callArgs[0].since, NOW - 30 * 24 * 60 * 60);
+    assert.strictEqual(
+      callArgs[1].since,
+      NOW - 30 * 24 * 60 * 60 - 60 * 24 * 60 * 60
+    );
+    assert.ok(service.items.length >= 2, 'events from 2nd call appended');
+  });
+
+  test('loadMore stops at MIN_SINCE floor with clamped final fetch', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const MIN_SINCE = Math.floor(new Date('2026-04-20').getTime() / 1000);
+    service._since = MIN_SINCE + 60 * 24 * 60 * 60;
+
+    const recentPhoto = makePhotoEvent({
+      id: 'r3'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: service._since - 100,
+    });
+    service._updateSocialItems([recentPhoto]);
+
+    let callCount = 0;
+    service.nostrData.fetchActivityPhotos = async () => {
+      callCount++;
+      return [];
+    };
+
+    await service.loadMore();
+
+    // First 30-day window: batchSince = MIN_SINCE + 30d (>= MIN_SINCE, executes)
+    // Second 60-day window: batchSince = MIN_SINCE - 30d (< MIN_SINCE, clamped to MIN_SINCE for final fetch)
+    assert.strictEqual(callCount, 2, 'one normal + one clamped final fetch');
+    assert.false(service.isLoadingMore, 'isLoadingMore reset after exhaustion');
+  });
+
+  test('loadMore guard prevents concurrent calls', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service.nostrData._contactPubkeys = new Set([SENDER_PUBKEY]);
+
+    const NOW = Math.floor(Date.now() / 1000);
+    service._since = NOW;
+
+    const recentPhoto = makePhotoEvent({
+      id: 'r4'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: NOW - 100,
+    });
+    service._updateSocialItems([recentPhoto]);
+
+    let callCount = 0;
+    service.nostrData.fetchActivityPhotos = async () => {
+      callCount++;
+      return [
+        makePhotoEvent({
+          id: 'old3'.padEnd(64, '0'),
+          author: SENDER_PUBKEY,
+          placeIdentifier: 'osm:node:200',
+          created_at: NOW - 5000,
+        }),
+      ];
+    };
+
+    const promise1 = service.loadMore();
+    await service.loadMore();
+    await promise1;
+
+    assert.strictEqual(callCount, 1, 'only one loadMore sequence');
+  });
+
+  test('loadMore does nothing when no items', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service._since = Math.floor(Date.now() / 1000);
+    service.items = [];
+
+    let called = false;
+    service.nostrData.fetchActivityPhotos = async () => {
+      called = true;
+      return [];
+    };
+
+    await service.loadMore();
+
+    assert.false(called, 'no fetch when items is empty');
+  });
+
+  test('stop resets isLoadingMore and isLoading', function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._isLoadingMore = true;
+    service.isLoadingMore = true;
+    service.isLoading = true;
+
+    service.stop();
+
+    assert.false(service.isLoadingMore, 'isLoadingMore reset');
+    assert.false(service._isLoadingMore, '_isLoadingMore reset');
+    assert.false(service.isLoading, 'isLoading reset');
   });
 });

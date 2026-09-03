@@ -18,6 +18,7 @@ export default class ActivityRoute extends Route {
   }
 
   deactivate() {
-    this.activity.stop();
+    // Don't call activity.stop() — keep state alive when navigating to place
+    // details and back. The service's willDestroy() handles final cleanup.
   }
 }

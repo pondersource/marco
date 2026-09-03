@@ -24,10 +24,14 @@ class MockActivityService extends Service {
     },
   ];
   @tracked sourceMode = 'home';
+  @tracked isLoadingMore = false;
+  @tracked isLoading = false;
 
   async load() {}
 
-  setSourceMode() {}
+  async setSourceMode() {}
+
+  loadMore() {}
 
   stop() {
     this.items = [];

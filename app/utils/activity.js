@@ -198,7 +198,7 @@ function buildSocialEntry(events) {
  *
  * This mirrors the time-proximity grouping logic from `groupPhotoContributions`
  * in `utils/contributions.js` but adds author as a grouping dimension so that
- * "Alice added 3 photos to Central Park Café" is one entry.
+ * "Alice shared 3 photos to Central Park Café" is one entry.
  *
  * @param {Array} events Mixed kind 360 / kind 5 events from followed contacts
  * @param {number} [thresholdHours=3] Max gap in hours within a sub-group

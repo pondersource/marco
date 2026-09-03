@@ -12,6 +12,7 @@ import not from 'ember-truth-helpers/helpers/not';
 import eq from 'ember-truth-helpers/helpers/eq';
 import and from 'ember-truth-helpers/helpers/and';
 import restoreScroll from '../modifiers/restore-scroll';
+import observeIntersection from '../modifiers/observe-intersection';
 
 export default class ActivityTimelineComponent extends Component {
   @tracked isNostrConnectModalOpen = false;
@@ -87,6 +88,13 @@ export default class ActivityTimelineComponent extends Component {
                 <ActivityPhotoItem @item={{item}} @onSelect={{@onSelect}} />
               {{/if}}
             {{/each}}
+            <li class="activity-load-more" {{observeIntersection @onLoadMore}}>
+              {{#if @isLoadingMore}}
+                <div class="activity-load-more-spinner">
+                  <Icon @name="loading-ring" @size={{24}} @color="#898989" />
+                </div>
+              {{/if}}
+            </li>
           </ul>
         {{/if}}
       </div>

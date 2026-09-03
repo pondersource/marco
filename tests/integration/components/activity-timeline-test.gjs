@@ -15,6 +15,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
     this.emptyItems = [];
     this.sourceMode = 'home';
     this.onSetSourceMode = () => {};
+    this.isLoadingMore = false;
+    this.onLoadMore = () => {};
   });
 
   test('it renders a loading state', async function (assert) {
@@ -30,6 +32,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.noop}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
@@ -51,6 +55,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.noop}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
@@ -72,6 +78,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.noop}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
@@ -96,6 +104,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.noop}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
@@ -151,6 +161,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.noop}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
@@ -180,6 +192,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.handleBack}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
@@ -201,6 +215,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.noop}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
@@ -230,6 +246,8 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.noop}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
@@ -275,12 +293,14 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.noop}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
 
     assert.dom('.activity-list').exists('items render in explore mode');
-    assert.dom('.activity-list li').exists({ count: 1 });
+    assert.dom('.activity-list .activity-item').exists({ count: 1 });
     assert.dom('.empty-state').doesNotExist('no connect prompt in explore');
   });
 
@@ -299,11 +319,96 @@ module('Integration | Component | activity-timeline', function (hooks) {
           @onBack={{this.noop}}
           @onClose={{this.noop}}
           @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
         />
       </template>
     );
 
     assert.dom('.empty-state').includesText('No activity yet.');
     assert.dom('.empty-state').doesNotIncludeText('Connect');
+  });
+
+  test('load-more sentinel renders when items exist', async function (assert) {
+    this.items = [
+      {
+        type: 'zap',
+        photoEventId: 'photo-1',
+        photo: {
+          url: 'https://x.com/photo.jpg',
+          thumbUrl: 'https://x.com/thumb.jpg',
+        },
+        placeIdentifier: 'osm:node:111',
+        senderPubkey: 'b'.repeat(64),
+        amountSats: 21,
+        message: 'Nice!',
+        createdAt: 2000,
+        senderName: 'Alice',
+        senderAvatar: 'https://x.com/avatar.jpg',
+        senderProfileLoading: false,
+      },
+    ];
+
+    await render(
+      <template>
+        <ActivityTimeline
+          @items={{this.items}}
+          @isLoading={{false}}
+          @isConnected={{true}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
+          @onSelect={{this.noop}}
+          @onBack={{this.noop}}
+          @onClose={{this.noop}}
+          @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
+        />
+      </template>
+    );
+
+    assert.dom('.activity-load-more').exists('sentinel renders');
+  });
+
+  test('load-more spinner shows when isLoadingMore is true', async function (assert) {
+    this.items = [
+      {
+        type: 'zap',
+        photoEventId: 'photo-1',
+        photo: {
+          url: 'https://x.com/photo.jpg',
+          thumbUrl: 'https://x.com/thumb.jpg',
+        },
+        placeIdentifier: 'osm:node:111',
+        senderPubkey: 'b'.repeat(64),
+        amountSats: 21,
+        message: 'Nice!',
+        createdAt: 2000,
+        senderName: 'Alice',
+        senderAvatar: 'https://x.com/avatar.jpg',
+        senderProfileLoading: false,
+      },
+    ];
+    this.isLoadingMore = true;
+
+    await render(
+      <template>
+        <ActivityTimeline
+          @items={{this.items}}
+          @isLoading={{false}}
+          @isConnected={{true}}
+          @sourceMode={{this.sourceMode}}
+          @onSetSourceMode={{this.onSetSourceMode}}
+          @onSelect={{this.noop}}
+          @onBack={{this.noop}}
+          @onClose={{this.noop}}
+          @onNostrConnected={{this.noop}}
+          @isLoadingMore={{this.isLoadingMore}}
+          @onLoadMore={{this.onLoadMore}}
+        />
+      </template>
+    );
+
+    assert.dom('.activity-load-more-spinner').exists('spinner shows');
   });
 });

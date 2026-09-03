@@ -175,7 +175,7 @@ module('Integration | Component | activity-zap-item', function (hooks) {
       .doesNotExist('No loading/fallback text shown');
   });
 
-  test('it shows "Loading…" when placeNameLoading is true', async function (assert) {
+  test('it shows no text when placeNameLoading is true', async function (assert) {
     this.item = new ActivityEntry({
       photoEventId: 'photo-1',
       photo: null,
@@ -197,8 +197,11 @@ module('Integration | Component | activity-zap-item', function (hooks) {
     );
 
     assert
-      .dom('.context-text .contribution-name-loading')
-      .hasText('Loading…', 'Loading state is displayed');
+      .dom('.context-text .activity-place-name')
+      .hasText('', 'No text shown while loading');
+    assert
+      .dom('.context-text .place-name-text')
+      .doesNotExist('No place-name-text shown while loading');
   });
 
   test('it shows "Unnamed place" when not loading and no placeName', async function (assert) {
@@ -223,7 +226,7 @@ module('Integration | Component | activity-zap-item', function (hooks) {
     );
 
     assert
-      .dom('.context-text .contribution-name-loading')
+      .dom('.context-text .place-name-text')
       .hasText('Unnamed place', 'Fallback name is displayed');
   });
 

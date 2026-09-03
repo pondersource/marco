@@ -9,6 +9,8 @@ import {
 } from '../utils/activity';
 
 const SINCE_WINDOW = 30 * 24 * 60 * 60; // 30 days in seconds
+const MIN_SINCE = Math.floor(new Date('2026-04-20').getTime() / 1000);
+const MAX_WINDOW = 960 * 24 * 60 * 60; // 960 days in seconds
 
 /**
  * Orchestrates loading the user's incoming social activity (zaps received on
@@ -16,8 +18,7 @@ const SINCE_WINDOW = 30 * 24 * 60 * 60; // 30 days in seconds
  * timeline.
  *
  * The flow is:
- *   1. Subscribe to `nostrData.store.timeline(...)` for kind 9735 zap receipts
- *      where the user is the recipient (`#p` filter).
+ *   1. Fetch kind 9735 zap receipts where the user is the recipient.
  *   2. Parse each receipt into an `ActivityEntry`, filtering to zaps on the
  *      user's own kind 360 photos.
  *   3. Resolve sender profiles asynchronously via a per-sender `ProfileModel`
@@ -32,9 +33,9 @@ export default class ActivityService extends Service {
 
   @tracked items = [];
   @tracked sourceMode = 'home';
+  @tracked isLoading = false;
+  @tracked isLoadingMore = false;
 
-  _sub = null;
-  _socialSub = null;
   _profileSubs = new Map();
   _userPubkey = null;
   _zapItems = [];
@@ -42,86 +43,96 @@ export default class ActivityService extends Service {
   _lastSocialEvents = [];
   _since = null;
   _sourceMode = 'home';
+  _isLoadingMore = false;
 
   /**
-   * Loads the user's incoming zap receipts and social photo activity, then
-   * subscribes to live updates.
+   * Loads the user's incoming zap receipts and social photo activity.
    *
    * When a Nostr account is connected, zaps received on the user's photos are
    * loaded and the 'home' mode shows photos from followed contacts. When no
    * account is connected, zaps and 'home' mode are skipped, but 'explore'
    * mode still loads photos from trusted relays.
    *
+   * If the initial 30-day window returns no events, the window expands
+   * exponentially (up to 960 days) until events are found or the minimum
+   * timestamp (2026-04-20) is reached.
+   *
    * @param {string|null} pubkey The user's Nostr pubkey, or null
    */
   async load(pubkey) {
+    if (this.items.length > 0 && pubkey) return;
     this._userPubkey = pubkey || null;
     this._since = Math.floor(Date.now() / 1000) - SINCE_WINDOW;
+    this.isLoading = true;
 
-    if (pubkey) {
-      const zapFilters = [{ kinds: [9735], '#p': [pubkey] }];
+    try {
+      if (pubkey) {
+        await this.nostrData.loadMyContributions(pubkey);
+        await this.nostrData.loadProfile(pubkey);
+        await this.nostrData.whenContactsLoaded();
+      }
 
-      console.debug('[activity] Subscribing to zap receipts', {
-        filters: zapFilters,
-        pubkey,
-        activeReadRelays: this.nostrData.activeReadRelays,
-      });
+      this._socialItems = [];
+      this._zapItems = [];
+      this._lastSocialEvents = [];
+      this._mergeItems();
 
-      // Subscribe to zap receipts (kind 9735 where #p = user)
-      this._sub = this.nostrData.store
-        .timeline(zapFilters)
-        .subscribe((events) => {
-          this._updateZapItems(events, pubkey);
-        });
+      const now = Math.floor(Date.now() / 1000);
+      await this._fetchWithBackoff(this._since, now);
+    } finally {
+      this.isLoading = false;
     }
-
-    // Subscribe to all kind 360 photos in the time window. The callback
-    // filters by source mode (e.g. followed contacts only) so we only
-    // show photos from the relevant source.
-    const photoFilters = [{ kinds: [360], since: this._since }];
-    this._socialSub = this.nostrData.store
-      .timeline(photoFilters)
-      .subscribe((events) => {
-        this._lastSocialEvents = events;
-        this._updateSocialItems(events);
-      });
-
-    if (pubkey) {
-      // Ensure the user's kind 360 photo events are in the store first so
-      // enrichWithPhoto can look them up when zap receipts arrive.
-      await this.nostrData.loadMyContributions(pubkey);
-
-      // Then load zap receipts — adding them to the store triggers the
-      // timeline subscription, and by now the photo events are available.
-      await this.nostrData.loadIncomingZaps(pubkey);
-    }
-
-    // Load social photos (contacts dependency handled internally — if
-    // contacts haven't loaded yet, loadActivityPhotos returns early and
-    // the ContactsModel callback re-triggers it when they arrive).
-    await this.nostrData.loadActivityPhotos(this._since, this._sourceMode);
   }
 
   /**
    * Switches the activity source mode (e.g. 'home' for followee photos,
-   * 'explore' for all photos from trusted relays). Re-filters existing
-   * events and re-fetches with the new mode.
+   * 'explore' for all photos from trusted relays). Resets to a fresh
+   * 30-day window and re-fetches both zaps and photos with the new mode.
    *
    * @param {string} mode The new source mode
    */
-  setSourceMode(mode) {
+  async setSourceMode(mode) {
     if (mode === this._sourceMode) return;
     this._sourceMode = mode;
     this.sourceMode = mode;
 
-    // Re-filter existing events with the new mode
-    if (this._lastSocialEvents.length > 0) {
-      this._updateSocialItems(this._lastSocialEvents);
-    }
+    this._since = Math.floor(Date.now() / 1000) - SINCE_WINDOW;
+    this._socialItems = [];
+    this._zapItems = [];
+    this._lastSocialEvents = [];
+    this._mergeItems();
 
-    // Re-fetch with the new mode
-    if (this._since !== null) {
-      this.nostrData.loadActivityPhotos(this._since, mode);
+    this.isLoading = true;
+
+    try {
+      const now = Math.floor(Date.now() / 1000);
+      await this._fetchWithBackoff(this._since, now);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  /**
+   * Loads older events by extending the time window further back.
+   * Only processes newly fetched events — existing items are not re-processed.
+   *
+   * If an empty window is returned (no photos AND no zaps), the window size
+   * doubles (up to 960 days) and the fetch is retried automatically until
+   * events are found or the minimum timestamp (2026-04-20) is reached.
+   *
+   * @returns {Promise<void>}
+   */
+  async loadMore() {
+    if (this._isLoadingMore || !this._since || !this.items.length) return;
+    this._isLoadingMore = true;
+    this.isLoadingMore = true;
+
+    try {
+      const startSince = this._since - SINCE_WINDOW;
+      await this._fetchWithBackoff(startSince, this._since);
+    } finally {
+      this._isLoadingMore = false;
+      this.isLoadingMore = false;
     }
   }
 
@@ -130,14 +141,6 @@ export default class ActivityService extends Service {
    * activity route.
    */
   stop() {
-    if (this._sub) {
-      this._sub.unsubscribe();
-      this._sub = null;
-    }
-    if (this._socialSub) {
-      this._socialSub.unsubscribe();
-      this._socialSub = null;
-    }
     this._cleanupProfileSubs();
     this._zapItems = [];
     this._socialItems = [];
@@ -145,6 +148,9 @@ export default class ActivityService extends Service {
     this.items = [];
     this._userPubkey = null;
     this._since = null;
+    this._isLoadingMore = false;
+    this.isLoadingMore = false;
+    this.isLoading = false;
     this.placeNameResolver.reset();
   }
 
@@ -153,35 +159,141 @@ export default class ActivityService extends Service {
     super.willDestroy(...arguments);
   }
 
-  _updateZapItems(receipts, pubkey) {
+  /**
+   * Fetches photos and zaps for a single time window, processes them, and
+   * appends to the respective item arrays.
+   *
+   * @param {number} batchSince Start of the window (seconds)
+   * @param {number} batchUntil End of the window (seconds)
+   * @returns {Promise<boolean>} True if any events were found
+   */
+  async _fetchAndProcessWindow(batchSince, batchUntil) {
+    const newEvents = await this.nostrData.fetchActivityPhotos(
+      batchSince,
+      batchUntil,
+      this._sourceMode
+    );
+
+    let newZapEvents = [];
+    if (this._sourceMode === 'home' && this._userPubkey) {
+      newZapEvents = await this.nostrData.fetchIncomingZaps(
+        this._userPubkey,
+        batchSince,
+        batchUntil
+      );
+    }
+
+    if (newEvents.length === 0 && newZapEvents.length === 0) {
+      return false;
+    }
+
+    let added = false;
+
+    if (newEvents.length > 0) {
+      this._lastSocialEvents = [...this._lastSocialEvents, ...newEvents];
+
+      const filtered = newEvents.filter((e) => this._matchesSourceMode(e));
+      if (filtered.length > 0) {
+        const newEntries = groupSocialPhotos(filtered);
+
+        for (const entry of newEntries) {
+          this._resolveSender(entry);
+        }
+
+        for (const entry of newEntries) {
+          if (entry.osmId) {
+            const bookmarkName = this.placeNameResolver.resolveBookmark(
+              entry.osmId
+            );
+            if (bookmarkName) {
+              entry.placeName = bookmarkName;
+              entry.placeNameLoading = false;
+            }
+          }
+        }
+
+        this._socialItems = [...this._socialItems, ...newEntries];
+        this._mergeItems();
+
+        void this.placeNameResolver
+          .resolveInBackground(newEntries)
+          .then(() => this._mergeItems());
+
+        added = true;
+      }
+    }
+
+    if (newZapEvents.length > 0) {
+      const newZapEntries = this._processZapEvents(
+        newZapEvents,
+        this._userPubkey
+      );
+      if (newZapEntries.length > 0) {
+        this._zapItems = [...this._zapItems, ...newZapEntries];
+        this._mergeItems();
+
+        void this.placeNameResolver
+          .resolveInBackground(newZapEntries)
+          .then(() => this._mergeItems());
+
+        added = true;
+      }
+    }
+
+    return added;
+  }
+
+  /**
+   * Fetches events with exponential backoff. Starts with a 30-day window
+   * and doubles the window size on each empty result (up to 960 days),
+   * until events are found or MIN_SINCE is reached.
+   *
+   * @param {number} startSince Start of the first window (seconds)
+   * @param {number} startUntil End of the first window (seconds)
+   * @returns {Promise<void>}
+   */
+  async _fetchWithBackoff(startSince, startUntil) {
+    let windowSize = SINCE_WINDOW;
+    let batchSince = startSince;
+    let batchUntil = startUntil;
+
+    while (true) {
+      if (this._since === null) return; // stopped
+
+      // Clamp to MIN_SINCE — this is the final iteration if clamped
+      const isFinal = batchSince < MIN_SINCE;
+      if (isFinal) {
+        batchSince = MIN_SINCE;
+      }
+
+      const found = await this._fetchAndProcessWindow(batchSince, batchUntil);
+      this._since = batchSince;
+
+      if (found || isFinal) break;
+
+      windowSize = Math.min(windowSize * 2, MAX_WINDOW);
+      batchUntil = batchSince;
+      batchSince = batchSince - windowSize;
+    }
+  }
+
+  _processZapEvents(receipts, pubkey) {
     const entries = [];
 
     for (const receipt of receipts) {
       const entry = parseZapReceipt(receipt, pubkey);
       if (!entry) continue;
 
-      // Only keep zaps for the user's own kind 360 photos
       if (!enrichWithPhoto(entry, this.nostrData.store, pubkey)) {
         continue;
       }
 
-      // Resolve sender profile (async, fire-and-forget)
       this._resolveSender(entry);
-
       entries.push(entry);
     }
 
-    // Sort newest-first by created_at
     entries.sort((a, b) => b.createdAt - a.createdAt);
 
-    console.debug('[activity] Zap receipts received', {
-      total: receipts.length,
-      matched: entries.length,
-      pubkey,
-    });
-
-    // Synchronous bookmark lookup — resolve those immediately so the
-    // first render shows bookmarked place names without a "Loading…" flicker.
     for (const entry of entries) {
       if (entry.osmId) {
         const bookmarkName = this.placeNameResolver.resolveBookmark(
@@ -194,27 +306,28 @@ export default class ActivityService extends Service {
       }
     }
 
+    return entries;
+  }
+
+  _updateZapItems(receipts, pubkey) {
+    const entries = this._processZapEvents(receipts, pubkey);
+
     this._zapItems = entries;
     this._mergeItems();
 
-    // Async-resolve remaining entries from the IndexedDB name cache and OSM
-    // cache, then fall through to the network batch for the rest.
     void this.placeNameResolver.resolveInBackground(entries).then(() => {
       this._mergeItems();
     });
   }
 
   _updateSocialItems(events) {
-    // Filter by source mode (e.g. only followed contacts, excluding own photos)
     const filtered = events.filter((e) => this._matchesSourceMode(e));
     const entries = groupSocialPhotos(filtered);
 
-    // Resolve sender profiles (async, fire-and-forget per sender)
     for (const entry of entries) {
       this._resolveSender(entry);
     }
 
-    // Synchronous bookmark lookup for instant first render
     for (const entry of entries) {
       if (entry.osmId) {
         const bookmarkName = this.placeNameResolver.resolveBookmark(
@@ -230,15 +343,11 @@ export default class ActivityService extends Service {
     this._socialItems = entries;
     this._mergeItems();
 
-    // Async-resolve remaining place names from caches → network batch
     void this.placeNameResolver.resolveInBackground(entries).then(() => {
       this._mergeItems();
     });
   }
 
-  /**
-   * Merges `_zapItems` and `_socialItems` into `items`, sorted newest-first.
-   */
   _mergeItems() {
     const all =
       this._sourceMode === 'explore'
@@ -282,10 +391,6 @@ export default class ActivityService extends Service {
     const pubkey = entry.senderPubkey;
     if (!pubkey) return;
 
-    // Set up a ProfileModel subscription for this sender so the entry's
-    // tracked fields update when the profile arrives from cache or network.
-    // The event loader (configured in nostrData) auto-fetches missing kind 0
-    // events from the IDB cache and relays.
     if (!this._profileSubs.has(pubkey)) {
       const sub = this.nostrData.store
         .model(ProfileModel, pubkey)
@@ -295,17 +400,12 @@ export default class ActivityService extends Service {
       this._profileSubs.set(pubkey, sub);
     }
 
-    // Read immediately in case the profile is already cached
     this._applySenderProfile(entry, pubkey);
   }
 
   _applySenderProfile(entry, pubkey) {
-    // Try nostrData's profiles dict first (populated by other parts of the app)
     let profile = this.nostrData.getProfile(pubkey);
 
-    // Fall back to reading the kind 0 event directly from the store. This
-    // handles the re-open case where the event is already in the store from
-    // a previous load but nostrData.profiles wasn't populated by this service.
     if (!profile) {
       const event = this.nostrData.store.getReplaceable(0, pubkey);
       if (event) {
@@ -321,7 +421,6 @@ export default class ActivityService extends Service {
   }
 
   _applyProfileToPubkey(pubkey, profileContent) {
-    // Update all entries matching this sender
     let changed = false;
     for (const entry of this.items) {
       if (entry.senderPubkey === pubkey) {
@@ -334,7 +433,6 @@ export default class ActivityService extends Service {
     }
 
     if (changed) {
-      // Trigger re-render
       this.items = [...this.items];
     }
   }
