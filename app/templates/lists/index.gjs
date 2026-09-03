@@ -11,6 +11,12 @@ export default class ListsIndexTemplate extends Component {
   @service router;
   @service mapUi;
 
+  savedList = {
+    id: 'saved',
+    title: 'Saved',
+    color: 'var(--default-list-color)',
+  };
+
   styleFor(color) {
     const finalColor =
       color ||
@@ -46,7 +52,7 @@ export default class ListsIndexTemplate extends Component {
             <span class="sidebar-header-icon-wrapper">
               <Icon @name="bookmark" @size={{20}} @color="#898989" />
             </span>
-            Collections
+            Saved Places
           </h2>
           <button type="button" class="close-btn" {{on "click" this.close}}>
             <Icon @name="x" @size={{20}} @color="#333" />
@@ -55,6 +61,30 @@ export default class ListsIndexTemplate extends Component {
 
         <div class="sidebar-content">
           <ul class="places-list">
+            <li>
+              <button
+                type="button"
+                class="lists-index-item"
+                {{on "click" (fn this.selectList this.savedList.id)}}
+              >
+                <div class="lists-index-item-left">
+                  {{! template-lint-disable no-inline-styles }}
+                  <span
+                    class="list-color-dot"
+                    style={{this.styleFor this.savedList.color}}
+                  ></span>
+                  <div class="lists-index-name">{{this.savedList.title}}</div>
+                </div>
+                <div class="lists-index-count">
+                  {{#if this.storage.savedPlaces.length}}
+                    {{this.storage.savedPlaces.length}}
+                    places
+                  {{else}}
+                    empty
+                  {{/if}}
+                </div>
+              </button>
+            </li>
             {{#each this.storage.lists as |list|}}
               <li>
                 <button
