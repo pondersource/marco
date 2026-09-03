@@ -394,6 +394,7 @@ module('Integration | Component | search-box', function (hooks) {
     );
 
     // Type "aw" (2 characters)
+    await focus('.search-input');
     await fillIn('.search-input', 'aw');
     await waitFor('.search-results-popover', { timeout: 2000 });
 
