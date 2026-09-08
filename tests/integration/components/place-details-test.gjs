@@ -432,6 +432,15 @@ module('Integration | Component | place-details', function (hooks) {
     assert.dom('[data-test-payment-method="cards"]').hasClass('is-denied');
     assert.dom('[data-test-payment-method="bitcoin"]').exists();
     assert.dom('[data-test-payment-badge="lightning"]').exists();
+
+    const methodNames = Array.from(
+      this.element.querySelectorAll('[data-test-payment-method]')
+    ).map((el) => el.getAttribute('data-test-payment-method'));
+    assert.deepEqual(
+      methodNames,
+      ['cash', 'cards', 'bitcoin'],
+      'renders in stable order: cash, cards, bitcoin'
+    );
   });
 
   test('it does not render payment methods when no payment tags are present on place', async function (assert) {

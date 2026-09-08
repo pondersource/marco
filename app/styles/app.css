@@ -1190,8 +1190,9 @@ abbr[title] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
   height: 24px;
+  border-radius: 4px;
+  outline-offset: 2px;
   color: var(--secondary-text-color);
 }
 
@@ -1203,27 +1204,40 @@ abbr[title] {
   content: '';
   position: absolute;
   top: 50%;
-  left: -2px;
-  right: -2px;
+  left: 50%;
+  width: 28px;
   height: 2px;
   background-color: var(--danger-color);
-  transform: rotate(-45deg);
+  transform: translate(-50%, -50%) rotate(-45deg);
   pointer-events: none;
   border-radius: 1px;
 }
 
 .payment-method-badge {
   position: absolute;
-  bottom: -3px;
-  right: -5px;
-  display: inline-flex;
+  bottom: -2px;
+  right: -6px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary-background-color);
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
-  width: 14px;
-  height: 14px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 15%);
+  background: var(--default-list-color);
+  overflow: hidden;
+  pointer-events: none;
+  font-size: 0;
+  line-height: 0;
+}
+
+.payment-method-badge .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-method-badge .icon svg {
+  display: block;
 }
 
 .btn {

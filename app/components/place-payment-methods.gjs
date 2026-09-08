@@ -1,90 +1,92 @@
 import Component from '@glimmer/component';
 import Icon from './icon';
 import { parsePaymentMethods } from '../utils/payment';
-import { eq } from 'ember-truth-helpers';
+import tooltip from '../modifiers/tooltip';
 
 export default class PlacePaymentMethods extends Component {
   get payment() {
     return parsePaymentMethods(this.args.tags);
   }
 
-  get showCash() {
-    return this.payment.cash !== null;
-  }
-
-  get showCards() {
-    return this.payment.cards !== null;
-  }
-
-  get showBitcoin() {
-    return this.payment.bitcoin.status !== null;
-  }
-
-  get cashTitle() {
-    return this.payment.cash === 'accepted' ? 'Cash accepted' : 'No cash';
-  }
-
-  get cardsTitle() {
-    return this.payment.cards === 'accepted' ? 'Cards accepted' : 'No cards';
-  }
-
-  get bitcoinTitle() {
-    if (this.payment.bitcoin.status === 'denied') {
-      return 'No Bitcoin';
+  get methods() {
+    const list = [];
+    if (this.payment.cash !== null) {
+      const isDenied = this.payment.cash === 'denied';
+      list.push({
+        id: 'cash',
+        isDenied,
+        icon: 'banknote',
+        color: 'currentColor',
+        description: isDenied ? 'No cash' : 'Cash accepted',
+        hasBadge: false,
+      });
     }
-    if (this.payment.bitcoin.lightning) {
-      return 'Bitcoin (Lightning)';
+
+    if (this.payment.cards !== null) {
+      const isDenied = this.payment.cards === 'denied';
+      list.push({
+        id: 'cards',
+        isDenied,
+        icon: 'payment-card',
+        color: 'currentColor',
+        description: isDenied ? 'No cards' : 'Cards accepted',
+        hasBadge: false,
+      });
     }
-    return 'Bitcoin (On-chain)';
+
+    if (this.payment.bitcoin.status !== null) {
+      const isDenied = this.payment.bitcoin.status === 'denied';
+      let description = 'No Bitcoin';
+      if (!isDenied) {
+        description = this.payment.bitcoin.lightning
+          ? 'Bitcoin (Lightning)'
+          : 'Bitcoin (On-chain)';
+      }
+      list.push({
+        id: 'bitcoin',
+        isDenied,
+        icon: 'bitcoin',
+        width: 17,
+        height: 22,
+        color: 'currentColor',
+        description,
+        hasBadge: !isDenied && this.payment.bitcoin.lightning,
+      });
+    }
+
+    return list;
   }
 
   <template>
+    {{! template-lint-disable no-unsupported-role-attributes }}
     {{#if this.payment.hasPaymentInfo}}
       <div class="place-payment-methods" aria-label="Payment methods">
-        {{#if this.showCash}}
+        {{#each this.methods as |method|}}
           <span
-            class="payment-method
-              {{if (eq this.payment.cash 'denied') 'is-denied'}}"
-            data-test-payment-method="cash"
-            title={{this.cashTitle}}
-            aria-label={{this.cashTitle}}
+            class="payment-method {{if method.isDenied 'is-denied'}}"
+            data-test-payment-method={{method.id}}
+            aria-label={{method.description}}
+            aria-description={{method.description}}
+            tabindex="0"
+            {{tooltip}}
           >
-            <Icon @name="banknote" @size={{22}} @color="currentColor" />
-          </span>
-        {{/if}}
-
-        {{#if this.showCards}}
-          <span
-            class="payment-method
-              {{if (eq this.payment.cards 'denied') 'is-denied'}}"
-            data-test-payment-method="cards"
-            title={{this.cardsTitle}}
-            aria-label={{this.cardsTitle}}
-          >
-            <Icon @name="payment-card" @size={{22}} @color="currentColor" />
-          </span>
-        {{/if}}
-
-        {{#if this.showBitcoin}}
-          <span
-            class="payment-method
-              {{if (eq this.payment.bitcoin.status 'denied') 'is-denied'}}"
-            data-test-payment-method="bitcoin"
-            title={{this.bitcoinTitle}}
-            aria-label={{this.bitcoinTitle}}
-          >
-            <Icon @name="bitcoin" @size={{22}} @color="currentColor" />
-            {{#if this.payment.bitcoin.lightning}}
+            <Icon
+              @name={{method.icon}}
+              @size={{22}}
+              @width={{method.width}}
+              @height={{method.height}}
+              @color={{method.color}}
+            />
+            {{#if method.hasBadge}}
               <span
                 class="payment-method-badge"
                 data-test-payment-badge="lightning"
-                title="Lightning"
               >
-                <Icon @name="zap" @size={{10}} @color="#f59e0b" />
+                <Icon @name="zap" @size={{13}} @color="#fff" @filled={{true}} />
               </span>
             {{/if}}
           </span>
-        {{/if}}
+        {{/each}}
       </div>
     {{/if}}
   </template>
