@@ -1175,6 +1175,71 @@ abbr[title] {
   margin-top: 1.5rem;
 }
 
+.place-payment-methods {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--divider-color);
+  color: var(--secondary-text-color);
+}
+
+.payment-method {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  border-radius: 4px;
+  outline-offset: 2px;
+  color: var(--secondary-text-color);
+}
+
+.payment-method.is-denied {
+  opacity: 0.5;
+}
+
+.payment-method.is-denied::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 2px;
+  background-color: var(--danger-color);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+.payment-method-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--default-list-color);
+  overflow: hidden;
+  pointer-events: none;
+  font-size: 0;
+  line-height: 0;
+}
+
+.payment-method-badge .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-method-badge .icon svg {
+  display: block;
+}
+
 .btn {
   /* TODO: remove this scoped rule in favor of a global box-sizing reset
      (e.g. `*, *::before, *::after { box-sizing: border-box; }`) at the top

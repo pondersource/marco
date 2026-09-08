@@ -113,6 +113,7 @@ import molarTooth from '@waysidemapping/pinhead/dist/icons/molar_tooth.svg?raw';
 import needleAndSpoolOfThread from '@waysidemapping/pinhead/dist/icons/needle_and_spool_of_thread.svg?raw';
 import openBook from '@waysidemapping/pinhead/dist/icons/open_book.svg?raw';
 import palace from '@waysidemapping/pinhead/dist/icons/palace.svg?raw';
+import paymentCard from '@waysidemapping/pinhead/dist/icons/payment_card.svg?raw';
 import parkingP from '@waysidemapping/pinhead/dist/icons/p_wide.svg?raw';
 import personCricketBattingAtCricketBall from '@waysidemapping/pinhead/dist/icons/person_cricket_batting_at_cricket_ball.svg?raw';
 import personBoardingTramWithDestinationDisplayAndPantographOnTramTrack from '@waysidemapping/pinhead/dist/icons/person_boarding_tram_with_destination_display_and_pantograph_on_tram_track.svg?raw';
@@ -148,6 +149,7 @@ import womensAndMensRestroomSymbol from '@waysidemapping/pinhead/dist/icons/wome
 /*
  * Custom/local icons
  */
+import bitcoin from '../icons/bitcoin.svg?raw';
 import loadingRing from '../icons/270-ring.svg?raw';
 import nostrich from '../icons/nostrich-2.svg?raw';
 import remotestorage from '../icons/remotestorage.svg?raw';
@@ -167,6 +169,7 @@ const ICONS = {
   'badge-shield-with-fire': badgeShieldWithFire,
   'beach-umbrella-in-ground': beachUmbrellaInGround,
   'beer-mug-with-foam': beerMugWithFoam,
+  bitcoin,
   bookmark,
   'boxing-glove-up': boxingGloveUp,
   'burger-and-drink-cup-with-straw': burgerAndDrinkCupWithStraw,
@@ -246,6 +249,7 @@ const ICONS = {
   nostrich,
   'open-book': openBook,
   palace,
+  'payment-card': paymentCard,
   'person-cricket-batting-at-cricket-ball': personCricketBattingAtCricketBall,
   'person-boarding-tram-with-destination-display-and-pantograph-on-tram-track':
     personBoardingTramWithDestinationDisplayAndPantographOnTramTrack,
@@ -303,7 +307,10 @@ const ICONS = {
 };
 
 const FILLED_ICONS = [
+  'banknote',
+  'bitcoin',
   'fork-and-knife',
+  'payment-card',
   'wikipedia',
   'whatsapp',
   'cup-and-saucer',
