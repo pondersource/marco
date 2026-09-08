@@ -411,4 +411,41 @@ module('Integration | Component | place-details', function (hooks) {
 
     assert.dom('button.btn-link').doesNotExist();
   });
+
+  test('it renders payment methods when payment tags are present on place', async function (assert) {
+    const place = {
+      title: 'Coffee Place',
+      lat: 52.52,
+      lon: 13.4,
+      osmTags: {
+        'payment:cash': 'yes',
+        'payment:cards': 'no',
+        'currency:XBT': 'yes',
+        'payment:lightning': 'yes',
+      },
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    assert.dom('.place-payment-methods').exists();
+    assert.dom('[data-test-payment-method="cash"]').exists();
+    assert.dom('[data-test-payment-method="cards"]').hasClass('is-denied');
+    assert.dom('[data-test-payment-method="bitcoin"]').exists();
+    assert.dom('[data-test-payment-badge="lightning"]').exists();
+  });
+
+  test('it does not render payment methods when no payment tags are present on place', async function (assert) {
+    const place = {
+      title: 'Simple Place',
+      lat: 52.52,
+      lon: 13.4,
+      osmTags: {
+        amenity: 'bench',
+      },
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    assert.dom('.place-payment-methods').doesNotExist();
+  });
 });

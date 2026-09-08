@@ -15,6 +15,7 @@ import NostrConnect from './nostr-connect';
 import Modal from './modal';
 import PhotoCarousel from './photo-carousel';
 import PhotoGallery from './photo-gallery';
+import PlacePaymentMethods from './place-payment-methods';
 
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
@@ -466,6 +467,8 @@ export default class PlaceDetails extends Component {
           </button>
         {{/if}}
       </div>
+
+      <PlacePaymentMethods @tags={{this.tags}} />
 
       <div class="meta-info">
 

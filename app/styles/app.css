@@ -1175,6 +1175,57 @@ abbr[title] {
   margin-top: 1.5rem;
 }
 
+.place-payment-methods {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--divider-color);
+  color: var(--secondary-text-color);
+}
+
+.payment-method {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--secondary-text-color);
+}
+
+.payment-method.is-denied {
+  opacity: 0.5;
+}
+
+.payment-method.is-denied::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  right: -2px;
+  height: 2px;
+  background-color: var(--danger-color);
+  transform: rotate(-45deg);
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+.payment-method-badge {
+  position: absolute;
+  bottom: -3px;
+  right: -5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-background-color);
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 15%);
+}
+
 .btn {
   /* TODO: remove this scoped rule in favor of a global box-sizing reset
      (e.g. `*, *::before, *::after { box-sizing: border-box; }`) at the top
