@@ -118,7 +118,7 @@ module('Integration | Component | place-payment-methods', function (hooks) {
       .doesNotHaveAttribute('title');
     assert
       .dom('[data-test-payment-method="bitcoin"]')
-      .hasAttribute('aria-description', 'Bitcoin (Lightning)');
+      .hasAttribute('aria-description', 'Bitcoin (Lightning) accepted');
     assert
       .dom('[data-test-payment-method="bitcoin"] > .icon')
       .hasAttribute('style', /width:17px;height:22px;color:currentColor/);

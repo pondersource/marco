@@ -39,8 +39,8 @@ export default class PlacePaymentMethods extends Component {
       let description = 'No Bitcoin';
       if (!isDenied) {
         description = this.payment.bitcoin.lightning
-          ? 'Bitcoin (Lightning)'
-          : 'Bitcoin (On-chain)';
+          ? 'Bitcoin (Lightning) accepted'
+          : 'Bitcoin (On-chain) accepted';
       }
       list.push({
         id: 'bitcoin',
