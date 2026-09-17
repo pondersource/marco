@@ -24,10 +24,6 @@ export default class SearchRoute extends Route {
 
     // Trigger the background task to fetch results
     controller.fetchResultsTask.perform(model);
-
-    // Store current search params to allow "Up" navigation from place details
-    const { q, category, lat, lon } = this.paramsFor('search');
-    this.mapUi.currentSearch = { q, category, lat, lon };
   }
 
   resetController(controller, isExiting) {

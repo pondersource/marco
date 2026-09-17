@@ -176,6 +176,18 @@ export default class SearchController extends Controller {
       return saved || p;
     });
 
+    // A search with results is a restorable context (e.g. for "up" navigation
+    // from place details). Empty searches are intentionally not restorable, so
+    // they don't reopen an invisible "no results" drawer later on.
+    if (pois.length > 0) {
+      this.mapUi.currentSearch = {
+        q: params.q,
+        category: params.category,
+        lat: params.lat,
+        lon: params.lon,
+      };
+    }
+
     const targetName = params.selected || params.q;
 
     if (targetName && pois.length > 0) {

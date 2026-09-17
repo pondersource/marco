@@ -129,4 +129,47 @@ module('Acceptance | navigation', function (hooks) {
       backStub.restore();
     }
   });
+
+  test('an empty search is not restored when navigating back from a place', async function (assert) {
+    const mapUi = this.owner.lookup('service:map-ui');
+
+    // Nearby search that yields no results, but with a fetchable place
+    this.owner.register(
+      'service:osm',
+      class extends Service {
+        async getNearbyPois() {
+          return [];
+        }
+        async fetchOsmObject(id, type) {
+          return {
+            osmId: id,
+            osmType: type,
+            lat: 1,
+            lon: 1,
+            osmTags: { name: 'Test Place', amenity: 'cafe' },
+            title: 'Test Place',
+          };
+        }
+      }
+    );
+
+    await visit('/search?lat=1&lon=1');
+    assert.strictEqual(
+      mapUi.currentSearch,
+      null,
+      'Empty search is not restorable'
+    );
+
+    // Simulate opening a place while the (empty) search route is active
+    mapUi.returnToSearch = true;
+
+    await visit('/place/osm:node:123');
+    await click('.back-btn');
+
+    assert.strictEqual(
+      currentURL(),
+      '/',
+      'Back navigation does not reopen the empty search'
+    );
+  });
 });
