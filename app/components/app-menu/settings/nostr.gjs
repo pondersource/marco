@@ -20,6 +20,7 @@ const stripProtocol = (url) => (url ? url.replace(/^wss?:\/\//, '') : '');
 export default class AppMenuSettingsNostr extends Component {
   @service settings;
   @service nostrData;
+  @service nostrAuth;
   @service toast;
 
   @tracked newReadRelay = '';
@@ -367,109 +368,111 @@ export default class AppMenuSettingsNostr extends Component {
           {{/if}}
         </div>
 
-        <div class="form-group">
-          <label for="new-write-relay">Write Relays</label>
-          <ul class="relay-list">
-            {{#each this.writeRelaysForDisplay as |relay|}}
-              <li>
-                <span>{{stripProtocol relay.url}}</span>
-                <div class="relay-actions">
-                  <button
-                    type="button"
-                    class="btn-remove-relay"
-                    aria-label="Remove"
-                    aria-description={{if
-                      relay.isRequired
-                      "Required relays cannot be removed"
-                      "Remove relay"
-                    }}
-                    disabled={{relay.isRequired}}
-                    {{tooltip}}
-                    {{on "click" (fn this.removeWriteRelay relay.url)}}
-                  >
-                    <Icon @name="x" @size={{14}} @color="currentColor" />
-                  </button>
-                </div>
-              </li>
-            {{/each}}
-          </ul>
-          <div class="add-relay-input">
-            <input
-              id="new-write-relay"
-              type="text"
-              class="form-control"
-              placeholder="relay.example.com"
-              value={{this.newWriteRelay}}
-              {{on "input" this.updateNewWriteRelay}}
-              {{on "keydown" this.handleWriteRelayKeydown}}
-            />
-            <button
-              type="button"
-              class="btn btn-secondary"
-              {{on "click" this.addWriteRelay}}
-            >Add</button>
-          </div>
-          {{#if this.hasWriteOverrides}}
-            <button
-              type="button"
-              class="btn-link reset-relays"
-              {{on "click" this.resetWriteRelays}}
-            >
-              Reset to Defaults
-            </button>
-          {{/if}}
-        </div>
-
-        <div class="form-group">
-          <label for="nostr-media-server">Media server</label>
-          <select
-            id="nostr-media-server"
-            class="form-control"
-            {{on "change" (fn @onChange "nostrMediaServer")}}
-          >
-            {{#each this.mediaServerOptions as |server|}}
-              <option
-                value={{server}}
-                selected={{if
-                  (eq server this.settings.nostrMediaServer)
-                  "selected"
-                }}
-              >
-                {{server}}
-              </option>
-            {{/each}}
-          </select>
-        </div>
-
-        {{#if this.hasMultipleMediaServers}}
+        {{#if this.nostrAuth.isConnected}}
           <div class="form-group">
-            <label for="nostr-photo-fallback-uploads">Upload photos to fallback
-              servers</label>
+            <label for="new-write-relay">Write Relays</label>
+            <ul class="relay-list">
+              {{#each this.writeRelaysForDisplay as |relay|}}
+                <li>
+                  <span>{{stripProtocol relay.url}}</span>
+                  <div class="relay-actions">
+                    <button
+                      type="button"
+                      class="btn-remove-relay"
+                      aria-label="Remove"
+                      aria-description={{if
+                        relay.isRequired
+                        "Required relays cannot be removed"
+                        "Remove relay"
+                      }}
+                      disabled={{relay.isRequired}}
+                      {{tooltip}}
+                      {{on "click" (fn this.removeWriteRelay relay.url)}}
+                    >
+                      <Icon @name="x" @size={{14}} @color="currentColor" />
+                    </button>
+                  </div>
+                </li>
+              {{/each}}
+            </ul>
+            <div class="add-relay-input">
+              <input
+                id="new-write-relay"
+                type="text"
+                class="form-control"
+                placeholder="relay.example.com"
+                value={{this.newWriteRelay}}
+                {{on "input" this.updateNewWriteRelay}}
+                {{on "keydown" this.handleWriteRelayKeydown}}
+              />
+              <button
+                type="button"
+                class="btn btn-secondary"
+                {{on "click" this.addWriteRelay}}
+              >Add</button>
+            </div>
+            {{#if this.hasWriteOverrides}}
+              <button
+                type="button"
+                class="btn-link reset-relays"
+                {{on "click" this.resetWriteRelays}}
+              >
+                Reset to Defaults
+              </button>
+            {{/if}}
+          </div>
+
+          <div class="form-group">
+            <label for="nostr-media-server">Media server</label>
             <select
-              id="nostr-photo-fallback-uploads"
+              id="nostr-media-server"
               class="form-control"
-              {{on "change" (fn @onChange "nostrPhotoFallbackUploads")}}
+              {{on "change" (fn @onChange "nostrMediaServer")}}
             >
-              <option
-                value="true"
-                selected={{if
-                  this.settings.nostrPhotoFallbackUploads
-                  "selected"
-                }}
-              >
-                Yes
-              </option>
-              <option
-                value="false"
-                selected={{unless
-                  this.settings.nostrPhotoFallbackUploads
-                  "selected"
-                }}
-              >
-                No
-              </option>
+              {{#each this.mediaServerOptions as |server|}}
+                <option
+                  value={{server}}
+                  selected={{if
+                    (eq server this.settings.nostrMediaServer)
+                    "selected"
+                  }}
+                >
+                  {{server}}
+                </option>
+              {{/each}}
             </select>
           </div>
+
+          {{#if this.hasMultipleMediaServers}}
+            <div class="form-group">
+              <label for="nostr-photo-fallback-uploads">Upload photos to
+                fallback servers</label>
+              <select
+                id="nostr-photo-fallback-uploads"
+                class="form-control"
+                {{on "change" (fn @onChange "nostrPhotoFallbackUploads")}}
+              >
+                <option
+                  value="true"
+                  selected={{if
+                    this.settings.nostrPhotoFallbackUploads
+                    "selected"
+                  }}
+                >
+                  Yes
+                </option>
+                <option
+                  value="false"
+                  selected={{unless
+                    this.settings.nostrPhotoFallbackUploads
+                    "selected"
+                  }}
+                >
+                  No
+                </option>
+              </select>
+            </div>
+          {{/if}}
         {{/if}}
 
         <div class="form-group">
