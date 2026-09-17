@@ -72,6 +72,9 @@ export default class ApplicationComponent extends Component {
         } else {
           this.router.transitionTo('index');
         }
+      } else if (name === 'search' && this.mapUi.searchResults.length === 0) {
+        // An empty search has no markers worth keeping, so clear the route
+        this.router.replaceWith('index');
       }
     }
   }

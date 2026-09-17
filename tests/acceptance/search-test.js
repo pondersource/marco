@@ -1,5 +1,5 @@
 import { module, test } from 'qunit';
-import { visit, currentURL } from '@ember/test-helpers';
+import { visit, currentURL, click } from '@ember/test-helpers';
 import { setupApplicationTest } from 'marco/tests/helpers';
 import Service from '@ember/service';
 
@@ -341,5 +341,47 @@ module('Acceptance | search', function (hooks) {
     assert
       .dom('.search-input')
       .hasValue('', 'Search input is cleared on transitioning to index');
+  });
+
+  test('closing the drawer clears the search route when there are no results', async function (assert) {
+    class MockPhotonService extends Service {
+      async search() {
+        return [];
+      }
+    }
+    this.owner.register('service:photon', MockPhotonService);
+
+    class MockStorageService extends Service {
+      savedPlaces = [];
+      findPlaceById() {
+        return null;
+      }
+      isPlaceSaved() {
+        return false;
+      }
+      rs = { on: () => {} };
+      placesInView = [];
+      loadPlacesInBounds() {
+        return Promise.resolve();
+      }
+    }
+    this.owner.register('service:storage', MockStorageService);
+
+    const mapUi = this.owner.lookup('service:map-ui');
+
+    await visit('/search?q=nowhere');
+
+    assert.dom('.empty-state').hasText('No results found.');
+    assert.strictEqual(
+      mapUi.currentSearch,
+      null,
+      'An empty search is not kept as a restorable search context'
+    );
+
+    await click('.close-btn');
+
+    assert.dom('.sidebar').doesNotExist('Sidebar should be closed');
+    assert.strictEqual(currentURL(), '/', 'Search route is cleared');
+    assert.strictEqual(mapUi.searchResults.length, 0, 'Results are cleared');
   });
 });

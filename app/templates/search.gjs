@@ -18,14 +18,20 @@ export default class SearchTemplate extends Component {
       this.mapUi.showSidebar();
       this.mapUi.preventNextZoom = true;
       // We don't need to manually set currentSearch here because
-      // it was already set in the route's setupController
+      // it was already set in the search controller
       this.router.transitionTo('place', place);
     }
   }
 
   @action
   close() {
-    this.mapUi.hideSidebar();
+    // With no results there is nothing to keep around (no map markers), so
+    // dismissing the drawer clears the search route entirely.
+    if (this.mapUi.searchResults.length === 0) {
+      this.router.replaceWith('index');
+    } else {
+      this.mapUi.hideSidebar();
+    }
   }
 
   <template>
