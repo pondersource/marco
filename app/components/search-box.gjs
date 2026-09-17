@@ -270,6 +270,7 @@ export default class SearchBoxComponent extends Component {
             (or
               (eq this.mapUi.loadingState.type "text")
               (eq this.mapUi.loadingState.type "category")
+              (eq this.mapUi.loadingState.type "nearby")
             )
           }}
             <Icon @name="loading-ring" @size={{20}} />

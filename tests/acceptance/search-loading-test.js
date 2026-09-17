@@ -54,7 +54,19 @@ class MockOsmService extends Service {
     return [];
   }
   async getNearbyPois() {
-    return [];
+    return new Promise((resolve) => {
+      osmResolve = () => {
+        resolve([
+          {
+            title: 'Nearby Place',
+            lat: 1,
+            lon: 1,
+            osmId: '999',
+            osmType: 'node',
+          },
+        ]);
+      };
+    });
   }
 }
 
@@ -68,7 +80,7 @@ module('Acceptance | search loading', function (hooks) {
     this.owner.register('service:osm', MockOsmService);
   });
 
-  test('search shows loading indicator but nearby search does not', async function (assert) {
+  test('search shows loading indicator for text, category and nearby searches', async function (assert) {
     const mapUi = this.owner.lookup('service:map-ui');
 
     // 1. Text Search
@@ -121,11 +133,25 @@ module('Acceptance | search loading', function (hooks) {
     );
 
     // 3. Nearby Search
-    await visit('/search?lat=1&lon=1');
+    const nearbyPromise = visit('/search?category=nearby&lat=1&lon=1');
+    await new Promise((r) => setTimeout(r, 10));
+
+    assert.deepEqual(
+      mapUi.loadingState,
+      { type: 'nearby', value: 'nearby' },
+      'Loading state is set for nearby search'
+    );
+
+    // Resolve the manual promise
+    osmResolve();
+
+    await nearbyPromise;
+    await settled();
+
     assert.strictEqual(
       mapUi.loadingState,
       null,
-      'Loading state is NOT set for nearby search'
+      'Loading state is cleared after nearby search'
     );
   });
 

@@ -22,6 +22,9 @@ module('Integration | Component | category-chips', function (hooks) {
     // Check for some expected labels
     assert.dom(this.element).includesText('Restaurants');
     assert.dom(this.element).includesText('Coffee');
+
+    // Nearby is an internal-only category and must not appear as a chip
+    assert.dom(this.element).doesNotIncludeText('Nearby');
   });
 
   test('clicking a chip triggers the @onSelect action', async function (assert) {

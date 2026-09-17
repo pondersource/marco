@@ -21,6 +21,7 @@ import { Style, Circle, Fill, Stroke, Icon } from 'ol/style.js';
 import { apply } from 'ol-mapbox-style';
 import { getIcon } from '../utils/icons';
 import { getIconNameForTags } from '../utils/osm-icons';
+import { NEARBY_CATEGORY } from '../utils/poi-categories';
 
 export default class MapComponent extends Component {
   @service osm;
@@ -1369,7 +1370,7 @@ export default class MapComponent extends Component {
       lat: lat.toFixed(6),
       lon: lon.toFixed(6),
       q: null, // Clear q to force spatial search
-      category: null, // Clear category to force spatial search
+      category: NEARBY_CATEGORY.id, // Represent nearby as a first-class category
       selected: selectedFeatureName || null,
     };
 

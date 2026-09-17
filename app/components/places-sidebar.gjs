@@ -11,6 +11,7 @@ import PlaceDetails from './place-details';
 import Icon from './icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import { NEARBY_CATEGORY } from '../utils/poi-categories';
 import restoreScroll from '../modifiers/restore-scroll';
 
 export default class PlacesSidebar extends Component {
@@ -150,7 +151,11 @@ export default class PlacesSidebar extends Component {
 
   get isNearbySearch() {
     const qp = this.router.currentRoute.queryParams;
-    return !qp.q && !qp.category && qp.lat && qp.lon;
+    // New searches use ?category=nearby; keep supporting legacy lat/lon-only URLs
+    return (
+      qp.category === NEARBY_CATEGORY.id ||
+      (!qp.q && !qp.category && qp.lat && qp.lon)
+    );
   }
 
   get hasHeaderPhoto() {

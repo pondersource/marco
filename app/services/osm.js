@@ -196,7 +196,7 @@ out center;
 
   async getCategoryPois(bounds, categoryId, lat, lon) {
     const category = getCategoryById(categoryId);
-    if (!category || !bounds) return [];
+    if (!category || !Array.isArray(category.filter) || !bounds) return [];
 
     const queryKey = lat && lon ? `cat:${categoryId}:${lat}:${lon}` : null;
 

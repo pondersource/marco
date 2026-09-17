@@ -277,6 +277,9 @@ module('Acceptance | search', function (hooks) {
       async getCategoryPois() {
         return [];
       }
+      async getNearbyPois() {
+        return [];
+      }
     }
     this.owner.register('service:osm', MockOsmService);
 
@@ -336,7 +339,13 @@ module('Acceptance | search', function (hooks) {
         'Search input is populated with mapped category label'
       );
 
-    // 3. Go back to index
+    // 3. Visit a nearby search URL
+    await visit('/search?category=nearby&lat=52.52&lon=13.405');
+    assert
+      .dom('.search-input')
+      .hasValue('Nearby', 'Search input is populated with the Nearby label');
+
+    // 4. Go back to index
     await visit('/');
     assert
       .dom('.search-input')
@@ -382,6 +391,65 @@ module('Acceptance | search', function (hooks) {
 
     assert.dom('.sidebar').doesNotExist('Sidebar should be closed');
     assert.strictEqual(currentURL(), '/', 'Search route is cleared');
+    assert.strictEqual(mapUi.searchResults.length, 0, 'Results are cleared');
+  });
+
+  test('nearby search state is shown in the search box and can be dismissed', async function (assert) {
+    class MockOsmService extends Service {
+      cancelAll() {}
+      async getNearbyPois() {
+        return [
+          {
+            title: 'Nearby Cafe',
+            lat: 52.521,
+            lon: 13.406,
+            osmId: '789',
+            osmType: 'N',
+          },
+        ];
+      }
+    }
+    this.owner.register('service:osm', MockOsmService);
+
+    class MockStorageService extends Service {
+      savedPlaces = [];
+      findPlaceById() {
+        return null;
+      }
+      isPlaceSaved() {
+        return false;
+      }
+      rs = { on: () => {} };
+      placesInView = [];
+      loadPlacesInBounds() {
+        return Promise.resolve();
+      }
+    }
+    this.owner.register('service:storage', MockStorageService);
+
+    const mapUi = this.owner.lookup('service:map-ui');
+
+    await visit('/search?category=nearby&lat=52.52&lon=13.405');
+
+    assert.dom('.sidebar-header h2').includesText('Nearby');
+    assert.dom('.search-input').hasValue('Nearby', 'Input indicates Nearby');
+
+    // Closing the sidebar keeps the search (and its markers) active, so the
+    // search box must still indicate the Nearby search and offer dismissal.
+    await click('.close-btn');
+
+    assert.ok(
+      currentURL().includes('category=nearby'),
+      'Still on the nearby search route with markers visible'
+    );
+    assert
+      .dom('.search-input')
+      .hasValue('Nearby', 'Input still indicates Nearby after closing sidebar');
+    assert.dom('.search-clear-btn').exists('Clear button remains available');
+
+    await click('.search-clear-btn');
+
+    assert.strictEqual(currentURL(), '/', 'Dismissing nearby clears the route');
     assert.strictEqual(mapUi.searchResults.length, 0, 'Results are cleared');
   });
 });

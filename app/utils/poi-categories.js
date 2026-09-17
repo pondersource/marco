@@ -63,6 +63,18 @@ export const POI_CATEGORIES = [
   },
 ];
 
+// Special-cased category for spatial "Nearby" searches (triggered by clicking
+// the map). It intentionally lives outside POI_CATEGORIES so it does not show
+// up as a quick-search chip or in the search autocomplete. Like other
+// categories it is represented in the URL as ?category=nearby, which lets the
+// UI display its label and offer a clear button.
+export const NEARBY_CATEGORY = {
+  id: 'nearby',
+  label: 'Nearby',
+  icon: 'target',
+};
+
 export function getCategoryById(id) {
+  if (id === NEARBY_CATEGORY.id) return NEARBY_CATEGORY;
   return POI_CATEGORIES.find((c) => c.id === id);
 }
