@@ -119,6 +119,27 @@ export default class ActivityService extends Service {
       this.isLoading = false;
       this._cacheReadyCallback = null;
     }
+
+    void this.retryUnresolvedProfiles();
+  }
+
+  /**
+   * Re-requests kind 0 metadata for senders whose profiles could not be
+   * resolved. Called when the activity view is re-entered or the source mode
+   * changes, so a profile published after the feed was first loaded can still
+   * show up in the same session.
+   *
+   * @returns {Promise<void>}
+   */
+  async retryUnresolvedProfiles() {
+    const pubkeys = new Set();
+    for (const item of this.items) {
+      if (item.senderPubkey && item.senderProfileLoading) {
+        pubkeys.add(item.senderPubkey);
+      }
+    }
+    if (pubkeys.size === 0) return;
+    await this.nostrData.refreshProfiles([...pubkeys]);
   }
 
   /**

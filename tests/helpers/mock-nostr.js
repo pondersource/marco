@@ -62,6 +62,10 @@ export class MockNostrDataService extends Service {
     return this.profiles[pubkey];
   }
 
+  refreshProfiles() {
+    return Promise.resolve();
+  }
+
   get activeReadRelays() {
     return [];
   }

@@ -31,6 +31,8 @@ class MockActivityService extends Service {
 
   async setSourceMode() {}
 
+  async retryUnresolvedProfiles() {}
+
   loadMore() {}
 
   stop() {

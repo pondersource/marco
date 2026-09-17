@@ -95,6 +95,10 @@ export default class NostrDataService extends Service {
   _contributionsSub = null;
   _deletionsSub = null;
   _profileModelSubs = new Map();
+  // Pubkeys whose profiles have already been requested at least once. Used to
+  // distinguish a first lookup (handled by the ProfileModel loader) from a
+  // retry on place re-entry, so we don't duplicate the initial request.
+  _attemptedProfilePubkeys = new Set();
 
   _zapReceiptsSub = null;
   _zapReceiptsNetworkSub = null;
@@ -922,6 +926,8 @@ export default class NostrDataService extends Service {
       (pk) => pk && !this._profileModelSubs.has(pk)
     );
 
+    const retryPubkeys = [];
+
     for (const pubkey of newPubkeys) {
       const sub = this.store
         .model(ProfileModel, pubkey)
@@ -929,7 +935,60 @@ export default class NostrDataService extends Service {
           this.profiles = { ...this.profiles, [pubkey]: profileContent };
         });
       this._profileModelSubs.set(pubkey, sub);
+
+      // If we already tried this pubkey before (e.g. selecting the same place
+      // again) and it still isn't in the store, explicitly re-request it. The
+      // ProfileModel loader only runs once per cached model, so without this a
+      // profile published after the first lookup would never be retried.
+      if (
+        this._attemptedProfilePubkeys.has(pubkey) &&
+        !this.store.getReplaceable(0, pubkey)
+      ) {
+        retryPubkeys.push(pubkey);
+      }
+      this._attemptedProfilePubkeys.add(pubkey);
     }
+
+    if (retryPubkeys.length > 0) {
+      void this.refreshProfiles(retryPubkeys);
+    }
+  }
+
+  /**
+   * Re-requests kind 0 metadata for the given pubkeys from the directory and
+   * active read relays, adding any results to the event store.
+   *
+   * Used to retry profiles that were not available on a first lookup (e.g. the
+   * author published their metadata after their content was loaded, or a
+   * cached applesauce model prevented the fallback loader from running again).
+   * Inserting the events into the store notifies any active `ProfileModel`
+   * subscriptions, so callers don't need to manage subscriptions themselves.
+   *
+   * @param {string[]} pubkeys Pubkeys to refresh
+   * @returns {Promise<void>}
+   */
+  async refreshProfiles(pubkeys) {
+    const unique = [...new Set(pubkeys)].filter(Boolean);
+    if (unique.length === 0) return;
+
+    const relays = uniqNormalizedRelays([
+      ...DIRECTORY_RELAYS,
+      ...this.activeReadRelays,
+    ]);
+    const filters = this._batchAuthorFilters(unique, [0]);
+
+    await new Promise((resolve) => {
+      this.nostrRelay.pool
+        .request(relays, filters)
+        .pipe(timeout({ first: 15_000 }))
+        .subscribe({
+          next: (event) => {
+            this.store.add(event);
+          },
+          error: () => resolve(),
+          complete: () => resolve(),
+        });
+    });
   }
 
   getProfile(pubkey) {
@@ -1257,6 +1316,7 @@ export default class NostrDataService extends Service {
     super.willDestroy(...arguments);
     this._cleanupSubscriptions();
     this._clearProfileSubs();
+    this._attemptedProfilePubkeys.clear();
 
     if (this._deletionsSub) {
       this._deletionsSub.unsubscribe();

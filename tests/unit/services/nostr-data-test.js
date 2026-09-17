@@ -1287,3 +1287,87 @@ module('Unit | Service | nostr-data | zap receipts', function (hooks) {
     );
   });
 });
+
+module('Unit | Service | nostr-data | profiles', function (hooks) {
+  setupNostrDataService(hooks);
+
+  function makeProfileEvent(pubkey, content, opts = {}) {
+    return {
+      id: opts.id || makeEventId(3000),
+      pubkey,
+      kind: 0,
+      created_at: opts.created_at || 1000,
+      tags: [],
+      content: JSON.stringify(content),
+      sig: 'sig',
+    };
+  }
+
+  test('refreshProfiles requests kind 0 for the given pubkeys', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const pubkey = makePubkey(80);
+
+    await service.refreshProfiles([pubkey]);
+
+    const filter = this.requestedFilters.find((f) => f.kinds?.includes(0));
+    assert.ok(filter, 'requested kind 0');
+    assert.deepEqual(filter.authors, [pubkey], 'requested the pubkey');
+  });
+
+  test('refreshProfiles adds returned profiles to the store', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const pubkey = makePubkey(81);
+    const event = makeProfileEvent(pubkey, { name: 'Alice' });
+
+    service.nostrRelay.pool.request = (_relays, filters) => {
+      this.requestedFilters.push(...filters);
+      return of(event);
+    };
+
+    await service.refreshProfiles([pubkey]);
+
+    assert.true(service.store.hasReplaceable(0, pubkey), 'profile stored');
+  });
+
+  test('refreshProfiles deduplicates input and skips empty input', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const pubkey = makePubkey(82);
+
+    await service.refreshProfiles([pubkey, pubkey, null]);
+    await service.refreshProfiles([]);
+
+    const filters = this.requestedFilters.filter((f) => f.kinds?.includes(0));
+    assert.strictEqual(filters.length, 1, 'one request for deduped input');
+    assert.deepEqual(filters[0].authors, [pubkey], 'deduped authors');
+  });
+
+  test('loadProfiles re-requests an unresolved profile on a second call', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const pubkey = makePubkey(83);
+
+    // First call: the ProfileModel loader handles it, no explicit refresh.
+    service.loadProfiles([pubkey]);
+    assert.strictEqual(
+      this.requestedFilters.filter((f) => f.kinds?.includes(0)).length,
+      0,
+      'first lookup is not refreshed explicitly'
+    );
+
+    // Re-entering the place clears the model subscriptions, but the ProfileModel
+    // stays cached and its loader won't run again. The second call should retry.
+    service._clearProfileSubs();
+    service.loadProfiles([pubkey]);
+
+    const filters = this.requestedFilters.filter((f) => f.kinds?.includes(0));
+    assert.strictEqual(
+      filters.length,
+      1,
+      'second lookup refreshes the profile'
+    );
+    assert.deepEqual(
+      filters[0].authors,
+      [pubkey],
+      'refreshes the missing pubkey'
+    );
+  });
+});
