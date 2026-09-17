@@ -87,6 +87,12 @@ function makePhotoEvent(opts = {}) {
 class MockNostrDataService extends Service {
   @tracked profiles = {};
   _contactPubkeys = new Set();
+  refreshProfilesCalls = [];
+
+  refreshProfiles(pubkeys) {
+    this.refreshProfilesCalls.push(pubkeys);
+    return Promise.resolve();
+  }
 
   store = {
     events: new Map(),
@@ -299,6 +305,115 @@ module('Unit | Service | activity', function (hooks) {
     assert.strictEqual(entry.senderName, 'Alice');
     assert.strictEqual(entry.senderAvatar, 'https://x.com/avatar.jpg');
     assert.false(entry.senderProfileLoading);
+  });
+
+  test('retryUnresolvedProfiles refreshes only unresolved sender pubkeys', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service._sourceMode = 'explore';
+    service.nostrData._contactPubkeys = new Set();
+    service.nostrData.isTrustedEvent = () => true;
+
+    const OTHER_PUBKEY = 'c'.repeat(64);
+    service.nostrData.profiles[SENDER_PUBKEY] = { name: 'Alice' };
+
+    const resolvedPhoto = makePhotoEvent({
+      id: 'rp'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: 1000,
+    });
+    const unresolvedPhoto = makePhotoEvent({
+      id: 'up'.padEnd(64, '0'),
+      author: OTHER_PUBKEY,
+      placeIdentifier: 'osm:node:200',
+      created_at: 2000,
+    });
+    service._updateSocialItems([resolvedPhoto, unresolvedPhoto]);
+
+    assert.strictEqual(service.items.length, 2, 'both entries present');
+    assert.false(
+      service.items.find((i) => i.senderPubkey === SENDER_PUBKEY)
+        .senderProfileLoading,
+      'resolved sender not loading'
+    );
+    assert.true(
+      service.items.find((i) => i.senderPubkey === OTHER_PUBKEY)
+        .senderProfileLoading,
+      'unresolved sender still loading'
+    );
+
+    await service.retryUnresolvedProfiles();
+
+    assert.strictEqual(
+      service.nostrData.refreshProfilesCalls.length,
+      1,
+      'refresh called once'
+    );
+    assert.deepEqual(
+      service.nostrData.refreshProfilesCalls[0],
+      [OTHER_PUBKEY],
+      'only the unresolved sender is refreshed'
+    );
+  });
+
+  test('retryUnresolvedProfiles does nothing when all senders are resolved', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service._sourceMode = 'explore';
+    service.nostrData._contactPubkeys = new Set();
+    service.nostrData.isTrustedEvent = () => true;
+    service.nostrData.profiles[SENDER_PUBKEY] = { name: 'Alice' };
+
+    service._updateSocialItems([
+      makePhotoEvent({
+        id: 'rp2'.padEnd(64, '0'),
+        author: SENDER_PUBKEY,
+        placeIdentifier: 'osm:node:100',
+        created_at: 1000,
+      }),
+    ]);
+
+    await service.retryUnresolvedProfiles();
+
+    assert.strictEqual(
+      service.nostrData.refreshProfilesCalls.length,
+      0,
+      'no refresh when every sender is resolved'
+    );
+  });
+
+  test('setSourceMode retries unresolved profiles after fetching', async function (assert) {
+    const service = this.owner.lookup('service:activity');
+    service._userPubkey = USER_PUBKEY;
+    service.nostrData._contactPubkeys = new Set();
+    service.nostrData.isTrustedEvent = () => true;
+
+    const photo = makePhotoEvent({
+      id: 'sm1'.padEnd(64, '0'),
+      author: SENDER_PUBKEY,
+      placeIdentifier: 'osm:node:100',
+      created_at: 1000,
+    });
+
+    service.nostrData.fetchActivityPhotos = async (_since, _until, mode) => {
+      if (mode === 'explore')
+        return { cacheEvents: [photo], networkEvents: Promise.resolve([]) };
+      return { cacheEvents: [], networkEvents: Promise.resolve([]) };
+    };
+
+    await service.setSourceMode('explore');
+
+    assert.strictEqual(
+      service.nostrData.refreshProfilesCalls.length,
+      1,
+      'refresh triggered by mode switch'
+    );
+    assert.deepEqual(
+      service.nostrData.refreshProfilesCalls[0],
+      [SENDER_PUBKEY],
+      'refreshes the unresolved sender'
+    );
   });
 
   test('_updateSocialItems groups photos by author + place', function (assert) {

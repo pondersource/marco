@@ -8,6 +8,10 @@ export default class ActivityRoute extends Route {
 
   activate() {
     this.mapUi.showSidebar();
+    // Re-request profiles for senders that couldn't be resolved when the feed
+    // was first loaded (e.g. metadata published since then). No-op on the first
+    // entry, when there are no items yet.
+    void this.activity.retryUnresolvedProfiles();
   }
 
   setupController(controller, model) {
