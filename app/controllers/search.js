@@ -2,6 +2,7 @@ import Controller from '@ember/controller';
 import { service } from '@ember/service';
 import { task } from 'ember-concurrency';
 import { getDistance } from '../utils/geo';
+import { NEARBY_CATEGORY } from '../utils/poi-categories';
 
 export default class SearchController extends Controller {
   @service osm;
@@ -18,6 +19,40 @@ export default class SearchController extends Controller {
   q = null;
   selected = null;
   category = null;
+
+  async fetchNearbyPois(lat, lon) {
+    const searchRadius = 50;
+
+    // Fetch POIs from Overpass
+    let pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
+
+    // Get cached/saved places in search radius
+    const localMatches = this.storage.savedPlaces.filter((p) => {
+      const dist = getDistance(lat, lon, p.lat, p.lon);
+      return dist <= searchRadius;
+    });
+
+    // Merge local matches
+    localMatches.forEach((local) => {
+      const exists = pois.find(
+        (poi) =>
+          (local.osmId && poi.osmId === local.osmId) ||
+          (poi.id && poi.id === local.id)
+      );
+
+      if (!exists) {
+        pois.push(local);
+      }
+    });
+
+    // Sort by distance from the search center
+    return pois
+      .map((p) => ({
+        ...p,
+        _distance: getDistance(lat, lon, p.lat, p.lon),
+      }))
+      .sort((a, b) => a._distance - b._distance);
+  }
 
   fetchResultsTask = task({ restartable: true }, async (params) => {
     // 1. Check if the incoming parameters match our currently loaded search
@@ -50,8 +85,22 @@ export default class SearchController extends Controller {
     let loadingValue = null;
 
     try {
-      // Case 0: Category Search (category parameter present)
-      if (params.category && lat && lon) {
+      // Case 0: Nearby Search (map click or ?category=nearby)
+      const isNearbySearch =
+        lat &&
+        lon &&
+        !params.q &&
+        (!params.category || params.category === NEARBY_CATEGORY.id);
+
+      if (isNearbySearch) {
+        loadingType = 'nearby';
+        loadingValue = 'nearby';
+        this.mapUi.startLoading(loadingType, loadingValue);
+
+        pois = await this.fetchNearbyPois(lat, lon);
+      }
+      // Case 1: Category Search (category parameter present)
+      else if (params.category && lat && lon) {
         loadingType = 'category';
         loadingValue = params.category;
         this.mapUi.startLoading(loadingType, loadingValue);
@@ -88,7 +137,7 @@ export default class SearchController extends Controller {
           }))
           .sort((a, b) => a._distance - b._distance);
       }
-      // Case 1: Text Search (q parameter present)
+      // Case 2: Text Search (q parameter present)
       else if (params.q) {
         loadingType = 'text';
         loadingValue = params.q;
@@ -120,43 +169,6 @@ export default class SearchController extends Controller {
             pois.push(local);
           }
         });
-      }
-      // Case 2: Nearby Search (lat/lon present, no q)
-      else if (lat && lon) {
-        // Nearby search does NOT trigger loading state (pulse is used instead)
-        const searchRadius = 50; // Default radius
-
-        // Fetch POIs from Overpass
-        pois = await this.osm.getNearbyPois(lat, lon, searchRadius);
-
-        // Get cached/saved places in search radius
-        const localMatches = this.storage.savedPlaces.filter((p) => {
-          const dist = getDistance(lat, lon, p.lat, p.lon);
-          return dist <= searchRadius;
-        });
-
-        // Merge local matches
-        localMatches.forEach((local) => {
-          const exists = pois.find(
-            (poi) =>
-              (local.osmId && poi.osmId === local.osmId) ||
-              (poi.id && poi.id === local.id)
-          );
-
-          if (!exists) {
-            pois.push(local);
-          }
-        });
-
-        // Sort by distance from click
-        pois = pois
-          .map((p) => {
-            return {
-              ...p,
-              _distance: getDistance(lat, lon, p.lat, p.lon),
-            };
-          })
-          .sort((a, b) => a._distance - b._distance);
       }
     } catch (error) {
       console.error('Search request failed.', error);

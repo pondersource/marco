@@ -9,7 +9,7 @@ import SearchBox from '#components/search-box';
 import CategoryChips from '#components/category-chips';
 import { and } from 'ember-truth-helpers';
 import cachedImage from '../modifiers/cached-image';
-import { POI_CATEGORIES } from '../utils/poi-categories';
+import { getCategoryById } from '../utils/poi-categories';
 
 export default class AppHeaderComponent extends Component {
   @service storage;
@@ -43,7 +43,7 @@ export default class AppHeaderComponent extends Component {
     if (qp?.q) {
       this.searchQuery = qp.q;
     } else if (qp?.category) {
-      const category = POI_CATEGORIES.find((c) => c.id === qp.category);
+      const category = getCategoryById(qp.category);
       this.searchQuery = category ? category.label : qp.category;
     } else {
       this.searchQuery = '';
