@@ -2,6 +2,7 @@ import { module, test } from 'qunit';
 import { setupRenderingTest } from 'marco/tests/helpers';
 import { click, fillIn, render, settled } from '@ember/test-helpers';
 import Service, { service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 import AppMenuSettingsNostr from 'marco/components/app-menu/settings/nostr';
 import {
   excludeRequiredRelays,
@@ -67,6 +68,10 @@ class MockNostrDataService extends Service {
   async clearCache() {}
 }
 
+class MockNostrAuthService extends Service {
+  @tracked isConnected = true;
+}
+
 function readRows(element) {
   const list = element.querySelectorAll('.relay-list')[0];
   return [...list.querySelectorAll('li')];
@@ -88,6 +93,7 @@ module('Integration | Component | app-menu/settings/nostr', function (hooks) {
     localStorage.removeItem('marco:settings');
 
     this.owner.register('service:nostrData', MockNostrDataService);
+    this.owner.register('service:nostrAuth', MockNostrAuthService);
     this.settings = this.owner.lookup('service:settings');
     this.onChange = () => {};
   });
@@ -281,6 +287,37 @@ module('Integration | Component | app-menu/settings/nostr', function (hooks) {
       null,
       'empty list collapses to null'
     );
+  });
+
+  test('publish-only settings are hidden when no nostr key is connected', async function (assert) {
+    this.owner.lookup('service:nostrAuth').isConnected = false;
+
+    const element = await renderAndOpenDetails(this);
+
+    assert.dom('#new-write-relay').doesNotExist('write relay input hidden');
+    assert
+      .dom('#nostr-media-server')
+      .doesNotExist('media server select hidden');
+    assert
+      .dom('#nostr-photo-fallback-uploads')
+      .doesNotExist('fallback uploads select hidden');
+    assert.strictEqual(
+      element.querySelectorAll('.relay-list').length,
+      1,
+      'only the read relay list is rendered'
+    );
+  });
+
+  test('read relays and cached data stay visible when no nostr key is connected', async function (assert) {
+    this.owner.lookup('service:nostrAuth').isConnected = false;
+
+    const element = await renderAndOpenDetails(this);
+
+    assert.dom('#new-read-relay').exists('read relay input visible');
+    assert.dom(readRows(element)[0]).exists('read relay list visible');
+    assert
+      .dom(element.querySelector('.btn-outline'))
+      .includesText('Clear profiles, photos, and reviews');
   });
 
   test('tooltip appears on hover and disappears on mouseleave', async function (assert) {
