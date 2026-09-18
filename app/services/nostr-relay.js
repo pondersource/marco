@@ -8,18 +8,11 @@ export default class NostrRelayService extends Service {
     if (!relays || relays.length === 0) {
       throw new Error('No relays provided to publish the event.');
     }
-    // The publish method is a wrapper around the event method that returns a Promise<PublishResponse[]>
-    // and automatically handles reconnecting and retrying.
-    const responses = await this.pool.publish(relays, event);
-
-    // Check if at least one relay accepted the event
-    const success = responses.some((res) => res.ok);
-    if (!success) {
-      throw new Error(
-        `Failed to publish event. Responses: ${JSON.stringify(responses)}`
-      );
-    }
-
-    return responses;
+    // The publish method is a wrapper around the event method that returns a
+    // Promise<PublishResponse[]> and automatically handles reconnecting and
+    // retrying. It resolves with the per-relay responses even when no relay
+    // accepted the event; callers are responsible for checking `ok` so that
+    // failed attempts can still be recorded.
+    return await this.pool.publish(relays, event);
   }
 }

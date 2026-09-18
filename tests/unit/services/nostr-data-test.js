@@ -498,6 +498,56 @@ module('Unit | Service | nostr-data | provenance', function (hooks) {
     );
     assert.true(service.store.hasEvent(eventId), 'event added to store');
   });
+
+  test('getEventRelays returns normalized relays for an event', function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const eventId = makeEventId(904);
+
+    service._recordProvenance(eventId, 'wss://one.example/');
+    service._recordProvenance(eventId, 'WSS://Two.Example');
+
+    assert.deepEqual(
+      service.getEventRelays(eventId).sort(),
+      ['wss://one.example', 'wss://two.example'],
+      'returns normalized, unique relays'
+    );
+    assert.deepEqual(
+      service.getEventRelays('unknown-event'),
+      [],
+      'returns an empty array for unknown events'
+    );
+  });
+
+  test('recordPublishResult records only successful relays into provenance', async function (assert) {
+    const service = this.owner.lookup('service:nostr-data');
+    const eventId = makeEventId(905);
+
+    service.recordPublishResult(eventId, [
+      { ok: true, from: 'wss://accepted.example' },
+      { ok: false, from: 'wss://rejected.example', message: 'blocked' },
+    ]);
+
+    const relays = service._eventRelays.get(eventId);
+    assert.ok(relays, 'provenance recorded');
+    assert.true(
+      relays.has('wss://accepted.example'),
+      'accepted relay is recorded'
+    );
+    assert.false(
+      relays.has('wss://rejected.example'),
+      'rejected relay is not recorded'
+    );
+
+    const persisted = await service.localForage.get(
+      'event-relay-provenance',
+      eventId
+    );
+    assert.deepEqual(
+      persisted,
+      ['wss://accepted.example'],
+      'accepted relay is persisted'
+    );
+  });
 });
 
 module('Unit | Service | nostr-data | trust evaluation', function (hooks) {
