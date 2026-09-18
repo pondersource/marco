@@ -7,6 +7,7 @@ import { service } from '@ember/service';
 import { modifier } from 'ember-modifier';
 import { task } from 'ember-concurrency';
 import { EventFactory } from 'applesauce-core';
+import { encodePointer } from 'applesauce-core/helpers/pointers';
 import or from 'ember-truth-helpers/helpers/or';
 import config from 'marco/config/environment';
 import DropdownMenu from './dropdown-menu';
@@ -14,6 +15,8 @@ import PhotoCarousel from './photo-carousel';
 import ZapPhotoModal from './zap-photo-modal';
 import Icon from './icon';
 import formatRelativeDate from '../helpers/format-relative-date';
+
+const MAX_NEVENT_RELAY_HINTS = 3;
 
 const GalleryContent = <template>
   <div
@@ -236,8 +239,23 @@ export default class PhotoGallery extends Component {
   @action
   async copyEventId(closeMenu) {
     if (this.currentPhoto?.eventId) {
+      let value = this.currentPhoto.eventId;
       try {
-        await navigator.clipboard.writeText(this.currentPhoto.eventId);
+        const nevent = encodePointer({
+          id: this.currentPhoto.eventId,
+          relays: this.nostrData
+            .getEventRelays(this.currentPhoto.eventId)
+            .slice(0, MAX_NEVENT_RELAY_HINTS),
+          author: this.currentPhoto.pubkey,
+          kind: 360,
+        });
+        if (nevent) value = nevent;
+      } catch (err) {
+        console.warn('Failed to encode nevent, copying raw event ID:', err);
+      }
+
+      try {
+        await navigator.clipboard.writeText(value);
         this.toast.show('Event ID copied to clipboard');
       } catch (err) {
         console.error('Failed to copy event ID:', err);
@@ -290,7 +308,14 @@ export default class PhotoGallery extends Component {
         .modifyPublicTags(() => tags)
         .as(this.nostrAuth.signer)
         .sign();
-      await this.nostrRelay.publish(this.nostrData.activeWriteRelays, event);
+      const responses = await this.nostrRelay.publish(
+        this.nostrData.activeWriteRelays,
+        event
+      );
+      this.nostrData.recordPublishResult(event.id, responses);
+      if (!responses?.some((res) => res.ok)) {
+        throw new Error('Failed to publish deletion event.');
+      }
 
       // Remove from local store by adding the kind 5 to it
       this.nostrData.store.add(event);

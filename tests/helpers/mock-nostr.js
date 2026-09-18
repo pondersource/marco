@@ -62,6 +62,12 @@ export class MockNostrDataService extends Service {
     return this.profiles[pubkey];
   }
 
+  getEventRelays() {
+    return [];
+  }
+
+  recordPublishResult() {}
+
   refreshProfiles() {
     return Promise.resolve();
   }
@@ -109,14 +115,14 @@ export class MockNostrDataService extends Service {
 
 export class MockNostrRelayService extends Service {
   pool = {
-    publish: () => Promise.resolve([{ ok: true }]),
+    publish: () => Promise.resolve([{ ok: true, from: 'wss://relay.test' }]),
     subscribe: () => {},
     unsubscribe: () => {},
     close: () => {},
   };
 
   async publish() {
-    return [{ ok: true }];
+    return [{ ok: true, from: 'wss://relay.test' }];
   }
 }
 

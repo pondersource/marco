@@ -339,6 +339,33 @@ export default class NostrDataService extends Service {
     });
   }
 
+  // Public getter for the normalized relays an event is known to have been
+  // seen on. Used to build shareable `nevent` pointers with relay hints.
+  getEventRelays(eventId) {
+    const relays = this._eventRelays.get(eventId);
+    return relays ? uniqNormalizedRelays([...relays]) : [];
+  }
+
+  /**
+   * Records the result of publishing an event to relays.
+   *
+   * Successful relays are merged into the provenance map so the event gets
+   * correct relay hints (e.g. in `nevent` pointers) and trust checks. The full
+   * per-relay responses are only debug-logged for now; this is the intended
+   * hook for a future publishing-status store/UI.
+   *
+   * @param {string} eventId The published event id
+   * @param {Array<{ok: boolean, message?: string, from: string}>} responses
+   */
+  recordPublishResult(eventId, responses = []) {
+    console.debug('[nostr-data] Publish result', eventId, responses);
+    for (const res of responses || []) {
+      if (res?.ok && res.from) {
+        this._recordProvenance(eventId, res.from);
+      }
+    }
+  }
+
   /**
    * Request content events from relays while capturing full provenance.
    *

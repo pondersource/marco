@@ -211,7 +211,14 @@ export default class PlacePhotoUpload extends Component {
         .modifyPublicTags(() => tags)
         .as(this.nostrAuth.signer)
         .sign();
-      await this.nostrRelay.publish(this.nostrData.activeWriteRelays, event);
+      const responses = await this.nostrRelay.publish(
+        this.nostrData.activeWriteRelays,
+        event
+      );
+      this.nostrData.recordPublishResult(event.id, responses);
+      if (!responses?.some((res) => res.ok)) {
+        throw new Error('Failed to publish event.');
+      }
       this.nostrData.store.add(event);
 
       this.toast.show('Photo published successfully');

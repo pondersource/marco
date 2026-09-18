@@ -2,6 +2,7 @@ import { module, test } from 'qunit';
 import { setupRenderingTest } from 'marco/tests/helpers';
 import { render, click, triggerKeyEvent } from '@ember/test-helpers';
 import Service from '@ember/service';
+import { decodePointer } from 'applesauce-core/helpers/pointers';
 import PhotoGallery from 'marco/components/photo-gallery';
 import { setupNostrMocks } from 'marco/tests/helpers/mock-nostr';
 import sinon from 'sinon';
@@ -163,8 +164,11 @@ module('Integration | Component | photo-gallery', function (hooks) {
 
     const confirmStub = sinon.stub(window, 'confirm').returns(true);
     const blossomStub = sinon.stub(this.blossom, 'delete').resolves();
-    const publishStub = sinon.stub(this.nostrRelay, 'publish').resolves();
+    const publishStub = sinon
+      .stub(this.nostrRelay, 'publish')
+      .resolves([{ ok: true, from: 'wss://relay.test' }]);
     const storeStub = sinon.stub(this.nostrData.store, 'add');
+    const recordPublishSpy = sinon.spy(this.nostrData, 'recordPublishResult');
     const toastSpy = sinon.spy(this.toast, 'show');
 
     await render(
@@ -224,6 +228,17 @@ module('Integration | Component | photo-gallery', function (hooks) {
       'added kind 5 event to local store'
     );
 
+    // Check publish result recording
+    assert.ok(
+      recordPublishSpy.calledOnce,
+      'nostrData.recordPublishResult was called'
+    );
+    assert.strictEqual(
+      recordPublishSpy.firstCall.args[0],
+      publishedEvent.id,
+      'publish result recorded for the deletion event'
+    );
+
     // Check UX
     assert.ok(
       toastSpy.calledWith('Photo deleted successfully'),
@@ -261,7 +276,9 @@ module('Integration | Component | photo-gallery', function (hooks) {
 
     sinon.stub(window, 'confirm').returns(true);
     sinon.stub(this.blossom, 'delete').resolves();
-    sinon.stub(this.nostrRelay, 'publish').resolves();
+    sinon
+      .stub(this.nostrRelay, 'publish')
+      .resolves([{ ok: true, from: 'wss://relay.test' }]);
     sinon.stub(this.nostrData.store, 'add');
 
     await render(
@@ -284,9 +301,27 @@ module('Integration | Component | photo-gallery', function (hooks) {
   });
 
   test('it copies event id to clipboard', async function (assert) {
+    const eventId = '1'.repeat(64);
     this.nostrAuth.pubkey = USER_A;
+    this.photos = [
+      {
+        eventId,
+        pubkey: USER_A,
+        placeIdentifier: 'osm:node:12345',
+        url: 'photo.jpg',
+      },
+    ];
     this.selectedPhoto = this.photos[0];
 
+    sinon
+      .stub(this.nostrData, 'getEventRelays')
+      .returns([
+        'wss://a.test',
+        'wss://b.test',
+        'wss://c.test',
+        'wss://d.test',
+        'wss://e.test',
+      ]);
     const clipboardStub = sinon
       .stub(navigator.clipboard, 'writeText')
       .resolves();
@@ -317,7 +352,23 @@ module('Integration | Component | photo-gallery', function (hooks) {
 
     await click(copyBtn);
 
-    assert.ok(clipboardStub.calledWith('event1'), 'copied correct event id');
+    const copied = clipboardStub.firstCall.args[0];
+    assert.ok(
+      copied.startsWith('nevent1'),
+      'copied value is an nevent identifier'
+    );
+    const decoded = decodePointer(copied);
+    assert.strictEqual(decoded.type, 'nevent', 'decoded value is an nevent');
+    assert.strictEqual(
+      decoded.data.id,
+      eventId,
+      'decoded nevent references the correct event id'
+    );
+    assert.deepEqual(
+      decoded.data.relays,
+      ['wss://a.test', 'wss://b.test', 'wss://c.test'],
+      'decoded nevent includes at most 3 relay hints'
+    );
     assert.ok(
       toastSpy.calledWith('Event ID copied to clipboard'),
       'success toast was shown'
