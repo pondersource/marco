@@ -53,6 +53,8 @@ import anchor from '@waysidemapping/pinhead/dist/icons/anchor.svg?raw';
 import airportTerminal from '@waysidemapping/pinhead/dist/icons/airport_terminal.svg?raw';
 import barbell from '@waysidemapping/pinhead/dist/icons/barbell.svg?raw';
 import barrelWithBunghole from '@waysidemapping/pinhead/dist/icons/barrel_with_bunghole.svg?raw';
+import bicycle from '@waysidemapping/pinhead/dist/icons/bicycle.svg?raw';
+import bulldozer from '@waysidemapping/pinhead/dist/icons/bulldozer.svg?raw';
 import climbingWall from '@waysidemapping/pinhead/dist/icons/climbing_wall.svg?raw';
 import banknote from '@waysidemapping/pinhead/dist/icons/banknote.svg?raw';
 import banknoteInSlot from '@waysidemapping/pinhead/dist/icons/banknote_in_slot.svg?raw';
@@ -95,7 +97,9 @@ import fish from '@waysidemapping/pinhead/dist/icons/fish.svg?raw';
 import flagCheckered from '@waysidemapping/pinhead/dist/icons/flag_checkered.svg?raw';
 import flowerBouquet from '@waysidemapping/pinhead/dist/icons/flower_bouquet.svg?raw';
 import fort from '@waysidemapping/pinhead/dist/icons/fort.svg?raw';
+import fortress from '@waysidemapping/pinhead/dist/icons/fortress.svg?raw';
 import forkAndKnife from '@waysidemapping/pinhead/dist/icons/fork_and_knife.svg?raw';
+import gableRoofedBuilding from '@waysidemapping/pinhead/dist/icons/gable_roofed_building.svg?raw';
 import gravestone from '@waysidemapping/pinhead/dist/icons/gravestone.svg?raw';
 import grecianVase from '@waysidemapping/pinhead/dist/icons/grecian_vase.svg?raw';
 import greekCross from '@waysidemapping/pinhead/dist/icons/greek_cross.svg?raw';
@@ -139,6 +143,8 @@ import shoppingCart from '@waysidemapping/pinhead/dist/icons/shopping_cart.svg?r
 import tableTennisPaddle from '@waysidemapping/pinhead/dist/icons/table_tennis_paddle.svg?raw';
 import tattooMachine from '@waysidemapping/pinhead/dist/icons/tattoo_machine.svg?raw';
 import toolbox from '@waysidemapping/pinhead/dist/icons/toolbox.svg?raw';
+import townBuildings from '@waysidemapping/pinhead/dist/icons/town_buildings.svg?raw';
+import transitVehicleOnRailwayTrack from '@waysidemapping/pinhead/dist/icons/transit_vehicle_on_railway_track.svg?raw';
 import treeAndBenchWithBackrest from '@waysidemapping/pinhead/dist/icons/tree_and_bench_with_backrest.svg?raw';
 import villageBuildings from '@waysidemapping/pinhead/dist/icons/village_buildings.svg?raw';
 import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/wall_hanging_with_mountains_and_sun.svg?raw';
@@ -164,6 +170,8 @@ const ICONS = {
   'arrow-left': arrowLeft,
   barbell,
   'barrel-with-bunghole': barrelWithBunghole,
+  bicycle,
+  bulldozer,
   banknote,
   'banknote-in-slot': banknoteInSlot,
   'badge-shield-with-fire': badgeShieldWithFire,
@@ -216,6 +224,8 @@ const ICONS = {
   'flower-bouquet': flowerBouquet,
   'fork-and-knife': forkAndKnife,
   fort,
+  fortress,
+  'gable-roofed-building': gableRoofedBuilding,
   'gasoline-pump': gasolinePump,
   gift,
   globe,
@@ -284,6 +294,8 @@ const ICONS = {
   target,
   'trash-2': trash2,
   'upload-cloud': uploadCloud,
+  'town-buildings': townBuildings,
+  'transit-vehicle-on-railway-track': transitVehicleOnRailwayTrack,
   'tree-and-bench-with-backrest': treeAndBenchWithBackrest,
   user,
   'user-check': userCheck,

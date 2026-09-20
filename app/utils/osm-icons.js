@@ -99,18 +99,9 @@ export const POI_ICON_RULES = [
   { tags: { leisure: 'playground' }, icon: 'play-structure-with-slide' },
   { tags: { leisure: 'marina' }, icon: 'anchor' },
   { tags: { landuse: 'vineyard' }, icon: 'grapes' },
-
-  // Transport
-  { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
-  { tags: { aeroway: 'terminal' }, icon: 'airport-terminal' },
-  { tags: { aeroway: 'heliport' }, icon: 'plane-top-right' },
-  { tags: { aeroway: 'helipad' }, icon: 'plane-top-right' },
-  { tags: { highway: 'bus_stop' }, icon: 'bus' },
-  { tags: { bus: true }, icon: 'bus' },
-  {
-    tags: { railway: 'tram_stop' },
-    icon: 'person-boarding-tram-with-destination-display-and-pantograph-on-tram-track',
-  },
+  { tags: { landuse: 'cemetery' }, icon: 'memorial-stone-with-inscription' },
+  { tags: { landuse: 'construction' }, icon: 'bulldozer' },
+  { tags: { landuse: 'residential' }, icon: 'town-buildings' },
 
   // Tourism
   { tags: { tourism: 'museum' }, icon: 'classical-building' },
@@ -131,9 +122,11 @@ export const POI_ICON_RULES = [
   { tags: { historic: 'canal' }, icon: 'winding_way_wide' },
   { tags: { historic: 'bridge' }, icon: 'bridge' },
   { tags: { historic: 'bridge_site' }, icon: 'bridge' },
+  { tags: { historic: 'aqueduct' }, icon: 'bridge' },
   { tags: { historic: 'fort' }, icon: 'fort' },
   { tags: { historic: 'city_gate' }, icon: 'city-gate' },
   { tags: { historic: 'castle' }, icon: 'palace' },
+  { tags: { historic: 'monastery' }, icon: 'fortress' },
   { tags: { building: 'tower', historic: 'yes' }, icon: 'castle-keep' },
   { tags: { historic: 'building' }, icon: 'classical-building-with-flag' },
   { tags: { historic: 'archaeological_site' }, icon: 'grecian-vase' },
@@ -153,7 +146,23 @@ export const POI_ICON_RULES = [
   { tags: { historic: 'wreck' }, icon: 'shipwreck-in-water' },
   { tags: { historic: 'ruins' }, icon: 'camera' },
   { tags: { historic: 'ruin' }, icon: 'camera' },
-  { tags: { historic: 'yes' }, icon: 'camera' },
+
+  // Transport
+  { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
+  { tags: { aeroway: 'terminal' }, icon: 'airport-terminal' },
+  { tags: { aeroway: 'heliport' }, icon: 'plane-top-right' },
+  { tags: { aeroway: 'helipad' }, icon: 'plane-top-right' },
+  { tags: { highway: 'bus_stop' }, icon: 'bus' },
+  { tags: { highway: 'cycleway' }, icon: 'bicycle' },
+  { tags: { bus: true }, icon: 'bus' },
+  {
+    tags: { railway: 'tram_stop' },
+    icon: 'person-boarding-tram-with-destination-display-and-pantograph-on-tram-track',
+  },
+  { tags: { light_rail: true }, icon: 'transit-vehicle-on-railway-track' },
+  { tags: { train: true }, icon: 'transit-vehicle-on-railway-track' },
+  { tags: { tram: true }, icon: 'transit-vehicle-on-railway-track' },
+  { tags: { subway: true }, icon: 'transit-vehicle-on-railway-track' },
 
   // Accommodation
   { tags: { tourism: 'hotel' }, icon: 'person-sleeping-in-bed' },
@@ -190,6 +199,7 @@ export const POI_ICON_RULES = [
   { tags: { leisure: 'stadium' }, icon: 'round-structure-with-flag' },
   { tags: { leisure: 'sports_centre' }, icon: 'person-running' },
   { tags: { leisure: 'pitch' }, icon: 'person-running' },
+  { tags: { landuse: 'recreation_ground' }, icon: 'person-running' },
   { tags: { sport: true }, icon: 'person-running' },
 
   // Healthcare
@@ -204,6 +214,10 @@ export const POI_ICON_RULES = [
   { tags: { building: 'commercial' }, icon: 'commercial-building' },
   { tags: { building: 'apartments' }, icon: 'lowrise-building' },
   { tags: { building: 'office' }, icon: 'lowrise-building' },
+
+  // Fallback
+  { tags: { historic: true }, icon: 'camera' },
+  { tags: { building: true }, icon: 'gable-roofed-building' },
 ];
 
 /**
