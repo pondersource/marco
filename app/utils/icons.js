@@ -99,6 +99,7 @@ import flowerBouquet from '@waysidemapping/pinhead/dist/icons/flower_bouquet.svg
 import fort from '@waysidemapping/pinhead/dist/icons/fort.svg?raw';
 import fortress from '@waysidemapping/pinhead/dist/icons/fortress.svg?raw';
 import forkAndKnife from '@waysidemapping/pinhead/dist/icons/fork_and_knife.svg?raw';
+import gableRoofedBuilding from '@waysidemapping/pinhead/dist/icons/gable_roofed_building.svg?raw';
 import gravestone from '@waysidemapping/pinhead/dist/icons/gravestone.svg?raw';
 import grecianVase from '@waysidemapping/pinhead/dist/icons/grecian_vase.svg?raw';
 import greekCross from '@waysidemapping/pinhead/dist/icons/greek_cross.svg?raw';
@@ -224,6 +225,7 @@ const ICONS = {
   'fork-and-knife': forkAndKnife,
   fort,
   fortress,
+  'gable-roofed-building': gableRoofedBuilding,
   'gasoline-pump': gasolinePump,
   gift,
   globe,

@@ -217,6 +217,7 @@ export const POI_ICON_RULES = [
 
   // Fallback
   { tags: { historic: true }, icon: 'camera' },
+  { tags: { building: true }, icon: 'gable-roofed-building' },
 ];
 
 /**
