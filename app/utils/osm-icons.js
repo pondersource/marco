@@ -146,7 +146,6 @@ export const POI_ICON_RULES = [
   { tags: { historic: 'wreck' }, icon: 'shipwreck-in-water' },
   { tags: { historic: 'ruins' }, icon: 'camera' },
   { tags: { historic: 'ruin' }, icon: 'camera' },
-  { tags: { historic: 'yes' }, icon: 'camera' },
 
   // Transport
   { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
@@ -215,6 +214,9 @@ export const POI_ICON_RULES = [
   { tags: { building: 'commercial' }, icon: 'commercial-building' },
   { tags: { building: 'apartments' }, icon: 'lowrise-building' },
   { tags: { building: 'office' }, icon: 'lowrise-building' },
+
+  // Fallback
+  { tags: { historic: true }, icon: 'camera' },
 ];
 
 /**
