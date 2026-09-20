@@ -53,6 +53,7 @@ import anchor from '@waysidemapping/pinhead/dist/icons/anchor.svg?raw';
 import airportTerminal from '@waysidemapping/pinhead/dist/icons/airport_terminal.svg?raw';
 import barbell from '@waysidemapping/pinhead/dist/icons/barbell.svg?raw';
 import barrelWithBunghole from '@waysidemapping/pinhead/dist/icons/barrel_with_bunghole.svg?raw';
+import bulldozer from '@waysidemapping/pinhead/dist/icons/bulldozer.svg?raw';
 import climbingWall from '@waysidemapping/pinhead/dist/icons/climbing_wall.svg?raw';
 import banknote from '@waysidemapping/pinhead/dist/icons/banknote.svg?raw';
 import banknoteInSlot from '@waysidemapping/pinhead/dist/icons/banknote_in_slot.svg?raw';
@@ -139,6 +140,7 @@ import shoppingCart from '@waysidemapping/pinhead/dist/icons/shopping_cart.svg?r
 import tableTennisPaddle from '@waysidemapping/pinhead/dist/icons/table_tennis_paddle.svg?raw';
 import tattooMachine from '@waysidemapping/pinhead/dist/icons/tattoo_machine.svg?raw';
 import toolbox from '@waysidemapping/pinhead/dist/icons/toolbox.svg?raw';
+import townBuildings from '@waysidemapping/pinhead/dist/icons/town_buildings.svg?raw';
 import treeAndBenchWithBackrest from '@waysidemapping/pinhead/dist/icons/tree_and_bench_with_backrest.svg?raw';
 import villageBuildings from '@waysidemapping/pinhead/dist/icons/village_buildings.svg?raw';
 import wallHangingWithMountainsAndSun from '@waysidemapping/pinhead/dist/icons/wall_hanging_with_mountains_and_sun.svg?raw';
@@ -164,6 +166,7 @@ const ICONS = {
   'arrow-left': arrowLeft,
   barbell,
   'barrel-with-bunghole': barrelWithBunghole,
+  bulldozer,
   banknote,
   'banknote-in-slot': banknoteInSlot,
   'badge-shield-with-fire': badgeShieldWithFire,
@@ -284,6 +287,7 @@ const ICONS = {
   target,
   'trash-2': trash2,
   'upload-cloud': uploadCloud,
+  'town-buildings': townBuildings,
   'tree-and-bench-with-backrest': treeAndBenchWithBackrest,
   user,
   'user-check': userCheck,

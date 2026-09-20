@@ -99,6 +99,9 @@ export const POI_ICON_RULES = [
   { tags: { leisure: 'playground' }, icon: 'play-structure-with-slide' },
   { tags: { leisure: 'marina' }, icon: 'anchor' },
   { tags: { landuse: 'vineyard' }, icon: 'grapes' },
+  { tags: { landuse: 'cemetery' }, icon: 'memorial-stone-with-inscription' },
+  { tags: { landuse: 'construction' }, icon: 'bulldozer' },
+  { tags: { landuse: 'residential' }, icon: 'town-buildings' },
 
   // Transport
   { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
@@ -190,6 +193,7 @@ export const POI_ICON_RULES = [
   { tags: { leisure: 'stadium' }, icon: 'round-structure-with-flag' },
   { tags: { leisure: 'sports_centre' }, icon: 'person-running' },
   { tags: { leisure: 'pitch' }, icon: 'person-running' },
+  { tags: { landuse: 'recreation_ground' }, icon: 'person-running' },
   { tags: { sport: true }, icon: 'person-running' },
 
   // Healthcare
