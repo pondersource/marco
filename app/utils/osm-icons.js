@@ -103,18 +103,6 @@ export const POI_ICON_RULES = [
   { tags: { landuse: 'construction' }, icon: 'bulldozer' },
   { tags: { landuse: 'residential' }, icon: 'town-buildings' },
 
-  // Transport
-  { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
-  { tags: { aeroway: 'terminal' }, icon: 'airport-terminal' },
-  { tags: { aeroway: 'heliport' }, icon: 'plane-top-right' },
-  { tags: { aeroway: 'helipad' }, icon: 'plane-top-right' },
-  { tags: { highway: 'bus_stop' }, icon: 'bus' },
-  { tags: { bus: true }, icon: 'bus' },
-  {
-    tags: { railway: 'tram_stop' },
-    icon: 'person-boarding-tram-with-destination-display-and-pantograph-on-tram-track',
-  },
-
   // Tourism
   { tags: { tourism: 'museum' }, icon: 'classical-building' },
   { tags: { tourism: 'gallery' }, icon: 'wall-hanging-with-mountains-and-sun' },
@@ -158,6 +146,23 @@ export const POI_ICON_RULES = [
   { tags: { historic: 'ruins' }, icon: 'camera' },
   { tags: { historic: 'ruin' }, icon: 'camera' },
   { tags: { historic: 'yes' }, icon: 'camera' },
+
+  // Transport
+  { tags: { aeroway: 'aerodrome' }, icon: 'plane-top-right' },
+  { tags: { aeroway: 'terminal' }, icon: 'airport-terminal' },
+  { tags: { aeroway: 'heliport' }, icon: 'plane-top-right' },
+  { tags: { aeroway: 'helipad' }, icon: 'plane-top-right' },
+  { tags: { highway: 'bus_stop' }, icon: 'bus' },
+  { tags: { highway: 'cycleway' }, icon: 'bicycle' },
+  { tags: { bus: true }, icon: 'bus' },
+  {
+    tags: { railway: 'tram_stop' },
+    icon: 'person-boarding-tram-with-destination-display-and-pantograph-on-tram-track',
+  },
+  { tags: { light_rail: true }, icon: 'transit-vehicle-on-railway-track' },
+  { tags: { train: true }, icon: 'transit-vehicle-on-railway-track' },
+  { tags: { tram: true }, icon: 'transit-vehicle-on-railway-track' },
+  { tags: { subway: true }, icon: 'transit-vehicle-on-railway-track' },
 
   // Accommodation
   { tags: { tourism: 'hotel' }, icon: 'person-sleeping-in-bed' },
