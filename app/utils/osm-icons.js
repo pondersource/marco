@@ -126,6 +126,7 @@ export const POI_ICON_RULES = [
   { tags: { historic: 'fort' }, icon: 'fort' },
   { tags: { historic: 'city_gate' }, icon: 'city-gate' },
   { tags: { historic: 'castle' }, icon: 'palace' },
+  { tags: { historic: 'monastery' }, icon: 'fortress' },
   { tags: { building: 'tower', historic: 'yes' }, icon: 'castle-keep' },
   { tags: { historic: 'building' }, icon: 'classical-building-with-flag' },
   { tags: { historic: 'archaeological_site' }, icon: 'grecian-vase' },
