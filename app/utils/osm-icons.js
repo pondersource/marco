@@ -134,6 +134,7 @@ export const POI_ICON_RULES = [
   { tags: { historic: 'canal' }, icon: 'winding_way_wide' },
   { tags: { historic: 'bridge' }, icon: 'bridge' },
   { tags: { historic: 'bridge_site' }, icon: 'bridge' },
+  { tags: { historic: 'aqueduct' }, icon: 'bridge' },
   { tags: { historic: 'fort' }, icon: 'fort' },
   { tags: { historic: 'city_gate' }, icon: 'city-gate' },
   { tags: { historic: 'castle' }, icon: 'palace' },
