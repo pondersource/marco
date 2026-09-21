@@ -8,8 +8,11 @@
 <br>
 
 Marco (as in [Marco Polo][1]) is an unhosted maps application that respects
-your privacy and choices. It allows users to connect their own remote storage
-to sync place bookmarks across apps and devices.
+your privacy and choices.
+
+It allows users to connect their own remote storage to sync place bookmarks
+across apps and devices. It also supports the decentralized sharing of place
+photos (and soon reviews) via [Nostr][2].
 
 This README outlines the details of collaborating on this Ember application, or
 just building and deploying it for yourself.
@@ -79,3 +82,4 @@ To run the script, you need `imagemagick` and `librsvg` installed:
   - [ember inspector for firefox](https://addons.mozilla.org/en-US/firefox/addon/ember-inspector/)
 
 [1]: https://en.wikipedia.org/wiki/Marco_Polo
+[2]: https://nostr.org
