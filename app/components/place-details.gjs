@@ -316,6 +316,70 @@ export default class PlaceDetails extends Component {
     return this.formatMultiLine(val);
   }
 
+  get operatorNames() {
+    const raw = this.tags.operator;
+    if (!raw) return null;
+    const values = raw
+      .split(';')
+      .map((value) => value.trim())
+      .filter(
+        (value) =>
+          value && value.toLowerCase() !== 'yes' && value.toLowerCase() !== 'no'
+      );
+    if (values.length === 0) return null;
+    return this.formatMultiLine(values.join(';'));
+  }
+
+  get operatorWebsite() {
+    const val = this.tags['operator:website'];
+    return val ? val.trim() : null;
+  }
+
+  get operatorWebsiteLabel() {
+    return this.operatorWebsite ? this.getDomain(this.operatorWebsite) : null;
+  }
+
+  get operatorWikidata() {
+    const val = this.tags['operator:wikidata'];
+    if (!val) return null;
+    return (
+      val
+        .split(';')
+        .map((v) => v.trim())
+        .filter(Boolean)[0] || null
+    );
+  }
+
+  get operatorWikipedia() {
+    const val = this.tags['operator:wikipedia'];
+    if (!val) return null;
+    return (
+      val
+        .split(';')
+        .map((v) => v.trim())
+        .filter(Boolean)[0] || null
+    );
+  }
+
+  get operatorWikipediaUrl() {
+    const val = this.operatorWikipedia;
+    if (!val) return null;
+    const match = val.match(/^([a-z-]+):(.+)$/i);
+    if (match) {
+      return `https://${match[1]}.wikipedia.org/wiki/${match[2]}`;
+    }
+    return `https://wikipedia.org/wiki/${val}`;
+  }
+
+  get showOperator() {
+    return !!(
+      this.operatorNames ||
+      this.operatorWebsite ||
+      this.operatorWikidata ||
+      this.operatorWikipedia
+    );
+  }
+
   get cuisine() {
     if (!this.tags.cuisine) return null;
     return this.tags.cuisine
@@ -486,6 +550,45 @@ export default class PlaceDetails extends Component {
             <Icon @name="clock" @title="Opening hours" />
             <span>
               {{this.openingHours}}
+            </span>
+          </p>
+        {{/if}}
+
+        {{#if this.showOperator}}
+          <p class="content-with-icon">
+            <Icon @name="briefcase" @title="Operator" />
+            <span>
+              {{this.operatorNames}}
+              {{#if this.operatorWebsite}}
+                <br />
+                <a
+                  href={{this.operatorWebsite}}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{this.operatorWebsiteLabel}}
+                </a>
+              {{/if}}
+              {{#if this.operatorWikidata}}
+                <br />
+                <a
+                  href="https://www.wikidata.org/wiki/{{this.operatorWikidata}}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Wikidata
+                </a>
+              {{/if}}
+              {{#if this.operatorWikipedia}}
+                <br />
+                <a
+                  href={{this.operatorWikipediaUrl}}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Wikipedia
+                </a>
+              {{/if}}
             </span>
           </p>
         {{/if}}

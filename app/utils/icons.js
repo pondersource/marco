@@ -5,6 +5,7 @@
 import activity from 'feather-icons/dist/icons/activity.svg?raw';
 import arrowLeft from 'feather-icons/dist/icons/arrow-left.svg?raw';
 import bookmark from 'feather-icons/dist/icons/bookmark.svg?raw';
+import briefcase from 'feather-icons/dist/icons/briefcase.svg?raw';
 import featherCamera from 'feather-icons/dist/icons/camera.svg?raw';
 import checkSquare from 'feather-icons/dist/icons/check-square.svg?raw';
 import chevronLeft from 'feather-icons/dist/icons/chevron-left.svg?raw';
@@ -182,6 +183,7 @@ const ICONS = {
   'boxing-glove-up': boxingGloveUp,
   'burger-and-drink-cup-with-straw': burgerAndDrinkCupWithStraw,
   bridge,
+  briefcase,
   bus,
   camera,
   'feather-camera': featherCamera,
