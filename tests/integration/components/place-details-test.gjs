@@ -457,4 +457,112 @@ module('Integration | Component | place-details', function (hooks) {
 
     assert.dom('.place-payment-methods').doesNotExist();
   });
+
+  test('it renders the operator name with a briefcase icon', async function (assert) {
+    const place = {
+      title: 'Operated Cafe',
+      osmTags: {
+        operator: 'Le Méridien',
+      },
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    const operatorBlock = this.element.querySelector(
+      '.meta-info .content-with-icon span.icon[title="Operator"]'
+    );
+    assert.ok(operatorBlock, 'Operator block is rendered');
+
+    const row = operatorBlock.closest('.content-with-icon');
+    assert.dom(row).includesText('Le Méridien');
+  });
+
+  test('it splits semicolon-separated operators onto separate lines', async function (assert) {
+    const place = {
+      title: 'Multi Operator Stop',
+      osmTags: {
+        operator: 'De Lijn;TEC',
+      },
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    const row = this.element
+      .querySelector('span.icon[title="Operator"]')
+      .closest('.content-with-icon');
+
+    assert.dom(row).includesText('De Lijn');
+    assert.dom(row).includesText('TEC');
+    assert.true(
+      row.querySelector('span:not(.icon)').innerHTML.includes('<br>'),
+      'Operators are separated by a line break'
+    );
+  });
+
+  test('it suppresses invalid operator values of yes and no', async function (assert) {
+    const place = {
+      title: 'Invalid Operator',
+      osmTags: {
+        operator: 'yes',
+      },
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    assert
+      .dom('span.icon[title="Operator"]')
+      .doesNotExist('Operator block is hidden for operator=yes');
+  });
+
+  test('it renders operator wikidata and website links', async function (assert) {
+    const place = {
+      title: 'Linked Operator',
+      osmTags: {
+        operator: 'Flixbus',
+        'operator:wikidata': 'Q15712278',
+        'operator:website': 'https://www.flixbus.com/',
+        'operator:wikipedia': 'en:FlixBus',
+      },
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    const row = this.element
+      .querySelector('span.icon[title="Operator"]')
+      .closest('.content-with-icon');
+
+    const wikidataLink = row.querySelector(
+      'a[href="https://www.wikidata.org/wiki/Q15712278"]'
+    );
+    assert.ok(wikidataLink, 'Wikidata link is rendered');
+    assert.dom(wikidataLink).hasText('Wikidata');
+
+    const websiteLink = row.querySelector('a[href="https://www.flixbus.com/"]');
+    assert.ok(websiteLink, 'Operator website link is rendered');
+    assert.dom(websiteLink).hasText('www.flixbus.com');
+
+    const wikipediaLink = row.querySelector(
+      'a[href="https://en.wikipedia.org/wiki/FlixBus"]'
+    );
+    assert.ok(wikipediaLink, 'Operator Wikipedia link is rendered');
+    assert.dom(wikipediaLink).hasText('Wikipedia');
+  });
+
+  test('it renders the operator block when only operator subkeys are present', async function (assert) {
+    const place = {
+      title: 'Subkey Only',
+      osmTags: {
+        'operator:wikidata': 'Q42',
+      },
+    };
+
+    await render(<template><PlaceDetails @place={{place}} /></template>);
+
+    assert
+      .dom('span.icon[title="Operator"]')
+      .exists('Operator block is rendered from subkeys alone');
+    assert
+      .dom('a[href="https://www.wikidata.org/wiki/Q42"]')
+      .exists('Wikidata link is rendered');
+  });
 });
