@@ -271,4 +271,85 @@ module('Acceptance | collections navigation', function (hooks) {
       'Saved Places are ordered by createdAt in descending order'
     );
   });
+
+  test('returning from place details preserves scroll position without a loading flash', async function (assert) {
+    const places = Array.from({ length: 40 }, (_, i) => ({
+      id: `place-${i}`,
+      title: `Place ${i}`,
+      geohash: 'u33dc0',
+      lat: 48.1,
+      lon: 11.5,
+      createdAt: new Date(2023, 0, 1, 12, 0, i).toISOString(),
+      osmTags: { name: `Place ${i}` },
+    }));
+
+    class ManyPlacesStorageService extends Service {
+      initialSyncDone = true;
+      savedPlaces = places;
+      lists = [
+        {
+          id: 'to-go',
+          title: 'Want to go',
+          color: '#2e9e4f',
+          placeRefs: places.map((p) => ({ id: p.id, geohash: p.geohash })),
+        },
+      ];
+
+      findPlaceById(id) {
+        return this.savedPlaces.find((p) => p.id === id) || null;
+      }
+
+      isPlaceSaved() {
+        return true;
+      }
+
+      loadPlacesInBounds() {
+        return [];
+      }
+
+      getPlacesInList(listId) {
+        if (listId === 'to-go') {
+          return Promise.resolve(this.savedPlaces);
+        }
+        return Promise.resolve([]);
+      }
+
+      rs = {
+        on: () => {},
+      };
+    }
+
+    this.owner.unregister('service:storage');
+    this.owner.register('service:storage', ManyPlacesStorageService);
+
+    await visit('/lists/to-go');
+    await waitFor('.places-list');
+
+    const sidebarContent = document.querySelector('.sidebar-content');
+    sidebarContent.scrollTop = 300;
+    assert.strictEqual(sidebarContent.scrollTop, 300, 'List is scrolled');
+
+    // Open place details from an item that is currently visible so the browser
+    // does not scroll it back into view (which would reset our saved position),
+    // then return via the back button.
+    const visibleItem = document.querySelectorAll('.place-item')[5];
+    await click(visibleItem);
+    await waitFor('.sidebar-content');
+    await click('.back-btn');
+    await waitFor('.places-list');
+
+    // Allow the restore-scroll requestAnimationFrame to run
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    const restored = document.querySelector('.sidebar-content');
+    assert.strictEqual(
+      restored.scrollTop,
+      300,
+      'Scroll position is restored on return'
+    );
+    assert
+      .dom('.sidebar-loading')
+      .doesNotExist('No loading spinner flashes when returning');
+  });
 });

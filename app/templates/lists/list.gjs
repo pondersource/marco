@@ -7,7 +7,7 @@ import PlacesSidebar from '#components/places-sidebar';
       @title={{@controller.listTitle}}
       @color={{@controller.listColor}}
       @scrollTop={{@controller.scrollTop}}
-      @isLoading={{@controller.loadPlacesTask.isRunning}}
+      @isLoading={{@controller.isLoading}}
       @onSelect={{@controller.selectPlace}}
       @onClose={{@controller.close}}
       @onBack={{@controller.backToLists}}
