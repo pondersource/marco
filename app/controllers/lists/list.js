@@ -23,18 +23,34 @@ export default class ListsListController extends Controller {
 
   @tracked model;
   @tracked loadedPlaces = [];
+  @tracked loadedListId = null;
 
   get listId() {
     return this.model?.list_id;
   }
 
+  get isLoading() {
+    // Only show the spinner when there is nothing to display yet. On re-entry
+    // the previously loaded places (plus live storage state) render instantly,
+    // so we avoid a loading flash and preserve restored scroll position.
+    return this.loadPlacesTask.isRunning && this.places.length === 0;
+  }
+
   loadPlacesTask = task({ restartable: true }, async (listId) => {
+    // Already loaded this list: keep the existing places so returning from
+    // place details is instant (mirrors the activity service's load guard).
+    if (this.loadedListId === listId) {
+      return;
+    }
+
+    this.loadedListId = listId;
     this.loadedPlaces = []; // Clear previous elements immediately to show fresh loader
     try {
       this.loadedPlaces = await this.storage.getPlacesInList(listId);
     } catch (e) {
       console.error('Failed to load places in list', listId, e);
       this.loadedPlaces = [];
+      this.loadedListId = null; // Allow a retry on next entry
     }
   });
 

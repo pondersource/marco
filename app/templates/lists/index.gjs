@@ -5,6 +5,7 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import Icon from '#components/icon';
 import { htmlSafe } from '@ember/template';
+import restoreScroll from '../../modifiers/restore-scroll';
 
 export default class ListsIndexTemplate extends Component {
   @service storage;
@@ -26,8 +27,16 @@ export default class ListsIndexTemplate extends Component {
     return htmlSafe(`background-color: ${finalColor}`);
   }
 
+  get scrollTop() {
+    return this.mapUi.getScrollPosition('lists-index');
+  }
+
   @action
   selectList(listId) {
+    const sidebarContent = document.querySelector('.sidebar-content');
+    if (sidebarContent) {
+      this.mapUi.saveScrollPosition('lists-index', sidebarContent.scrollTop);
+    }
     this.router.transitionTo('lists.list', listId);
   }
 
@@ -59,7 +68,7 @@ export default class ListsIndexTemplate extends Component {
           </button>
         </div>
 
-        <div class="sidebar-content">
+        <div class="sidebar-content" {{restoreScroll this.scrollTop}}>
           <ul class="places-list">
             <li>
               <button
