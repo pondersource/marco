@@ -554,45 +554,6 @@ export default class PlaceDetails extends Component {
           </p>
         {{/if}}
 
-        {{#if this.showOperator}}
-          <p class="content-with-icon">
-            <Icon @name="briefcase" @title="Operator" />
-            <span>
-              {{this.operatorNames}}
-              {{#if this.operatorWebsite}}
-                <br />
-                <a
-                  href={{this.operatorWebsite}}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {{this.operatorWebsiteLabel}}
-                </a>
-              {{/if}}
-              {{#if this.operatorWikidata}}
-                <br />
-                <a
-                  href="https://www.wikidata.org/wiki/{{this.operatorWikidata}}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Wikidata
-                </a>
-              {{/if}}
-              {{#if this.operatorWikipedia}}
-                <br />
-                <a
-                  href={{this.operatorWikipediaUrl}}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Wikipedia
-                </a>
-              {{/if}}
-            </span>
-          </p>
-        {{/if}}
-
         {{#if this.phone}}
           <p class="content-with-icon">
             <Icon @name="phone" @title="Phone" />
@@ -670,6 +631,45 @@ export default class PlaceDetails extends Component {
               >
                 Wikipedia
               </a>
+            </span>
+          </p>
+        {{/if}}
+
+        {{#if this.showOperator}}
+          <p class="content-with-icon">
+            <Icon @name="briefcase" @title="Operator" />
+            <span>
+              {{this.operatorNames}}
+              {{#if this.operatorWebsite}}
+                <br />
+                <a
+                  href={{this.operatorWebsite}}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{this.operatorWebsiteLabel}}
+                </a>
+              {{/if}}
+              {{#if this.operatorWikidata}}
+                <br />
+                <a
+                  href="https://www.wikidata.org/wiki/{{this.operatorWikidata}}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Wikidata
+                </a>
+              {{/if}}
+              {{#if this.operatorWikipedia}}
+                <br />
+                <a
+                  href={{this.operatorWikipediaUrl}}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Wikipedia
+                </a>
+              {{/if}}
             </span>
           </p>
         {{/if}}
