@@ -47,6 +47,10 @@ export default class SettingsService extends Service {
       name: 'private.coffee (AT)',
       url: 'https://overpass.private.coffee/api/interpreter',
     },
+    {
+      name: 'overpass.btcmap.org (SG)',
+      url: 'https://overpass.btcmap.org/api/interpreter',
+    },
     // {
     //   name: 'overpass.openstreetmap.us (US)',
     //   url: 'https://overpass.openstreetmap.us/api/interpreter'
