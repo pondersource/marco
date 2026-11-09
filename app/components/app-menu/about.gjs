@@ -61,11 +61,31 @@ import Icon from '#components/icon';
               <tr>
                 <td>
                   <a
+                    href="https://github.com/pondersource/marco"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Ponder Source fork
+                  </a>
+                </td>
+                <td>
+                  <a
+                    href="https://github.com/pondersource/marco/blob/master/LICENSE"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    AGPL
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a
                     href="https://gitea.kosmos.org/raucao/marco"
                     target="_blank"
                     rel="noopener"
                   >
-                    Marco App
+                    Marco upstream
                   </a>
                 </td>
                 <td>

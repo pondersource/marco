@@ -14,6 +14,9 @@ It allows users to connect their own remote storage to sync place bookmarks
 across apps and devices. It also supports the decentralized sharing of place
 photos (and soon reviews) via [Nostr][2].
 
+[Ponder Source deployment](https://marco.pondersource.com) ·
+[Upstream repository](https://gitea.kosmos.org/raucao/marco)
+
 This README outlines the details of collaborating on this Ember application, or
 just building and deploying it for yourself.
 
@@ -67,9 +70,15 @@ To run the script, you need `imagemagick` and `librsvg` installed:
 
 ### Deploying
 
-- `git push 5apps master` (needs collaborator permission on 5apps)
-- Or deploy `release/` to any static file host (ideally routing all 404s to
-  `index.html` for launching with client-side routes to work)
+GitHub Actions builds and deploys the Ponder Source fork from `master` to
+GitHub Pages. For other static hosts, route unknown paths to `index.html` so
+client-side map links open directly.
+
+OpenStreetMap account sign-in needs an OAuth client registered for the
+deployment. Set the GitHub Actions repository variable `MARCO_OSM_CLIENT_ID`
+to that client's public ID and register
+`https://marco.pondersource.com/oauth/osm/callback` as the redirect URI.
+Map browsing, place search and remoteStorage work without this client.
 
 ## Further Reading / Useful Links
 

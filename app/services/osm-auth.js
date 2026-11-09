@@ -25,11 +25,16 @@ export default class OsmAuthService extends Service {
 
   oauthClient;
 
+  get isConfigured() {
+    return Boolean(this.oauthClient);
+  }
+
   constructor() {
     super(...arguments);
 
-    const clientId =
-      import.meta.env.VITE_OSM_CLIENT_ID || 'YOUR_CLIENT_ID_HERE';
+    const clientId = import.meta.env.VITE_OSM_CLIENT_ID;
+    if (!clientId) return;
+
     const oauthUrl =
       import.meta.env.VITE_OSM_OAUTH_URL || 'https://www.openstreetmap.org';
 
@@ -74,10 +79,12 @@ export default class OsmAuthService extends Service {
   }
 
   async login() {
-    await this.oauthClient.requestAuthorizationCode();
+    await this.oauthClient?.requestAuthorizationCode();
   }
 
   async handleCallback() {
+    if (!this.oauthClient) return;
+
     await this.oauthClient.receiveCode();
     await this.oauthClient.getTokens();
     this.isConnected = true;
@@ -85,7 +92,7 @@ export default class OsmAuthService extends Service {
   }
 
   async logout() {
-    await this.oauthClient.reset();
+    await this.oauthClient?.reset();
     this.isConnected = false;
     this.userDisplayName = null;
     localStorage.removeItem('marco:osm_user_display_name');

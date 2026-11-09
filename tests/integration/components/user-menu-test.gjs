@@ -6,6 +6,7 @@ import { tracked } from '@glimmer/tracking';
 import UserMenu from 'marco/components/user-menu';
 
 class MockOsmAuthService extends Service {
+  @tracked isConfigured = true;
   @tracked isConnected = false;
   @tracked userDisplayName = null;
 
@@ -98,5 +99,22 @@ module('Integration | Component | user-menu', function (hooks) {
       this.osmAuth.logoutCalled,
       'osmAuth.logout() was called when Disconnect is clicked'
     );
+  });
+
+  test('it offers no sign-in button without a configured OSM client', async function (assert) {
+    this.osmAuth.isConfigured = false;
+    this.storageArg = { connected: false, userAddress: null };
+    this.onClose = () => {};
+
+    await render(
+      <template>
+        <UserMenu @storage={{this.storageArg}} @onClose={{this.onClose}} />
+      </template>
+    );
+
+    assert.dom('.account-item:nth-child(2) button').doesNotExist();
+    assert
+      .dom('.account-item:nth-child(2) .account-status')
+      .hasText('Account sign-in is unavailable on this deployment');
   });
 });

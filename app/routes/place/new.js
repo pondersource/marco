@@ -18,7 +18,7 @@ export default class PlaceNewRoute extends Route {
 
   setupController(controller, model) {
     super.setupController(controller, model);
-    if (model.lat && model.lon) {
+    if (Number.isFinite(model.lat) && Number.isFinite(model.lon)) {
       this.mapUi.updateCreationCoordinates(model.lat, model.lon);
     }
     this.mapUi.startCreating();

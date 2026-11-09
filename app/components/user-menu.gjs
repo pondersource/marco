@@ -96,7 +96,7 @@ export default class UserMenuComponent extends Component {
                 type="button"
                 {{on "click" this.disconnectOsm}}
               >Disconnect</button>
-            {{else}}
+            {{else if this.osmAuth.isConfigured}}
               <button
                 class="btn-text text-primary"
                 type="button"
@@ -107,8 +107,10 @@ export default class UserMenuComponent extends Component {
           <div class="account-status">
             {{#if this.osmAuth.isConnected}}
               <strong>{{this.osmAuth.userDisplayName}}</strong>
-            {{else}}
+            {{else if this.osmAuth.isConfigured}}
               Not connected
+            {{else}}
+              Account sign-in is unavailable on this deployment
             {{/if}}
           </div>
         </li>
