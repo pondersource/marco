@@ -3,6 +3,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { htmlSafe } from '@ember/template';
 import { humanizeOsmTag } from '../utils/format-text';
+import { hasCoordinates } from '../utils/geo';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
 import { mapToStorageSchema } from '../utils/place-mapping';
 import { getSocialInfo } from '../utils/social-links';
@@ -408,7 +409,7 @@ export default class PlaceDetails extends Component {
   get geoLink() {
     const lat = this.place.lat;
     const lon = this.place.lon;
-    if (!lat || !lon) return '#';
+    if (!hasCoordinates(lat, lon)) return '#';
     const label = encodeURIComponent(this.name);
     return `geo:${lat},${lon}?q=${lat},${lon}(${label})`;
   }
@@ -416,7 +417,7 @@ export default class PlaceDetails extends Component {
   get visibleGeoLink() {
     const lat = this.place.lat;
     const lon = this.place.lon;
-    if (!lat || !lon) return '';
+    if (!hasCoordinates(lat, lon)) return '';
     return `${Number(lat).toFixed(6)}, ${Number(lon).toFixed(6)}`;
   }
 
@@ -429,7 +430,7 @@ export default class PlaceDetails extends Component {
 
     const lat = this.place.lat;
     const lon = this.place.lon;
-    if (!lat || !lon) return null;
+    if (!hasCoordinates(lat, lon)) return null;
 
     const viewLat = this.mapUi.currentCenter?.lat ?? lat;
     const viewLon = this.mapUi.currentCenter?.lon ?? lon;

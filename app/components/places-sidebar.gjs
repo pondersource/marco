@@ -11,6 +11,7 @@ import PlaceDetails from './place-details';
 import Icon from './icon';
 import humanizeOsmTag from '../helpers/humanize-osm-tag';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import { hasCoordinates } from '../utils/geo';
 import { NEARBY_CATEGORY } from '../utils/poi-categories';
 import restoreScroll from '../modifiers/restore-scroll';
 
@@ -26,7 +27,7 @@ export default class PlacesSidebar extends Component {
     const lat = qp.lat;
     const lon = qp.lon;
 
-    if (lat && lon) {
+    if (hasCoordinates(parseFloat(lat), parseFloat(lon))) {
       this.router.transitionTo('place.new', { queryParams: { lat, lon } });
     } else {
       // Fallback (shouldn't happen in search context)
@@ -154,7 +155,9 @@ export default class PlacesSidebar extends Component {
     // New searches use ?category=nearby; keep supporting legacy lat/lon-only URLs
     return (
       qp.category === NEARBY_CATEGORY.id ||
-      (!qp.q && !qp.category && qp.lat && qp.lon)
+      (!qp.q &&
+        !qp.category &&
+        hasCoordinates(parseFloat(qp.lat), parseFloat(qp.lon)))
     );
   }
 

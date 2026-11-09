@@ -12,3 +12,6 @@ export function getDistance(lat1, lon1, lat2, lon2) {
 
   return R * c; // in metres
 }
+export function hasCoordinates(lat, lon) {
+  return Number.isFinite(lat) && Number.isFinite(lon);
+}

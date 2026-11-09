@@ -6,6 +6,7 @@ import { on } from '@ember/modifier';
 import { EventFactory } from 'applesauce-core';
 import { task } from 'ember-concurrency';
 import Geohash from 'latlon-geohash';
+import { hasCoordinates } from '../utils/geo';
 import PlacePhotoUploadItem from './place-photo-upload-item';
 import Icon from '#components/icon';
 import { getSuggestedPhotoTags } from '../utils/photo-tag-suggestions';
@@ -168,7 +169,7 @@ export default class PlacePhotoUpload extends Component {
         tags.push(['t', tag]);
       }
 
-      if (lat && lon) {
+      if (hasCoordinates(lat, lon)) {
         tags.push(['g', Geohash.encode(lat, lon, 4)]);
         tags.push(['g', Geohash.encode(lat, lon, 6)]);
         tags.push(['g', Geohash.encode(lat, lon, 7)]);

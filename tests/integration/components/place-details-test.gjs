@@ -73,6 +73,21 @@ module('Integration | Component | place-details', function (hooks) {
     assert.dom('.meta-info a[href*="geo:"]').doesNotExist();
   });
 
+  test('it links places on the prime meridian and the equator', async function (assert) {
+    const meridian = { title: 'Prime meridian', lat: 51.4779, lon: 0 };
+    const equator = { title: 'Equator', lat: 0, lon: 32.577 };
+
+    await render(
+      <template>
+        <PlaceDetails @place={{meridian}} />
+        <PlaceDetails @place={{equator}} />
+      </template>
+    );
+
+    assert.dom('a[href^="geo:51.4779,0?"]').hasText('51.477900, 0.000000');
+    assert.dom('a[href^="geo:0,32.577?"]').hasText('0.000000, 32.577000');
+  });
+
   test('it reveals the list manager when save is clicked', async function (assert) {
     const place = {
       title: 'Cool Cafe',

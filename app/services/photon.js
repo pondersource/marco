@@ -1,6 +1,7 @@
 import Service, { service } from '@ember/service';
 import { getPlaceType } from '../utils/osm';
 import { humanizeOsmTag } from '../utils/format-text';
+import { hasCoordinates } from '../utils/geo';
 
 export default class PhotonService extends Service {
   @service settings;
@@ -32,9 +33,11 @@ export default class PhotonService extends Service {
       limit: String(limit),
     });
 
-    if (lat && lon) {
-      params.append('lat', parseFloat(lat).toFixed(4));
-      params.append('lon', parseFloat(lon).toFixed(4));
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lon);
+    if (hasCoordinates(latitude, longitude)) {
+      params.append('lat', latitude.toFixed(4));
+      params.append('lon', longitude.toFixed(4));
     }
 
     const url = `${this.baseUrl}?${params.toString()}`;

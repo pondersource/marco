@@ -1,5 +1,6 @@
 import Route from '@ember/routing/route';
 import { service } from '@ember/service';
+import { hasCoordinates } from '../../utils/geo';
 
 export default class PlaceNewRoute extends Route {
   @service mapUi;
@@ -18,7 +19,7 @@ export default class PlaceNewRoute extends Route {
 
   setupController(controller, model) {
     super.setupController(controller, model);
-    if (Number.isFinite(model.lat) && Number.isFinite(model.lon)) {
+    if (hasCoordinates(model.lat, model.lon)) {
       this.mapUi.updateCreationCoordinates(model.lat, model.lon);
     }
     this.mapUi.startCreating();

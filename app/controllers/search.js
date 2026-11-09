@@ -1,7 +1,7 @@
 import Controller from '@ember/controller';
 import { service } from '@ember/service';
 import { task } from 'ember-concurrency';
-import { getDistance } from '../utils/geo';
+import { getDistance, hasCoordinates } from '../utils/geo';
 import { NEARBY_CATEGORY } from '../utils/poi-categories';
 
 export default class SearchController extends Controller {
@@ -78,8 +78,9 @@ export default class SearchController extends Controller {
     this.mapUi.hideSidebar();
     this.mapUi.clearSearchResults();
 
-    const lat = params.lat ? parseFloat(params.lat) : null;
-    const lon = params.lon ? parseFloat(params.lon) : null;
+    const lat = params.lat == null ? null : parseFloat(params.lat);
+    const lon = params.lon == null ? null : parseFloat(params.lon);
+    const hasLocation = hasCoordinates(lat, lon);
     let pois = [];
     let loadingType = null;
     let loadingValue = null;
@@ -87,8 +88,7 @@ export default class SearchController extends Controller {
     try {
       // Case 0: Nearby Search (map click or ?category=nearby)
       const isNearbySearch =
-        lat &&
-        lon &&
+        hasLocation &&
         !params.q &&
         (!params.category || params.category === NEARBY_CATEGORY.id);
 
@@ -100,7 +100,7 @@ export default class SearchController extends Controller {
         pois = await this.fetchNearbyPois(lat, lon);
       }
       // Case 1: Category Search (category parameter present)
-      else if (params.category && lat && lon) {
+      else if (params.category && hasLocation) {
         loadingType = 'category';
         loadingValue = params.category;
         this.mapUi.startLoading(loadingType, loadingValue);

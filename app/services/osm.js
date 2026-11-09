@@ -1,5 +1,6 @@
 import Service, { service } from '@ember/service';
 import { getLocalizedName, getPlaceType } from '../utils/osm';
+import { hasCoordinates } from '../utils/geo';
 import { getCategoryById } from '../utils/poi-categories';
 
 export default class OsmService extends Service {
@@ -198,7 +199,9 @@ out center;
     const category = getCategoryById(categoryId);
     if (!category || !Array.isArray(category.filter) || !bounds) return [];
 
-    const queryKey = lat && lon ? `cat:${categoryId}:${lat}:${lon}` : null;
+    const queryKey = hasCoordinates(lat, lon)
+      ? `cat:${categoryId}:${lat}:${lon}`
+      : null;
 
     if (queryKey && this.lastQueryKey === queryKey && this.cachedResults) {
       console.debug('Returning cached category results for:', queryKey);
@@ -264,8 +267,8 @@ out center;
 
     return {
       title: getLocalizedName(tags),
-      lat: poi.lat || poi.center?.lat,
-      lon: poi.lon || poi.center?.lon,
+      lat: poi.lat ?? poi.center?.lat,
+      lon: poi.lon ?? poi.center?.lon,
       url: tags.website,
       osmId: String(poi.id),
       osmType: poi.type,

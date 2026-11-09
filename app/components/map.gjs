@@ -1,4 +1,5 @@
 import Component from '@glimmer/component';
+import { hasCoordinates } from '../utils/geo';
 import { service } from '@ember/service';
 import { modifier } from 'ember-modifier';
 import 'ol/ol.css';
@@ -608,7 +609,7 @@ export default class MapComponent extends Component {
 
     const features = [];
     results.forEach((place) => {
-      if (Number.isFinite(place.lat) && Number.isFinite(place.lon)) {
+      if (hasCoordinates(place.lat, place.lon)) {
         const feature = new Feature({
           geometry: new Point(fromLonLat([place.lon, place.lat])),
           name: place.title,
@@ -642,7 +643,7 @@ export default class MapComponent extends Component {
       this.selectedShapeSource.clear();
     }
 
-    if (Number.isFinite(selected?.lat) && Number.isFinite(selected?.lon)) {
+    if (hasCoordinates(selected?.lat, selected?.lon)) {
       const coords = fromLonLat([selected.lon, selected.lat]);
       this.selectedPinOverlay.setPosition(coords);
 
@@ -958,7 +959,7 @@ export default class MapComponent extends Component {
 
       if (places && Array.isArray(places)) {
         places.forEach((place) => {
-          if (Number.isFinite(place.lat) && Number.isFinite(place.lon)) {
+          if (hasCoordinates(place.lat, place.lon)) {
             const feature = new Feature({
               geometry: new Point(fromLonLat([place.lon, place.lat])),
               name: place.title,
@@ -996,7 +997,7 @@ export default class MapComponent extends Component {
       // If we have initial coordinates from the route (e.g. reload or link),
       // we need to pan the map so those coordinates are UNDER the crosshair.
       const coords = this.mapUi.creationCoordinates;
-      if (Number.isFinite(coords?.lat) && Number.isFinite(coords?.lon)) {
+      if (hasCoordinates(coords?.lat, coords?.lon)) {
         // We only animate if the map center isn't already "roughly" correct.
         const targetCoords = fromLonLat([coords.lon, coords.lat]);
         this.animateToCrosshair(targetCoords);

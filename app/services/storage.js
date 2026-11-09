@@ -4,6 +4,7 @@ import Places from '@remotestorage/module-places';
 import Widget from 'remotestorage-widget';
 import { tracked } from '@glimmer/tracking';
 import { getGeohashPrefixesInBbox } from '../utils/geohash-coverage';
+import { hasCoordinates } from '../utils/geo';
 import { action } from '@ember/object';
 import { debounceTask } from 'ember-lifeline';
 import Geohash from 'latlon-geohash';
@@ -312,7 +313,7 @@ export default class StorageService extends Service {
           const prefixSet = new Set(prefixes);
 
           const keptPlaces = this.placesInView.filter((place) => {
-            if (!place.lat || !place.lon) return false;
+            if (!hasCoordinates(place.lat, place.lon)) return false;
             try {
               // Calculate 4-char geohash for the existing place
               const hash = Geohash.encode(place.lat, place.lon, 4);
