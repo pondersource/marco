@@ -44,7 +44,7 @@ export default class OsmAuthService extends Service {
 
     this.oauthClient = new OAuth2AuthCodePkceClient(
       {
-        scopes: ['read_prefs', 'write_api'],
+        scopes: ['read_prefs'],
         authorizationUrl: `${oauthUrl}/oauth2/authorize`,
         tokenUrl: `${oauthUrl}/oauth2/token`,
         clientId: clientId,

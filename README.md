@@ -75,9 +75,11 @@ GitHub Pages. For other static hosts, route unknown paths to `index.html` so
 client-side map links open directly.
 
 OpenStreetMap account sign-in needs an OAuth client registered for the
-deployment. Set the GitHub Actions repository variable `MARCO_OSM_CLIENT_ID`
-to that client's public ID and register
-`https://marco.pondersource.com/oauth/osm/callback` as the redirect URI.
+deployment. Register a public OAuth client with the **Read user preferences**
+(`read_prefs`) scope and the redirect URI
+`https://marco.pondersource.com/oauth/osm/callback`.
+Set the GitHub Actions repository variable `MARCO_OSM_CLIENT_ID` to the
+client's public ID and rerun the Pages workflow.
 Map browsing, place search and remoteStorage work without this client.
 
 ## Further Reading / Useful Links
