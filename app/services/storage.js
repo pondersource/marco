@@ -1,5 +1,7 @@
 import Service, { service } from '@ember/service';
 import RemoteStorage from 'remotestoragejs';
+import storageApiKeys from '../config/storage-providers';
+import { configureProviderRedirects } from '../utils/provider-redirects';
 import Places from '@remotestorage/module-places';
 import Widget from 'remotestorage-widget';
 import { tracked } from '@glimmer/tracking';
@@ -36,6 +38,8 @@ export default class StorageService extends Service {
       modules: [Places],
     });
 
+    this.rs.setApiKeys(storageApiKeys);
+    configureProviderRedirects(this.rs);
     this.rs.access.claim('places', 'rw');
     this.rs.caching.enable('/places/');
 
