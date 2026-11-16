@@ -95,7 +95,6 @@ Map browsing, place search and remoteStorage work without this client.
 [1]: https://en.wikipedia.org/wiki/Marco_Polo
 [2]: https://nostr.org
 
-
 ## PonderSource storage providers
 
 Public OAuth application identifiers are configured in `app/config/storage-providers.js`. These are
