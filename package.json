@@ -88,7 +88,7 @@
     "qunit": "^2.26.0",
     "qunit-dom": "^3.6.0",
     "remotestorage-widget": "^1.8.1",
-    "remotestoragejs": "file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.2.tgz",
+    "remotestoragejs": "file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.3.tgz",
     "sinon": "^22.1.0",
     "stylelint": "^17.16.0",
     "stylelint-config-standard": "^40.0.0",
