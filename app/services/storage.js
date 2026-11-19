@@ -1,6 +1,6 @@
 import Service, { service } from '@ember/service';
 import RemoteStorage from 'remotestoragejs';
-import { withChanges, attachSolid } from '@pondersource/rs-apps';
+import { withChanges } from '@pondersource/rs-apps';
 import storageApiKeys from '../config/storage-providers';
 import { configureProviderRedirects } from '../utils/provider-redirects';
 import Places from '@remotestorage/module-places';
@@ -40,7 +40,7 @@ export default class StorageService extends Service {
     });
 
     this.rs.setApiKeys(storageApiKeys);
-    attachSolid(this.rs);
+
     configureProviderRedirects(this.rs);
     this.rs.access.claim('places', 'rw');
     this.rs.caching.enable('/places/');
@@ -48,10 +48,12 @@ export default class StorageService extends Service {
     window.remoteStorage = this.rs;
 
     this.widget = new Widget(this.rs, {
+      solidProviders: { allowAnyProvider: true },
       leaveOpen: true,
       skipInitial: true,
     });
-    // We don't attach immediately; we'll attach when the user clicks Connect
+    // A Solid callback must reveal the widget even before the account menu opens.
+    this.rs.on('pod-not-selected', () => this.showConnectWidget());
 
     this.rs.on('ready', () => {
       // console.debug('[rs] client ready');

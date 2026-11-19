@@ -205,8 +205,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
       remotestorage-widget:
-        specifier: ^1.8.1
-        version: 1.8.1
+        specifier: file:vendor/remotestorage-widget-1.8.2-pondersource.1.tgz
+        version: file:vendor/remotestorage-widget-1.8.2-pondersource.1.tgz
       sinon:
         specifier: ^22.1.0
         version: 22.1.0
@@ -5042,8 +5042,9 @@ packages:
   relative-to-absolute-iri@1.0.8:
     resolution: {integrity: sha512-U1TmhrhCmXKkDL9mI8gBbF5TN6TKcuv28k5+H3gMCAjoz0TyyHAICHlaGDZsTEBSu2Y3HhDKc8e6X9n33qeIqA==}
 
-  remotestorage-widget@1.8.1:
-    resolution: {integrity: sha512-HxNu2VvIRW3wzkf5fLEzs56ySQ7+YQbRqyp3CKvmw/G+zKhRsmj06HtFoAcm3B14/nJh2SOAv3LyfKuXfUsKPw==}
+  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.1.tgz:
+    resolution: {integrity: sha512-hb9K8gN357xse1oYRVkWmEuKmEqqFt+xplSg889LNXgYxbg8v9dWN46ZQxBHF8r4cyTVcnuYIx5PLf/CBF69CA==, tarball: file:vendor/remotestorage-widget-1.8.2-pondersource.1.tgz}
+    version: 1.8.2-pondersource.1
 
   remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.6.tgz:
     resolution: {integrity: sha512-7USlSZekm0AJUUOC44DZAjyjFe2lvuLPWkWJ0H0df8YmmRiVXx3tF0+CsrBCYEI3/hbZzrPBBd4VSyPliU/b3g==, tarball: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.6.tgz}
@@ -12023,7 +12024,7 @@ snapshots:
 
   relative-to-absolute-iri@1.0.8: {}
 
-  remotestorage-widget@1.8.1: {}
+  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.1.tgz: {}
 
   remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.6.tgz:
     dependencies:
