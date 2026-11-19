@@ -1,5 +1,6 @@
 import Service, { service } from '@ember/service';
 import RemoteStorage from 'remotestoragejs';
+import { withChanges, attachSolid } from '@pondersource/rs-apps';
 import storageApiKeys from '../config/storage-providers';
 import { configureProviderRedirects } from '../utils/provider-redirects';
 import Places from '@remotestorage/module-places';
@@ -35,10 +36,11 @@ export default class StorageService extends Service {
     this.checkInitialConnectionState();
 
     this.rs = new RemoteStorage({
-      modules: [Places],
+      modules: [withChanges(Places, 'onChange', '')],
     });
 
     this.rs.setApiKeys(storageApiKeys);
+    attachSolid(this.rs);
     configureProviderRedirects(this.rs);
     this.rs.access.claim('places', 'rw');
     this.rs.caching.enable('/places/');
@@ -100,7 +102,7 @@ export default class StorageService extends Service {
       }
     });
 
-    this.rs.scope('/places/').on('change', (event) => {
+    this.rs.places.onChange((event) => {
       // console.debug(event);
       if (event.relativePath.startsWith('_lists/')) {
         this.loadLists();
