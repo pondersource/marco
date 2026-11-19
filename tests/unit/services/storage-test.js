@@ -5,6 +5,34 @@ import Service from '@ember/service';
 module('Unit | Service | storage', function (hooks) {
   setupTest(hooks);
 
+  test('reopens the connect widget after its container is replaced', async function (assert) {
+    const service = this.owner.lookup('service:storage');
+    await new Promise((resolve) => service.rs.on('features-loaded', resolve));
+    const container = document.createElement('div');
+    container.id = 'rs-widget-container';
+    document.body.appendChild(container);
+    try {
+      service.showConnectWidget();
+      const first = service.widget;
+      container.replaceChildren();
+      service.closeWidget();
+      service.showConnectWidget();
+      assert.notStrictEqual(
+        service.widget,
+        first,
+        'releases the detached widget'
+      );
+      assert.strictEqual(container.querySelectorAll('.rs-widget').length, 1);
+      assert.strictEqual(
+        container.querySelectorAll('.rs-choose-solid').length,
+        1
+      );
+    } finally {
+      service.widget.destroy();
+      container.remove();
+    }
+  });
+
   test('refreshPlace skips invalid places', async function (assert) {
     let service = this.owner.lookup('service:storage');
     let result = await service.refreshPlace({});

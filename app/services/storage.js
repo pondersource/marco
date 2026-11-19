@@ -516,6 +516,14 @@ export default class StorageService extends Service {
 
     // Check if widget is already attached
     if (!document.querySelector('.rs-widget')) {
+      // Route rendering can replace the widget container. Release the old
+      // attachment before mounting a fresh widget in the current element.
+      this.widget.destroy();
+      this.widget = new Widget(this.rs, {
+        solidProviders: { allowAnyProvider: true },
+        leaveOpen: true,
+        skipInitial: true,
+      });
       // Attach to our specific container
       this.widget.attach('rs-widget-container');
     }
