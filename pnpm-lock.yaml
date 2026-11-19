@@ -54,8 +54,8 @@ importers:
         specifier: ^1.5.4
         version: 1.5.4
       remotestoragejs:
-        specifier: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.5.tgz
-        version: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.5.tgz
+        specifier: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.6.tgz
+        version: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.6.tgz
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -5045,9 +5045,9 @@ packages:
   remotestorage-widget@1.8.1:
     resolution: {integrity: sha512-HxNu2VvIRW3wzkf5fLEzs56ySQ7+YQbRqyp3CKvmw/G+zKhRsmj06HtFoAcm3B14/nJh2SOAv3LyfKuXfUsKPw==}
 
-  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.5.tgz:
-    resolution: {integrity: sha512-hZDYM0QU+1hUKT4XO3VL32OUnj3B1kqyAXdbzqFDfemgnGYqBtdWZXkPorg6jSxJyNrvWf2emKy5DykwmfUofg==, tarball: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.5.tgz}
-    version: 2.0.0-beta.10-pondersource.5
+  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.6.tgz:
+    resolution: {integrity: sha512-7USlSZekm0AJUUOC44DZAjyjFe2lvuLPWkWJ0H0df8YmmRiVXx3tF0+CsrBCYEI3/hbZzrPBBd4VSyPliU/b3g==, tarball: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.6.tgz}
+    version: 2.0.0-beta.10-pondersource.6
 
   remove-types@1.0.0:
     resolution: {integrity: sha512-G7Hk1Q+UJ5DvlNAoJZObxANkBZGiGdp589rVcTW/tYqJWJ5rwfraSnKSQaETN8Epaytw8J40nS/zC7bcHGv36w==}
@@ -12025,7 +12025,7 @@ snapshots:
 
   remotestorage-widget@1.8.1: {}
 
-  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.5.tgz:
+  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.6.tgz:
     dependencies:
       '@inrupt/solid-client': 4.0.0
       '@inrupt/solid-client-authn-browser': 5.0.3
