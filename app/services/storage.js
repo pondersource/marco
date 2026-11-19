@@ -52,8 +52,13 @@ export default class StorageService extends Service {
       leaveOpen: true,
       skipInitial: true,
     });
-    // A Solid callback must reveal the widget even before the account menu opens.
-    this.rs.on('pod-not-selected', () => this.showConnectWidget());
+    // Attach after feature initialization: Solid can discover pods before
+    // rs.js is ready to replay that pending condition to the widget.
+    const revealPodSelection = () => this.showConnectWidget();
+    this.rs.on('features-loaded', () => {
+      this.rs.removeEventListener('pod-not-selected', revealPodSelection);
+      this.rs.on('pod-not-selected', revealPodSelection);
+    });
 
     this.rs.on('ready', () => {
       // console.debug('[rs] client ready');
