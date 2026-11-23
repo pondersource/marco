@@ -54,8 +54,8 @@ importers:
         specifier: ^1.5.4
         version: 1.5.4
       remotestoragejs:
-        specifier: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.2.tgz
-        version: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.2.tgz(typescript@5.9.3)
+        specifier: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.3.tgz
+        version: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.3.tgz(@inrupt/solid-client-authn-browser@5.0.3)(@inrupt/solid-client@4.0.0)(typescript@5.9.3)
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -205,8 +205,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
       remotestorage-widget:
-        specifier: file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.2.tgz
-        version: file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.2.tgz
+        specifier: file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.3.tgz
+        version: file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.3.tgz
       sinon:
         specifier: ^22.1.0
         version: 22.1.0
@@ -5172,13 +5172,21 @@ packages:
   relativize-url@0.1.1:
     resolution: {integrity: sha512-Z3uvG8fITjw8Xcz6ACzO6QZoI02D574Q6PBKvYUfkOxILtiDV9aOBSeSytIky1bBKX/JeK3/YNqCD9sM5FH+Bw==}
 
-  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.2.tgz:
-    resolution: {integrity: sha512-YaqDzmZtdi6Sr5htdzR1/e/dUSVgPjpDphuAxds3Wk0DWFpX7J27sdxb1YTRBAehXvNgmbGh/XlA+ziZpJr/7Q==, tarball: file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.2.tgz}
-    version: 1.8.2-pondersource.2-preview.2
+  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.3.tgz:
+    resolution: {integrity: sha512-xmouH2F8/3Ir/7q/+lmWTDCzEdOGAOJBYA44+DbWee9wxLkUGY6OYfyO9fW6iSkpsp7BNq0ykszWnfOBeFAZrA==, tarball: file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.3.tgz}
+    version: 1.8.2-pondersource.2-preview.3
 
-  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.2.tgz:
-    resolution: {integrity: sha512-JwbASyG/E1WwZvhTlW4fB7gd5tY78TCq9SDvhI82pdlOahZiVdt1RWGb1HCZMI55qKoAFLCFPuo6gaiWQGujew==, tarball: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.2.tgz}
-    version: 2.0.0-beta.10-pondersource.7-preview.2
+  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.3.tgz:
+    resolution: {integrity: sha512-pndkzwuVeAUBmcv0mkW2q7Kvl5+DUHtnf/BHtBpfLueGxQdslyePC6JhOPoeP6sw1QkWwBhQ2GbSFUE0nHSp6w==, tarball: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.3.tgz}
+    version: 2.0.0-beta.10-pondersource.7-preview.3
+    peerDependencies:
+      '@inrupt/solid-client': ^4.0.0
+      '@inrupt/solid-client-authn-browser': ^5.0.2
+    peerDependenciesMeta:
+      '@inrupt/solid-client':
+        optional: true
+      '@inrupt/solid-client-authn-browser':
+        optional: true
 
   remove-types@1.0.0:
     resolution: {integrity: sha512-G7Hk1Q+UJ5DvlNAoJZObxANkBZGiGdp589rVcTW/tYqJWJ5rwfraSnKSQaETN8Epaytw8J40nS/zC7bcHGv36w==}
@@ -7572,6 +7580,7 @@ snapshots:
   '@bergos/jsonparse@1.4.2':
     dependencies:
       buffer: 6.0.3
+    optional: true
 
   '@cacheable/memory@2.2.0':
     dependencies:
@@ -8156,6 +8165,7 @@ snapshots:
       jose: 6.2.17
       oidc-client-ts: 3.5.0
       uuid: 14.0.3
+    optional: true
 
   '@inrupt/solid-client-authn-browser@5.0.3':
     dependencies:
@@ -8164,14 +8174,17 @@ snapshots:
       events: 3.3.0
       jose: 6.2.17
       uuid: 14.0.3
+    optional: true
 
   '@inrupt/solid-client-authn-core@5.0.3':
     dependencies:
       events: 3.3.0
       jose: 6.2.17
       uuid: 14.0.3
+    optional: true
 
-  '@inrupt/solid-client-errors@0.0.4': {}
+  '@inrupt/solid-client-errors@0.0.4':
+    optional: true
 
   '@inrupt/solid-client@4.0.0':
     dependencies:
@@ -8186,6 +8199,7 @@ snapshots:
       uuid: 14.0.3
     optionalDependencies:
       fsevents: 2.3.3
+    optional: true
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -8421,7 +8435,8 @@ snapshots:
 
   '@pondersource/rs-apps@file:vendor/pondersource-rs-apps-1.0.0.tgz': {}
 
-  '@rdfjs/dataset@2.0.3': {}
+  '@rdfjs/dataset@2.0.3':
+    optional: true
 
   '@rdfjs/types@1.1.2':
     dependencies:
@@ -8686,6 +8701,7 @@ snapshots:
   '@types/node@24.19.2':
     dependencies:
       undici-types: 7.24.6
+    optional: true
 
   '@types/node@26.6.6':
     dependencies:
@@ -8696,6 +8712,7 @@ snapshots:
   '@types/readable-stream@4.0.25':
     dependencies:
       '@types/node': 26.6.6
+    optional: true
 
   '@types/shexj@2.1.7': {}
 
@@ -8818,6 +8835,7 @@ snapshots:
   abort-controller@3.0.0:
     dependencies:
       event-target-shim: 5.0.1
+    optional: true
 
   accepts@1.3.8:
     dependencies:
@@ -9145,7 +9163,8 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
-  base64-js@1.5.1: {}
+  base64-js@1.5.1:
+    optional: true
 
   baseline-browser-mapping@2.11.35: {}
 
@@ -9506,6 +9525,7 @@ snapshots:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+    optional: true
 
   bytes@1.0.0: {}
 
@@ -9550,7 +9570,8 @@ snapshots:
 
   caniuse-lite@1.0.30001823: {}
 
-  canonicalize@2.1.0: {}
+  canonicalize@2.1.0:
+    optional: true
 
   capture-exit@2.0.0:
     dependencies:
@@ -10561,13 +10582,15 @@ snapshots:
 
   etag@1.8.1: {}
 
-  event-target-shim@5.0.1: {}
+  event-target-shim@5.0.1:
+    optional: true
 
   eventemitter3@4.0.7: {}
 
   events-to-array@2.0.3: {}
 
-  events@3.3.0: {}
+  events@3.3.0:
+    optional: true
 
   exec-sh@0.3.6: {}
 
@@ -11221,7 +11244,8 @@ snapshots:
 
   idb@8.0.4: {}
 
-  ieee754@1.2.1: {}
+  ieee754@1.2.1:
+    optional: true
 
   ignore@5.3.2: {}
 
@@ -11367,7 +11391,8 @@ snapshots:
       filelist: 1.0.4
       picocolors: 1.1.1
 
-  jose@6.2.17: {}
+  jose@6.2.17:
+    optional: true
 
   js-string-escape@1.0.1: {}
 
@@ -11470,6 +11495,7 @@ snapshots:
       '@types/node': 24.19.2
       http-link-header: 1.1.4
       relative-to-absolute-iri: 1.0.8
+    optional: true
 
   jsonld-streaming-parser@5.0.2:
     dependencies:
@@ -11482,6 +11508,7 @@ snapshots:
       jsonld-context-parser: 3.1.1
       rdf-data-factory: 2.1.0
       readable-stream: 4.8.0
+    optional: true
 
   jsonld2graphobject@0.0.5:
     dependencies:
@@ -11492,7 +11519,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  jwt-decode@4.0.0: {}
+  jwt-decode@4.0.0:
+    optional: true
 
   keyv@5.6.0:
     dependencies:
@@ -11791,6 +11819,7 @@ snapshots:
     dependencies:
       buffer: 6.0.3
       readable-stream: 4.8.0
+    optional: true
 
   nanoid@3.3.20: {}
 
@@ -11896,6 +11925,7 @@ snapshots:
   oidc-client-ts@3.5.0:
     dependencies:
       jwt-decode: 4.0.0
+    optional: true
 
   ol-mapbox-style@13.9.0(ol@10.11.0):
     dependencies:
@@ -12145,7 +12175,8 @@ snapshots:
 
   proc-log@6.1.0: {}
 
-  process@0.11.10: {}
+  process@0.11.10:
+    optional: true
 
   promise-map-series@0.2.3:
     dependencies:
@@ -12258,6 +12289,7 @@ snapshots:
       events: 3.3.0
       process: 0.11.10
       string_decoder: 1.3.0
+    optional: true
 
   readdirp@5.1.1: {}
 
@@ -12299,13 +12331,11 @@ snapshots:
 
   relativize-url@0.1.1: {}
 
-  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.2.tgz: {}
+  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.3.tgz: {}
 
-  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.2.tgz(typescript@5.9.3):
+  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.3.tgz(@inrupt/solid-client-authn-browser@5.0.3)(@inrupt/solid-client@4.0.0)(typescript@5.9.3):
     dependencies:
       '@azure/msal-browser': 4.29.0
-      '@inrupt/solid-client': 4.0.0
-      '@inrupt/solid-client-authn-browser': 5.0.3
       '@ng-org/orm': 0.1.2-alpha.25
       '@ng-org/shex-orm': 0.1.2-alpha.12(typescript@5.9.3)
       '@ng-org/web': 0.1.2-alpha.17
@@ -12314,6 +12344,9 @@ snapshots:
       tv4: 1.3.0
       webfinger.js: 3.1.0
       xhr2: 0.2.1
+    optionalDependencies:
+      '@inrupt/solid-client': 4.0.0
+      '@inrupt/solid-client-authn-browser': 5.0.3
     transitivePeerDependencies:
       - encoding
       - react
@@ -13137,7 +13170,8 @@ snapshots:
 
   undici-types@5.26.5: {}
 
-  undici-types@7.24.6: {}
+  undici-types@7.24.6:
+    optional: true
 
   undici-types@8.9.0: {}
 
@@ -13182,7 +13216,8 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
-  uuid@14.0.3: {}
+  uuid@14.0.3:
+    optional: true
 
   uuid@8.3.2: {}
 
