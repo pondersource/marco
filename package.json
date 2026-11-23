@@ -87,7 +87,7 @@
     "prettier-plugin-ember-template-tag": "^2.1.8",
     "qunit": "^2.26.0",
     "qunit-dom": "^3.6.0",
-    "remotestorage-widget": "file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.4.tgz",
+    "remotestorage-widget": "file:vendor/remotestorage-widget-1.8.2-pondersource.2-preview.6.tgz",
     "sinon": "^22.1.0",
     "stylelint": "^17.16.0",
     "stylelint-config-standard": "^40.0.0",
@@ -117,7 +117,7 @@
     "qrcode": "^1.5.4",
     "rxjs": "^7.8.2",
     "@pondersource/rs-apps": "file:vendor/pondersource-rs-apps-1.0.0.tgz",
-    "remotestoragejs": "file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.4.tgz"
+    "remotestoragejs": "file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.7-preview.6.tgz"
   },
   "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
 }
