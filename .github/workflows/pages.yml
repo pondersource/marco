@@ -11,12 +11,11 @@ concurrency:
   group: pages
   cancel-in-progress: false
 jobs:
-  deploy:
+  build:
     if: github.repository == 'pondersource/marco'
     runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      pages_artifact: ${{ steps.pages_artifact.outputs.name }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -36,9 +35,23 @@ jobs:
           printf '%s\n' 'marco.pondersource.com' > CNAME
           cp index.html 404.html
           touch .nojekyll
-      - uses: actions/configure-pages@v5
+      - name: Select the Pages artifact for this attempt
+        id: pages_artifact
+        run: echo "name=github-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v3
         with:
+          name: ${{ steps.pages_artifact.outputs.name }}
           path: ${{ runner.temp }}/marco-pages
+  deploy:
+    if: github.repository == 'pondersource/marco'
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
       - uses: actions/deploy-pages@v4
         id: deployment
+        with:
+          artifact_name: ${{ needs.build.outputs.pages_artifact }}
