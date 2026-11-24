@@ -87,7 +87,7 @@
     "prettier-plugin-ember-template-tag": "^2.1.8",
     "qunit": "^2.26.0",
     "qunit-dom": "^3.6.0",
-    "remotestorage-widget": "file:vendor/remotestorage-widget-1.8.2-pondersource.4-preview.9.tgz",
+    "remotestorage-widget": "file:vendor/remotestorage-widget-1.8.2-pondersource.5-preview.10.tgz",
     "sinon": "^22.1.0",
     "stylelint": "^17.16.0",
     "stylelint-config-standard": "^40.0.0",
