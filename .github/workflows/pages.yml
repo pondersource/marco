@@ -12,6 +12,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
+    # Retain the original environment context for the public OSM client variable.
+    environment: github-pages
     if: github.repository == 'pondersource/marco'
     runs-on: ubuntu-24.04
     outputs:
