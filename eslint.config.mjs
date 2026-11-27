@@ -36,6 +36,10 @@ export default defineConfig([
   ember.configs.base,
   ember.configs.gjs,
   ...WarpDrive,
+  {
+    files: ['atomic/**/*.js'],
+    rules: { 'warp-drive/no-legacy-request-patterns': 'off' },
+  },
   /**
    * https://eslint.org/docs/latest/use/configure/configuration-files#configuring-linter-options
    */
