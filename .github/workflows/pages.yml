@@ -33,6 +33,7 @@ jobs:
           VITE_OSM_CLIENT_ID: ${{ vars.MARCO_OSM_CLIENT_ID }}
       - name: Prepare custom domain and client routes
         run: |
+          cp -R atomic "$RUNNER_TEMP/marco-pages/"
           cd "$RUNNER_TEMP/marco-pages"
           printf '%s\n' 'marco.pondersource.com' > CNAME
           cp index.html 404.html
