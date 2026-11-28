@@ -35,6 +35,8 @@ export default class StorageService extends Service {
 
     this.checkInitialConnectionState();
 
+    const sdk = new URL('atomic-sdk/index.mjs', document.baseURI);
+    RemoteStorage.Atomic.loadSDK = () => import(/* @vite-ignore */ sdk.href);
     this.rs = new RemoteStorage({
       modules: [withChanges(Places, 'onChange', '')],
     });
