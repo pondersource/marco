@@ -1,6 +1,5 @@
 name: Deploy Ponder Source app
 on:
-  pull_request:
   push:
     branches: [master]
   workflow_dispatch:
@@ -66,7 +65,6 @@ jobs:
           name: ${{ steps.pages_artifact.outputs.name }}
           path: ${{ runner.temp }}/marco-pages
   deploy:
-    if: github.event_name != 'pull_request'
     if: github.repository == 'pondersource/marco'
     needs: build
     runs-on: ubuntu-24.04
