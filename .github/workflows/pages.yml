@@ -1,5 +1,6 @@
 name: Deploy Ponder Source app
 on:
+  pull_request:
   push:
     branches: [master]
   workflow_dispatch:
@@ -31,6 +32,25 @@ jobs:
       - run: pnpm exec vite build --outDir "$RUNNER_TEMP/marco-pages"
         env:
           VITE_OSM_CLIENT_ID: ${{ vars.MARCO_OSM_CLIENT_ID }}
+      - uses: actions/checkout@v4
+        with:
+          repository: pondersource/remotestorage.js
+          ref: 607acc5a474c28e08ca3836de71d20c9bdff7ca1
+          path: atomic-storage-source
+          persist-credentials: false
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ontola/atomic-server
+          ref: fb640fb54657ef826db8ec7ca55e24587faab1da
+          path: atomic-sdk-source
+          persist-credentials: false
+
+      - run: pnpm install --frozen-lockfile && pnpm --filter @tomic/utils build
+        working-directory: atomic-sdk-source/browser
+
+      - run: node atomic-storage-source/scripts/build-atomic-sdk.mjs atomic-sdk-source "$RUNNER_TEMP/marco-pages"/atomic-sdk
+
       - name: Prepare custom domain and client routes
         run: |
           cp -R atomic "$RUNNER_TEMP/marco-pages/"
@@ -46,6 +66,7 @@ jobs:
           name: ${{ steps.pages_artifact.outputs.name }}
           path: ${{ runner.temp }}/marco-pages
   deploy:
+    if: github.event_name != 'pull_request'
     if: github.repository == 'pondersource/marco'
     needs: build
     runs-on: ubuntu-24.04

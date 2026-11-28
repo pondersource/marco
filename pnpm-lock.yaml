@@ -54,8 +54,8 @@ importers:
         specifier: ^1.5.4
         version: 1.5.4
       remotestoragejs:
-        specifier: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.9-preview.9.tgz
-        version: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.9-preview.9.tgz(@inrupt/solid-client-authn-browser@5.0.3)(@inrupt/solid-client@4.0.0)(typescript@5.9.3)
+        specifier: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.10-atomic.1.tgz
+        version: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.10-atomic.1.tgz(@inrupt/solid-client-authn-browser@5.0.3)(@inrupt/solid-client@4.0.0)(typescript@5.9.3)
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -205,8 +205,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
       remotestorage-widget:
-        specifier: file:vendor/remotestorage-widget-1.8.2-pondersource.6-preview.11.tgz
-        version: file:vendor/remotestorage-widget-1.8.2-pondersource.6-preview.11.tgz
+        specifier: file:vendor/remotestorage-widget-1.8.2-pondersource.6-atomic.1.tgz
+        version: file:vendor/remotestorage-widget-1.8.2-pondersource.6-atomic.1.tgz
       sinon:
         specifier: ^22.1.0
         version: 22.1.0
@@ -5172,13 +5172,13 @@ packages:
   relativize-url@0.1.1:
     resolution: {integrity: sha512-Z3uvG8fITjw8Xcz6ACzO6QZoI02D574Q6PBKvYUfkOxILtiDV9aOBSeSytIky1bBKX/JeK3/YNqCD9sM5FH+Bw==}
 
-  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.6-preview.11.tgz:
-    resolution: {integrity: sha512-La6v1zJQSOWho7AL3Co97R7Oi34MuLSILSsrEvWBRG4JXYoTrgEn3WNg//tUOBZbswbxSm4/lCD+i54hYTF02g==, tarball: file:vendor/remotestorage-widget-1.8.2-pondersource.6-preview.11.tgz}
-    version: 1.8.2-pondersource.6-preview.11
+  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.6-atomic.1.tgz:
+    resolution: {integrity: sha512-jXjn3htKpBx+ZBZUBvo9J5xEafgWtaopZ/KU65C9KZ1NLDXKp631pTOm3D68oqg5ce1B19E1wCBIWDM59MP+yw==, tarball: file:vendor/remotestorage-widget-1.8.2-pondersource.6-atomic.1.tgz}
+    version: 1.8.2-pondersource.6-atomic.1
 
-  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.9-preview.9.tgz:
-    resolution: {integrity: sha512-ifiLaxD4mt0qQ2GrYFeHka3sVux3ojxmHXqsO9iqL48ppUwTOYDWXcxxUSD7I8HORxzJY/2SmwW8aAO7VfGKmg==, tarball: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.9-preview.9.tgz}
-    version: 2.0.0-beta.10-pondersource.9-preview.9
+  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.10-atomic.1.tgz:
+    resolution: {integrity: sha512-eU5tVrf9WwYjxM1udoWvJZkl+zDfwKvajkA+eY4K6qMlzUzevpdEdQUPH4hHbQEjqJwYHR1R5ClHfzdJE+xaPQ==, tarball: file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.10-atomic.1.tgz}
+    version: 2.0.0-beta.10-pondersource.10-atomic.1
     peerDependencies:
       '@inrupt/solid-client': ^4.0.0
       '@inrupt/solid-client-authn-browser': ^5.0.2
@@ -12331,9 +12331,9 @@ snapshots:
 
   relativize-url@0.1.1: {}
 
-  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.6-preview.11.tgz: {}
+  remotestorage-widget@file:vendor/remotestorage-widget-1.8.2-pondersource.6-atomic.1.tgz: {}
 
-  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.9-preview.9.tgz(@inrupt/solid-client-authn-browser@5.0.3)(@inrupt/solid-client@4.0.0)(typescript@5.9.3):
+  remotestoragejs@file:vendor/remotestoragejs-2.0.0-beta.10-pondersource.10-atomic.1.tgz(@inrupt/solid-client-authn-browser@5.0.3)(@inrupt/solid-client@4.0.0)(typescript@5.9.3):
     dependencies:
       '@azure/msal-browser': 4.29.0
       '@ng-org/orm': 0.1.2-alpha.25
